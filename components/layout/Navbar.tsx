@@ -17,12 +17,12 @@ export function Navbar() {
   };
 
   return (
-    <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-50">
+    <nav className="border-b border-white/[0.04] bg-[#050505]/85 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link href={user ? '/dashboard' : '/'} className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-white">
-              Math<span className="text-blue-500">Arena</span>
+        <div className="flex items-center justify-between h-14">
+          <Link href={user ? '/dashboard' : '/'} className="flex items-center">
+            <span className="font-serif text-base font-bold text-white/90 tracking-[1px]">
+              MATH<span className="font-light text-white/35">ARENA</span>
             </span>
           </Link>
 
@@ -31,38 +31,41 @@ export function Navbar() {
               <>
                 {user ? (
                   <>
-                    <Link href="/play" className="text-gray-300 hover:text-white transition-colors">
-                      Play
+                    <Link href="/play" className="text-[10px] tracking-[1.5px] text-white/25 hover:text-white/70 transition-colors">
+                      PLAY
                     </Link>
-                    <Link href="/practice" className="text-gray-300 hover:text-white transition-colors">
-                      Practice
+                    <Link href="/practice" className="text-[10px] tracking-[1.5px] text-white/25 hover:text-white/70 transition-colors">
+                      PRACTICE
                     </Link>
-                    <Link href="/lessons" className="text-gray-300 hover:text-white transition-colors">
-                      Lessons
+                    <Link href="/lessons" className="text-[10px] tracking-[1.5px] text-white/25 hover:text-white/70 transition-colors">
+                      LESSONS
                     </Link>
-                    <Link href="/leaderboard" className="text-gray-300 hover:text-white transition-colors">
-                      Rankings
+                    <Link href="/leaderboard" className="text-[10px] tracking-[1.5px] text-white/25 hover:text-white/70 transition-colors">
+                      RANKINGS
                     </Link>
-                    <Link href="/profile" className="text-gray-300 hover:text-white transition-colors">
-                      Profile
+                    <Link
+                      href="/profile"
+                      className="w-7 h-7 rounded-full border border-white/[0.12] flex items-center justify-center text-[11px] text-white/50 hover:border-white/25 transition-colors"
+                    >
+                      {user.email?.[0]?.toUpperCase() ?? 'U'}
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-[10px] tracking-[1.5px] text-white/20 hover:text-white/50 transition-colors"
                     >
-                      Sign Out
+                      SIGN OUT
                     </button>
                   </>
                 ) : (
                   <>
-                    <Link href="/leaderboard" className="text-gray-300 hover:text-white transition-colors">
-                      Rankings
+                    <Link href="/leaderboard" className="text-[10px] tracking-[1.5px] text-white/25 hover:text-white/70 transition-colors">
+                      RANKINGS
                     </Link>
                     <Link
                       href="/login"
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
+                      className="px-4 py-1.5 border border-white/[0.15] rounded-sm text-[10px] tracking-[1.5px] text-white/60 hover:text-white/90 hover:border-white/25 transition-colors"
                     >
-                      Sign In
+                      SIGN IN
                     </Link>
                   </>
                 )}

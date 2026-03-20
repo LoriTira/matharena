@@ -5,13 +5,6 @@ import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import type { Lesson } from '@/types';
 
-const categoryColors: Record<string, string> = {
-  addition: 'bg-green-900 text-green-300 border-green-700',
-  subtraction: 'bg-red-900 text-red-300 border-red-700',
-  multiplication: 'bg-blue-900 text-blue-300 border-blue-700',
-  division: 'bg-purple-900 text-purple-300 border-purple-700',
-};
-
 export default function LessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +27,7 @@ export default function LessonsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-gray-400">Loading lessons...</div>
+        <div className="text-white/25">Loading lessons...</div>
       </div>
     );
   }
@@ -47,34 +40,30 @@ export default function LessonsPage() {
   }, {});
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-bold text-white">Lessons</h1>
-        <p className="text-gray-400 mt-2">Learn mental math tricks and techniques to improve your speed.</p>
+        <h1 className="font-serif text-3xl font-light text-white/90">Lessons</h1>
+        <p className="text-white/30 mt-2 text-[15px] font-light">Learn mental math tricks and techniques to improve your speed.</p>
       </div>
 
       {Object.entries(grouped).map(([category, categoryLessons]) => (
         <div key={category}>
-          <h2 className="text-xl font-bold text-white capitalize mb-4">{category}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h2 className="font-serif text-lg text-white/70 capitalize mb-4">{category}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {categoryLessons.map((lesson) => (
               <Link
                 key={lesson.id}
                 href={`/lessons/${lesson.slug}`}
-                className="bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl p-6 transition-colors group"
+                className="border border-white/[0.06] rounded-sm p-6 bg-white/[0.015] hover:border-white/[0.12] transition-colors group"
               >
-                <span
-                  className={`inline-block px-2 py-1 text-xs font-medium rounded border ${
-                    categoryColors[lesson.category] ?? 'bg-gray-800 text-gray-300 border-gray-600'
-                  }`}
-                >
+                <span className="inline-block px-2 py-0.5 text-[9px] tracking-[1.5px] text-white/30 border border-white/[0.08] rounded-sm uppercase">
                   {lesson.category}
                 </span>
-                <h3 className="text-lg font-semibold text-white mt-3 group-hover:text-blue-400 transition-colors">
+                <h3 className="font-serif text-base text-white/80 mt-3 group-hover:text-white/95 transition-colors">
                   {lesson.title}
                 </h3>
                 {lesson.description && (
-                  <p className="text-gray-400 text-sm mt-2">{lesson.description}</p>
+                  <p className="text-white/25 text-sm mt-2 leading-relaxed">{lesson.description}</p>
                 )}
               </Link>
             ))}

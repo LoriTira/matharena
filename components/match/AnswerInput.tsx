@@ -64,26 +64,26 @@ export function AnswerInput({ onSubmit, disabled = false }: AnswerInputProps) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={locked || disabled}
-          className={`w-full px-6 py-4 text-2xl font-mono text-center rounded-xl border-2 bg-gray-800 text-white focus:outline-none transition-colors
-            ${feedback === 'correct' ? 'border-green-500 bg-green-950' : ''}
-            ${feedback === 'wrong' || locked ? 'border-red-500 bg-red-950' : ''}
-            ${!feedback && !locked ? 'border-gray-600 focus:border-blue-500' : ''}
+          className={`w-full px-6 py-4 text-2xl font-mono text-center rounded-sm border bg-white/[0.03] text-white/80 focus:outline-none transition-colors
+            ${feedback === 'correct' ? 'border-green-400/50 bg-green-400/5' : ''}
+            ${feedback === 'wrong' || locked ? 'border-red-400/50 bg-red-400/5' : ''}
+            ${!feedback && !locked ? 'border-white/[0.08] focus:border-white/20 focus:ring-1 focus:ring-white/10' : ''}
           `}
           placeholder={locked ? `Wait ${Math.ceil(GAME_CONFIG.WRONG_ANSWER_PENALTY_MS / 1000)}s...` : 'Your answer'}
           autoComplete="off"
         />
         {locked && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-950/50 rounded-xl">
-            <span className="text-red-400 font-semibold text-lg">Wrong! Wait...</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-red-400/5 rounded-sm">
+            <span className="text-red-400/60 font-medium text-sm tracking-wide">Wrong — wait...</span>
           </div>
         )}
       </div>
       <button
         type="submit"
         disabled={locked || disabled || !value}
-        className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xl rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-8 py-4 bg-white/90 text-[#050505] font-semibold text-xl rounded-sm transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        →
+        &rarr;
       </button>
     </form>
   );

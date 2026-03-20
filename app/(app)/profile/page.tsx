@@ -63,7 +63,7 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-gray-400">Loading profile...</div>
+        <div className="text-white/25">Loading profile...</div>
       </div>
     );
   }
@@ -74,57 +74,57 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">
+      <div className="border border-white/[0.06] rounded-sm p-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">{profile.display_name || profile.username}</h1>
-            <p className="text-gray-400">@{profile.username}</p>
+            <h1 className="font-serif text-3xl font-light text-white/90">{profile.display_name || profile.username}</h1>
+            <p className="text-white/25 text-sm mt-1">@{profile.username}</p>
           </div>
           <button
             onClick={() => setEditing(!editing)}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg transition-colors"
+            className="px-4 py-2 text-[10px] tracking-[1.5px] text-white/30 border border-white/[0.08] hover:border-white/20 hover:text-white/50 rounded-sm transition-colors"
           >
-            {editing ? 'Cancel' : 'Edit Profile'}
+            {editing ? 'CANCEL' : 'EDIT PROFILE'}
           </button>
         </div>
 
         {editing ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Display Name</label>
+              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Display Name</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Affiliation</label>
+              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Affiliation</label>
               <input
                 type="text"
                 value={affiliation}
                 onChange={(e) => setAffiliation(e.target.value)}
                 placeholder="MIT, Google, etc."
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Country</label>
+              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Country</label>
               <input
                 type="text"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 placeholder="United States, France, etc."
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Type</label>
+              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Type</label>
               <select
                 value={affiliationType}
                 onChange={(e) => setAffiliationType(e.target.value as 'school' | 'company' | '')}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
               >
                 <option value="">None</option>
                 <option value="school">School</option>
@@ -134,22 +134,22 @@ export default function ProfilePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 bg-white/90 text-[#050505] font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-white disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? 'SAVING...' : 'SAVE CHANGES'}
             </button>
           </div>
         ) : (
           <>
             {profile.country && (
-              <p className="text-gray-300">
-                <span className="text-gray-500">Country: </span>
+              <p className="text-white/50 text-sm">
+                <span className="text-white/20">Country: </span>
                 {profile.country}
               </p>
             )}
             {profile.affiliation && (
-              <p className="text-gray-300">
-                <span className="text-gray-500 capitalize">{profile.affiliation_type}: </span>
+              <p className="text-white/50 text-sm mt-1">
+                <span className="text-white/20 capitalize">{profile.affiliation_type}: </span>
                 {profile.affiliation}
               </p>
             )}
@@ -157,22 +157,22 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Rating</div>
-          <div className="text-2xl font-bold text-white">{profile.elo_rating}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04] rounded-sm overflow-hidden">
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">RATING</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.elo_rating}</div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Games</div>
-          <div className="text-2xl font-bold text-white">{profile.games_played}</div>
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">GAMES</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.games_played}</div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Wins</div>
-          <div className="text-2xl font-bold text-green-400">{profile.games_won}</div>
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WINS</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.games_won}</div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Win Rate</div>
-          <div className="text-2xl font-bold text-white">{winRate}%</div>
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WIN RATE</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{winRate}%</div>
         </div>
       </div>
     </div>

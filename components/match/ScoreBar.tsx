@@ -29,29 +29,29 @@ export function ScoreBar({
     <div className="w-full max-w-2xl mx-auto space-y-3">
       {/* My score */}
       <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-blue-400 w-24 truncate">{myName} (You)</span>
-        <div className="flex-1 h-4 bg-gray-800 rounded-full overflow-hidden">
+        <span className="text-[11px] tracking-[1px] text-white/40 w-24 truncate">{myName} (You)</span>
+        <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+            className="h-full bg-white/60 rounded-full transition-all duration-500"
             style={{ width: `${(myScore / targetScore) * 100}%` }}
           />
         </div>
-        <span className="text-lg font-bold text-white w-10 text-right tabular-nums">{myScore}</span>
+        <span className="font-mono text-lg font-medium text-white/90 w-10 text-right tabular-nums">{myScore}</span>
       </div>
 
       {/* Their score */}
       <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-red-400 w-24 truncate">{theirName}</span>
-        <div className="flex-1 h-4 bg-gray-800 rounded-full overflow-hidden">
+        <span className="text-[11px] tracking-[1px] text-white/25 w-24 truncate">{theirName}</span>
+        <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
           <div
-            className="h-full bg-red-500 rounded-full transition-all duration-500"
+            className="h-full bg-white/20 rounded-full transition-all duration-500"
             style={{ width: `${(theirScore / targetScore) * 100}%` }}
           />
         </div>
-        <span className="text-lg font-bold text-white w-10 text-right tabular-nums">{theirScore}</span>
+        <span className="font-mono text-lg font-medium text-white/50 w-10 text-right tabular-nums">{theirScore}</span>
       </div>
 
-      <div className="text-center text-sm text-gray-500">First to {targetScore}</div>
+      <div className="text-center text-[9px] tracking-[2px] text-white/20">FIRST TO {targetScore}</div>
     </div>
   );
 }

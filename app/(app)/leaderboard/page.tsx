@@ -34,30 +34,30 @@ export default function LeaderboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
+        <h1 className="font-serif text-3xl font-light text-white/90">Leaderboard</h1>
         <input
           type="text"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter by school/company..."
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+          className="px-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/70 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 w-64 text-sm transition-colors"
         />
       </div>
 
       {loading ? (
-        <div className="text-gray-400 text-center py-12">Loading rankings...</div>
+        <div className="text-white/25 text-center py-12">Loading rankings...</div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="border border-white/[0.04] rounded-sm overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-800">
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 w-16">#</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Player</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Country</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Affiliation</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">Rating</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">W/L</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">Win %</th>
+              <tr className="border-b border-white/[0.06]">
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20 w-16">#</th>
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20">PLAYER</th>
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20">COUNTRY</th>
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20">AFFILIATION</th>
+                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-white/20">RATING</th>
+                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-white/20">W/L</th>
+                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-white/20">WIN %</th>
               </tr>
             </thead>
             <tbody>
@@ -68,25 +68,25 @@ export default function LeaderboardPage() {
                 const losses = player.games_played - player.games_won;
 
                 return (
-                  <tr key={player.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                    <td className="px-4 py-3 text-gray-500 font-mono">{index + 1}</td>
+                  <tr key={player.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
+                    <td className="px-4 py-3 font-mono text-white/25 text-sm tabular-nums">{index + 1}</td>
                     <td className="px-4 py-3">
                       <Link
                         href={`/profile/${player.id}`}
-                        className="text-white hover:text-blue-400 font-medium transition-colors"
+                        className="text-white/70 hover:text-white/95 text-sm transition-colors"
                       >
                         {player.display_name || player.username}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 text-sm">{player.country ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-400 text-sm">{player.affiliation ?? '—'}</td>
-                    <td className="px-4 py-3 text-right font-bold text-white tabular-nums">{player.elo_rating}</td>
-                    <td className="px-4 py-3 text-right text-sm tabular-nums">
-                      <span className="text-green-400">{player.games_won}</span>
-                      <span className="text-gray-600"> / </span>
-                      <span className="text-red-400">{losses}</span>
+                    <td className="px-4 py-3 text-white/25 text-sm">{player.country ?? '—'}</td>
+                    <td className="px-4 py-3 text-white/25 text-sm">{player.affiliation ?? '—'}</td>
+                    <td className="px-4 py-3 text-right font-mono font-medium text-white/80 tabular-nums text-sm">{player.elo_rating}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm tabular-nums">
+                      <span className="text-white/60">{player.games_won}</span>
+                      <span className="text-white/15"> / </span>
+                      <span className="text-white/30">{losses}</span>
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-300 tabular-nums">{winRate}%</td>
+                    <td className="px-4 py-3 text-right font-mono text-white/40 text-sm tabular-nums">{winRate}%</td>
                   </tr>
                 );
               })}
@@ -94,7 +94,7 @@ export default function LeaderboardPage() {
           </table>
 
           {players.length === 0 && (
-            <div className="text-center py-12 text-gray-500">No players found</div>
+            <div className="text-center py-12 text-white/20">No players found</div>
           )}
         </div>
       )}

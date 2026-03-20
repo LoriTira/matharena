@@ -73,7 +73,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-xl text-gray-400">Loading match...</div>
+        <div className="text-white/25">Loading match...</div>
       </div>
     );
   }
@@ -81,7 +81,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   if (!match || !user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-xl text-red-400">Match not found</div>
+        <div className="text-red-400/60">Match not found</div>
       </div>
     );
   }
@@ -116,13 +116,13 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   if (match.status === 'waiting') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <div className="text-xl text-gray-300">Waiting for opponent...</div>
+        <div className="w-12 h-12 border border-white/20 border-t-white/60 rounded-full animate-spin" />
+        <div className="text-[15px] text-white/40">Waiting for opponent...</div>
         <button
           onClick={abandonMatch}
-          className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          className="px-4 py-2 text-[10px] tracking-[1.5px] text-white/30 hover:text-white/50 transition-colors"
         >
-          Cancel
+          CANCEL
         </button>
       </div>
     );
@@ -135,7 +135,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   if (!currentProblem) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-xl text-gray-400">Waiting for results...</div>
+        <div className="text-white/25">Waiting for results...</div>
       </div>
     );
   }
@@ -146,9 +146,9 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         <Timer startTime={match.started_at} isRunning={match.status === 'active'} />
         <button
           onClick={abandonMatch}
-          className="text-sm text-gray-500 hover:text-red-400 transition-colors"
+          className="text-[10px] tracking-[1.5px] text-white/20 hover:text-red-400/60 transition-colors"
         >
-          Forfeit
+          FORFEIT
         </button>
       </div>
 
@@ -162,8 +162,8 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         player1Id={match.player1_id}
       />
 
-      <div className="text-sm text-gray-500">
-        Problem {currentProblemIndex + 1}
+      <div className="text-[9px] tracking-[2px] text-white/20">
+        PROBLEM {currentProblemIndex + 1}
       </div>
 
       <ProblemDisplay

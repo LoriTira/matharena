@@ -12,7 +12,7 @@ export function Timer({ startTime, isRunning }: TimerProps) {
 
   return (
     <div className="text-center">
-      <span className="text-2xl font-mono text-gray-300 tabular-nums">{formatted}</span>
+      <span className="font-mono text-lg text-white/30 tabular-nums">{formatted}</span>
     </div>
   );
 }

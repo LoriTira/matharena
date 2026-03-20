@@ -27,29 +27,29 @@ export function MatchResult({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-      <div className={`text-6xl font-bold ${won ? 'text-green-400' : 'text-red-400'}`}>
-        {won ? 'Victory!' : 'Defeat'}
+      <div className={`font-serif text-5xl font-light ${won ? 'text-white/90' : 'text-white/40'}`}>
+        {won ? 'Victory' : 'Defeat'}
       </div>
 
-      <div className="text-xl text-gray-300">
+      <div className="text-[13px] text-white/30">
         vs {opponentName}
       </div>
 
-      <div className="text-3xl font-bold text-white">
-        {myScore} - {theirScore}
-        <span className="text-gray-500 text-lg ml-2">/ {targetScore}</span>
+      <div className="font-mono text-3xl font-medium text-white/80 tabular-nums">
+        {myScore} &ndash; {theirScore}
+        <span className="text-white/20 text-lg ml-2">/ {targetScore}</span>
       </div>
 
-      <div className={`text-2xl font-bold ${eloChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+      <div className={`font-mono text-2xl font-medium tabular-nums ${eloChange >= 0 ? 'text-white/70' : 'text-white/30'}`}>
         {eloChange >= 0 ? '+' : ''}{eloChange} Elo
       </div>
 
-      <div className="text-gray-400">
-        Rating: {eloBefore} → {eloAfter}
+      <div className="text-white/25 text-sm font-mono tabular-nums">
+        {eloBefore} &rarr; {eloAfter}
       </div>
 
       {penalties > 0 && (
-        <div className="text-gray-500 text-sm">
+        <div className="text-white/20 text-xs">
           {penalties} wrong {penalties === 1 ? 'answer' : 'answers'}
         </div>
       )}
@@ -57,15 +57,15 @@ export function MatchResult({
       <div className="flex gap-4 mt-4">
         <Link
           href="/play"
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-colors"
+          className="px-8 py-3 bg-white/90 text-[#050505] font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-white"
         >
-          Play Again
+          PLAY AGAIN
         </Link>
         <Link
           href="/dashboard"
-          className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+          className="px-8 py-3 border border-white/[0.12] text-white/50 text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-white/25 hover:text-white/70"
         >
-          Dashboard
+          DASHBOARD
         </Link>
       </div>
     </div>

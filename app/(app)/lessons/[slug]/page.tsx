@@ -33,7 +33,7 @@ export default function LessonPage({ params }: LessonPageProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-gray-400">Loading...</div>
+        <div className="text-white/25">Loading...</div>
       </div>
     );
   }
@@ -41,9 +41,9 @@ export default function LessonPage({ params }: LessonPageProps) {
   if (!lesson) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="text-xl text-red-400">Lesson not found</div>
-        <Link href="/lessons" className="text-blue-400 hover:text-blue-300">
-          ← Back to lessons
+        <div className="text-white/40">Lesson not found</div>
+        <Link href="/lessons" className="text-white/50 underline underline-offset-2 decoration-white/15 hover:text-white/70 text-sm">
+          Back to lessons
         </Link>
       </div>
     );
@@ -51,32 +51,33 @@ export default function LessonPage({ params }: LessonPageProps) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/lessons" className="text-blue-400 hover:text-blue-300 text-sm">
-        ← Back to lessons
+      <Link href="/lessons" className="text-white/30 underline underline-offset-2 decoration-white/10 hover:text-white/50 text-sm transition-colors">
+        Back to lessons
       </Link>
 
-      <h1 className="text-3xl font-bold text-white mt-4">{lesson.title}</h1>
+      <h1 className="font-serif text-3xl font-light text-white/90 mt-6">{lesson.title}</h1>
 
       {lesson.description && (
-        <p className="text-gray-400 mt-2">{lesson.description}</p>
+        <p className="text-white/35 mt-2 font-light">{lesson.description}</p>
       )}
 
-      <div className="mt-8 prose prose-invert max-w-none">
-        {/* Simple markdown rendering — split by lines and render headers/paragraphs */}
+      <div className="w-10 h-px bg-white/10 my-8" />
+
+      <div className="max-w-none">
         {lesson.content.split('\n').map((line, i) => {
           if (line.startsWith('# ')) {
-            return <h1 key={i} className="text-2xl font-bold text-white mt-6 mb-3">{line.slice(2)}</h1>;
+            return <h1 key={i} className="font-serif text-2xl font-light text-white/85 mt-8 mb-3">{line.slice(2)}</h1>;
           }
           if (line.startsWith('## ')) {
-            return <h2 key={i} className="text-xl font-bold text-white mt-5 mb-2">{line.slice(3)}</h2>;
+            return <h2 key={i} className="font-serif text-xl font-light text-white/75 mt-6 mb-2">{line.slice(3)}</h2>;
           }
           if (line.startsWith('- ')) {
-            return <li key={i} className="text-gray-300 ml-4">{renderInline(line.slice(2))}</li>;
+            return <li key={i} className="text-white/50 ml-4 leading-relaxed">{renderInline(line.slice(2))}</li>;
           }
           if (line.trim() === '') {
             return <br key={i} />;
           }
-          return <p key={i} className="text-gray-300 leading-relaxed">{renderInline(line)}</p>;
+          return <p key={i} className="text-white/50 leading-relaxed">{renderInline(line)}</p>;
         })}
       </div>
     </div>
@@ -84,11 +85,10 @@ export default function LessonPage({ params }: LessonPageProps) {
 }
 
 function renderInline(text: string) {
-  // Bold text
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+      return <strong key={i} className="text-white/80 font-medium">{part.slice(2, -2)}</strong>;
     }
     return part;
   });
