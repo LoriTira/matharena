@@ -55,22 +55,22 @@ export default function PracticePage() {
   if (!started) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
-        <h1 className="text-4xl font-bold text-white">Practice Mode</h1>
-        <p className="text-gray-400 text-lg">Train your mental math skills. No rating impact.</p>
+        <h1 className="font-serif text-4xl font-light text-white/90">Practice Mode</h1>
+        <p className="text-white/35 text-[15px] font-light">Train your mental math skills. No rating impact.</p>
 
         <div className="space-y-6 w-full max-w-md">
           {/* Operation selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Operation</label>
+            <label className="block text-[9px] tracking-[2px] text-white/25 mb-3 uppercase">Operation</label>
             <div className="grid grid-cols-4 gap-2">
               {operations.map((op) => (
                 <button
                   key={op.value}
                   onClick={() => setOperation(op.value)}
-                  className={`py-3 rounded-lg font-bold text-lg transition-colors ${
+                  className={`py-3 rounded-sm font-mono text-lg transition-colors ${
                     operation === op.value
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-800 text-gray-400 hover:text-white'
+                      ? 'bg-white/90 text-[#050505]'
+                      : 'border border-white/[0.08] text-white/40 hover:text-white/60 hover:border-white/15'
                   }`}
                 >
                   {op.symbol}
@@ -81,8 +81,8 @@ export default function PracticePage() {
 
           {/* Difficulty selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Difficulty: {difficulty}
+            <label className="block text-[9px] tracking-[2px] text-white/25 mb-3 uppercase">
+              Difficulty: <span className="font-mono text-white/50">{difficulty}</span>
             </label>
             <input
               type="range"
@@ -90,9 +90,9 @@ export default function PracticePage() {
               max={5}
               value={difficulty}
               onChange={(e) => setDifficulty(parseInt(e.target.value))}
-              className="w-full accent-blue-500"
+              className="w-full"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-[10px] text-white/20 mt-2 tracking-wide">
               <span>Beginner</span>
               <span>Master</span>
             </div>
@@ -100,9 +100,9 @@ export default function PracticePage() {
 
           <button
             onClick={start}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white text-xl font-bold rounded-xl transition-colors"
+            className="w-full py-4 bg-white/90 text-[#050505] text-sm font-semibold tracking-[1.5px] rounded-sm transition-colors hover:bg-white"
           >
-            Start Practice
+            START PRACTICE
           </button>
         </div>
       </div>
@@ -113,16 +113,16 @@ export default function PracticePage() {
     <div className="flex flex-col items-center gap-8 py-8">
       <div className="flex items-center gap-8">
         <div className="text-center">
-          <div className="text-sm text-gray-400">Correct</div>
-          <div className="text-2xl font-bold text-green-400">{stats.correct}</div>
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-1">CORRECT</div>
+          <div className="font-mono text-2xl text-white/70 tabular-nums">{stats.correct}</div>
         </div>
         <div className="text-center">
-          <div className="text-sm text-gray-400">Wrong</div>
-          <div className="text-2xl font-bold text-red-400">{stats.wrong}</div>
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-1">WRONG</div>
+          <div className="font-mono text-2xl text-white/30 tabular-nums">{stats.wrong}</div>
         </div>
         <div className="text-center">
-          <div className="text-sm text-gray-400">Streak</div>
-          <div className="text-2xl font-bold text-yellow-400">{stats.streak}</div>
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-1">STREAK</div>
+          <div className="font-mono text-2xl text-white/50 tabular-nums">{stats.streak}</div>
         </div>
       </div>
 
@@ -142,9 +142,9 @@ export default function PracticePage() {
           setStarted(false);
           setProblem(null);
         }}
-        className="text-gray-500 hover:text-white transition-colors"
+        className="text-white/25 text-sm underline underline-offset-2 decoration-white/10 hover:text-white/50 transition-colors"
       >
-        ← Back to settings
+        Back to settings
       </button>
     </div>
   );

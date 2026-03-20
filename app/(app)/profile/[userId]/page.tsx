@@ -33,7 +33,7 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-gray-400">Loading...</div>
+        <div className="text-white/25">Loading...</div>
       </div>
     );
   }
@@ -41,9 +41,9 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="text-xl text-red-400">Player not found</div>
-        <Link href="/leaderboard" className="text-blue-400 hover:text-blue-300">
-          ← Back to leaderboard
+        <div className="text-white/40">Player not found</div>
+        <Link href="/leaderboard" className="text-white/50 underline underline-offset-2 decoration-white/15 hover:text-white/70 text-sm">
+          Back to leaderboard
         </Link>
       </div>
     );
@@ -55,43 +55,43 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <Link href="/leaderboard" className="text-blue-400 hover:text-blue-300 text-sm">
-        ← Back to leaderboard
+      <Link href="/leaderboard" className="text-white/30 underline underline-offset-2 decoration-white/10 hover:text-white/50 text-sm transition-colors">
+        Back to leaderboard
       </Link>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-white">{profile.display_name || profile.username}</h1>
-        <p className="text-gray-400">@{profile.username}</p>
+      <div className="border border-white/[0.06] rounded-sm p-8">
+        <h1 className="font-serif text-3xl font-light text-white/90">{profile.display_name || profile.username}</h1>
+        <p className="text-white/25 text-sm mt-1">@{profile.username}</p>
         {profile.country && (
-          <p className="text-gray-300 mt-2">
-            <span className="text-gray-500">Country: </span>
+          <p className="text-white/50 text-sm mt-3">
+            <span className="text-white/20">Country: </span>
             {profile.country}
           </p>
         )}
         {profile.affiliation && (
-          <p className="text-gray-300 mt-1">
-            <span className="text-gray-500 capitalize">{profile.affiliation_type}: </span>
+          <p className="text-white/50 text-sm mt-1">
+            <span className="text-white/20 capitalize">{profile.affiliation_type}: </span>
             {profile.affiliation}
           </p>
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Rating</div>
-          <div className="text-2xl font-bold text-white">{profile.elo_rating}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04] rounded-sm overflow-hidden">
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">RATING</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.elo_rating}</div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Games</div>
-          <div className="text-2xl font-bold text-white">{profile.games_played}</div>
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">GAMES</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.games_played}</div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Wins</div>
-          <div className="text-2xl font-bold text-green-400">{profile.games_won}</div>
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WINS</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.games_won}</div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400">Win Rate</div>
-          <div className="text-2xl font-bold text-white">{winRate}%</div>
+        <div className="bg-[#050505] p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WIN RATE</div>
+          <div className="font-mono text-2xl text-white/85 tabular-nums">{winRate}%</div>
         </div>
       </div>
     </div>
