@@ -1,6 +1,8 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { MathTexture } from '@/components/layout/MathTexture';
 
+export const dynamic = 'force-dynamic';
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#050505] relative">
