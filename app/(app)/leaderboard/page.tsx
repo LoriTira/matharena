@@ -53,6 +53,7 @@ export default function LeaderboardPage() {
               <tr className="border-b border-gray-800">
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 w-16">#</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Player</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Country</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Affiliation</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">Rating</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">W/L</th>
@@ -77,6 +78,7 @@ export default function LeaderboardPage() {
                         {player.display_name || player.username}
                       </Link>
                     </td>
+                    <td className="px-4 py-3 text-gray-400 text-sm">{player.country ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-400 text-sm">{player.affiliation ?? '—'}</td>
                     <td className="px-4 py-3 text-right font-bold text-white tabular-nums">{player.elo_rating}</td>
                     <td className="px-4 py-3 text-right text-sm tabular-nums">

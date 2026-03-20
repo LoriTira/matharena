@@ -6,6 +6,7 @@ const updateSchema = z.object({
   display_name: z.string().min(1).max(50).optional(),
   affiliation: z.string().max(100).optional().nullable(),
   affiliation_type: z.enum(['school', 'company']).optional().nullable(),
+  country: z.string().max(100).optional().nullable(),
 });
 
 export async function PATCH(request: Request) {

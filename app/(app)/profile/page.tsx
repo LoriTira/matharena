@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
   const [affiliation, setAffiliation] = useState('');
   const [affiliationType, setAffiliationType] = useState<'school' | 'company' | ''>('');
+  const [country, setCountry] = useState('');
   const [saving, setSaving] = useState(false);
   const supabase = createClient();
 
@@ -31,6 +32,7 @@ export default function ProfilePage() {
         setDisplayName(p.display_name || '');
         setAffiliation(p.affiliation || '');
         setAffiliationType((p.affiliation_type as 'school' | 'company') || '');
+        setCountry(p.country || '');
       }
     };
 
@@ -46,6 +48,7 @@ export default function ProfilePage() {
         display_name: displayName || null,
         affiliation: affiliation || null,
         affiliation_type: affiliationType || null,
+        country: country || null,
       }),
     });
 
@@ -107,6 +110,16 @@ export default function ProfilePage() {
               />
             </div>
             <div>
+              <label className="block text-sm text-gray-400 mb-1">Country</label>
+              <input
+                type="text"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="United States, France, etc."
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
               <label className="block text-sm text-gray-400 mb-1">Type</label>
               <select
                 value={affiliationType}
@@ -128,6 +141,12 @@ export default function ProfilePage() {
           </div>
         ) : (
           <>
+            {profile.country && (
+              <p className="text-gray-300">
+                <span className="text-gray-500">Country: </span>
+                {profile.country}
+              </p>
+            )}
             {profile.affiliation && (
               <p className="text-gray-300">
                 <span className="text-gray-500 capitalize">{profile.affiliation_type}: </span>

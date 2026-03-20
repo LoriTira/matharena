@@ -62,8 +62,14 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">
         <h1 className="text-3xl font-bold text-white">{profile.display_name || profile.username}</h1>
         <p className="text-gray-400">@{profile.username}</p>
-        {profile.affiliation && (
+        {profile.country && (
           <p className="text-gray-300 mt-2">
+            <span className="text-gray-500">Country: </span>
+            {profile.country}
+          </p>
+        )}
+        {profile.affiliation && (
+          <p className="text-gray-300 mt-1">
             <span className="text-gray-500 capitalize">{profile.affiliation_type}: </span>
             {profile.affiliation}
           </p>

@@ -31,6 +31,7 @@ export interface Profile {
   games_won: number;
   affiliation: string | null;
   affiliation_type: AffiliationType | null;
+  country: string | null;
   created_at: string;
   updated_at: string;
 }

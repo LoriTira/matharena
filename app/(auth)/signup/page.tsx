@@ -33,6 +33,7 @@ export default function SignupPage() {
           username,
           display_name: username,
         },
+        emailRedirectTo: `${window.location.origin}/callback`,
       },
     });
 
