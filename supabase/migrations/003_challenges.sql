@@ -34,4 +34,8 @@ CREATE POLICY "Authenticated users can create challenges"
 
 CREATE POLICY "Challenge participants can update"
   ON challenges FOR UPDATE
-  USING (sender_id = auth.uid() OR recipient_id = auth.uid());
+  USING (
+    sender_id = auth.uid()
+    OR recipient_id = auth.uid()
+    OR (status = 'pending' AND auth.uid() IS NOT NULL)
+  );
