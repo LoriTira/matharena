@@ -1,17 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
-import type { Profile, Match } from '@/types';
+import { ChallengeModal } from '@/components/challenge/ChallengeModal';
+import type { Profile, Match, Challenge } from '@/types';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
   const [opponentNames, setOpponentNames] = useState<Record<string, string>>({});
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [challengeProfiles, setChallengeProfiles] = useState<Record<string, { username: string; display_name: string | null; elo_rating: number; games_won: number; games_played: number }>>({});
+  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const supabase = createClient();
+
+  const fetchChallenges = useCallback(async () => {
+    try {
+      const res = await fetch('/api/challenge/list');
+      if (!res.ok) return;
+      const data = await res.json();
+      setChallenges(data.challenges ?? []);
+      setChallengeProfiles(data.profiles ?? {});
+    } catch {
+      // Silently fail
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -60,7 +76,36 @@ export default function DashboardPage() {
     };
 
     fetchData();
+    fetchChallenges();
   }, [user]);
+
+  const handleDecline = async (challengeCode: string) => {
+    try {
+      await fetch('/api/challenge/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: challengeCode, decline: true }),
+      });
+      fetchChallenges();
+    } catch {
+      // Silently fail
+    }
+  };
+
+  const handleAccept = async (challengeCode: string) => {
+    try {
+      const res = await fetch('/api/challenge/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: challengeCode }),
+      });
+      if (res.ok) {
+        fetchChallenges();
+      }
+    } catch {
+      // Silently fail
+    }
+  };
 
   if (!profile) {
     return (
@@ -73,6 +118,20 @@ export default function DashboardPage() {
   const winRate = profile.games_played > 0
     ? Math.round((profile.games_won / profile.games_played) * 100)
     : 0;
+
+  // Categorize challenges
+  const sentPending = challenges.filter(c => c.sender_id === user?.id && c.status === 'pending');
+  const sentAccepted = challenges.filter(c => c.sender_id === user?.id && c.status === 'accepted');
+  const receivedPending = challenges.filter(c => c.recipient_id === user?.id && c.status === 'pending');
+  const receivedAccepted = challenges.filter(c => c.recipient_id === user?.id && c.status === 'accepted');
+  const activeChallenges = [...sentPending, ...sentAccepted, ...receivedPending, ...receivedAccepted];
+
+  const getChallengeOpponentName = (challenge: Challenge) => {
+    const opponentId = challenge.sender_id === user?.id ? challenge.recipient_id : challenge.sender_id;
+    if (!opponentId) return null;
+    const p = challengeProfiles[opponentId];
+    return p ? (p.display_name || p.username) : null;
+  };
 
   return (
     <div className="space-y-10">
@@ -103,6 +162,140 @@ export default function DashboardPage() {
           <div className="font-mono text-[28px] font-normal text-white/[0.88] tabular-nums">{winRate}%</div>
         </div>
       </div>
+
+      {/* Challenge Hero Card */}
+      <div
+        onClick={() => setChallengeModalOpen(true)}
+        className="border border-white/[0.08] rounded-sm p-6 hover:border-white/[0.15] transition-colors cursor-pointer"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="font-serif text-base text-white/80 mb-1">Challenge a Friend</div>
+            <div className="text-[11px] text-white/25 leading-relaxed">Share a link and prove who&apos;s faster</div>
+          </div>
+          <button
+            className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setChallengeModalOpen(true);
+            }}
+          >
+            CREATE LINK
+          </button>
+        </div>
+      </div>
+
+      {/* Pending Challenges Section */}
+      {activeChallenges.length > 0 && (
+        <div>
+          <div className="text-[9px] tracking-[3px] text-white/20 mb-4">CHALLENGES</div>
+          <div className="space-y-2">
+            {/* Sent, pending — waiting for someone to accept */}
+            {sentPending.map((challenge) => (
+              <div
+                key={challenge.id}
+                className="border border-white/[0.06] rounded-sm p-5 bg-white/[0.01]"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[13px] text-white/50">Waiting for someone to accept</div>
+                    <div className="font-mono text-[11px] text-white/15 mt-1 truncate max-w-[220px]">
+                      /challenge/{challenge.code}
+                    </div>
+                  </div>
+                  <div className="text-[9px] tracking-[1.5px] text-white/15">PENDING</div>
+                </div>
+              </div>
+            ))}
+
+            {/* Sent, accepted — opponent accepted, you can play */}
+            {sentAccepted.map((challenge) => {
+              const opponentName = getChallengeOpponentName(challenge);
+              return (
+                <div
+                  key={challenge.id}
+                  className="border border-white/[0.08] rounded-sm p-5 bg-white/[0.03]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[13px] text-white/60">
+                        {opponentName ? `${opponentName} accepted` : 'Challenge accepted'}
+                      </div>
+                      <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
+                    </div>
+                    <Link
+                      href="/play"
+                      className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
+                    >
+                      PLAY NOW
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Received, pending — you need to accept or decline */}
+            {receivedPending.map((challenge) => {
+              const opponentName = getChallengeOpponentName(challenge);
+              return (
+                <div
+                  key={challenge.id}
+                  className="border border-white/[0.08] rounded-sm p-5 bg-white/[0.02]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[13px] text-white/60">
+                        {opponentName ? `${opponentName} challenged you` : 'You received a challenge'}
+                      </div>
+                      <div className="text-[11px] text-white/20 mt-0.5">Accept to start the match</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleAccept(challenge.code)}
+                        className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
+                      >
+                        ACCEPT
+                      </button>
+                      <button
+                        onClick={() => handleDecline(challenge.code)}
+                        className="px-2.5 py-1.5 border border-white/[0.08] text-white/30 text-[10px] rounded-sm hover:border-white/[0.15] hover:text-white/50 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Received, accepted — waiting to play */}
+            {receivedAccepted.map((challenge) => {
+              const opponentName = getChallengeOpponentName(challenge);
+              return (
+                <div
+                  key={challenge.id}
+                  className="border border-white/[0.06] rounded-sm p-5 bg-white/[0.01]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[13px] text-white/50">
+                        {opponentName ? `Match vs ${opponentName}` : 'Challenge accepted'}
+                      </div>
+                      <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
+                    </div>
+                    <Link
+                      href="/play"
+                      className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
+                    >
+                      PLAY NOW
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Quick actions */}
       <div>
@@ -178,6 +371,15 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Challenge Modal */}
+      <ChallengeModal
+        isOpen={challengeModalOpen}
+        onClose={() => {
+          setChallengeModalOpen(false);
+          fetchChallenges();
+        }}
+      />
     </div>
   );
 }

@@ -85,3 +85,17 @@ export interface EloResult {
   newRatingA: number;
   newRatingB: number;
 }
+
+export type ChallengeStatus = 'pending' | 'accepted' | 'completed' | 'expired';
+
+export interface Challenge {
+  id: string;
+  code: string;
+  sender_id: string;
+  recipient_id: string | null;
+  match_id: string | null;
+  status: ChallengeStatus;
+  created_at: string;
+  accepted_at: string | null;
+  expires_at: string;
+}

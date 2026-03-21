@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -27,7 +29,7 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      router.push(redirect || '/dashboard');
       router.refresh();
     }
   };
@@ -84,11 +86,23 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-white/30 text-sm">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-white/60 underline underline-offset-2 decoration-white/15 hover:text-white/80 transition-colors">
+          <Link href={redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup'} className="text-white/60 underline underline-offset-2 decoration-white/15 hover:text-white/80 transition-colors">
             Sign up
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+        <div className="text-white/25">Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

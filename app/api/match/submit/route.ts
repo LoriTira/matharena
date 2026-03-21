@@ -145,6 +145,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to update match' }, { status: 500 });
     }
 
+    // If match completed, mark any associated challenge as completed
+    if (updates.status === 'completed') {
+      await supabase
+        .from('challenges')
+        .update({ status: 'completed' })
+        .eq('match_id', matchId)
+        .eq('status', 'accepted');
+    }
+
     return NextResponse.json({
       correct,
       matchStatus: updates.status ?? 'active',

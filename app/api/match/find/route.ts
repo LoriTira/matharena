@@ -43,6 +43,60 @@ export async function POST(request: Request) {
       });
     }
 
+    // Check for accepted challenges — prioritize challenge matches
+    const { data: acceptedChallenges } = await supabase
+      .from('challenges')
+      .select('id, sender_id, recipient_id')
+      .eq('status', 'accepted')
+      .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+      .limit(1);
+
+    if (acceptedChallenges && acceptedChallenges.length > 0) {
+      const challenge = acceptedChallenges[0];
+      const opponentId = challenge.sender_id === user.id ? challenge.recipient_id : challenge.sender_id;
+
+      if (opponentId) {
+        // Check if opponent is also searching (has a waiting match)
+        const { data: opponentMatch } = await supabase
+          .from('matches')
+          .select('id, avg_difficulty')
+          .eq('player1_id', opponentId)
+          .eq('status', 'waiting')
+          .limit(1)
+          .single();
+
+        if (opponentMatch) {
+          // Both players are searching — create the challenge match
+          const avgElo = Math.round((opponentMatch.avg_difficulty + playerElo) / 2);
+          const problems = generateProblems(avgElo, GAME_CONFIG.TARGET_SCORE + GAME_CONFIG.PROBLEMS_BUFFER);
+
+          const { error: joinError } = await supabase
+            .from('matches')
+            .update({
+              player2_id: user.id,
+              status: 'active',
+              problems: JSON.parse(JSON.stringify(problems)),
+              avg_difficulty: avgElo,
+              player1_elo_before: opponentMatch.avg_difficulty,
+              player2_elo_before: playerElo,
+              started_at: new Date().toISOString(),
+            })
+            .eq('id', opponentMatch.id)
+            .eq('status', 'waiting');
+
+          if (!joinError) {
+            // Link the challenge to the match
+            await supabase
+              .from('challenges')
+              .update({ match_id: opponentMatch.id })
+              .eq('id', challenge.id);
+
+            return NextResponse.json({ matchId: opponentMatch.id, status: 'active' });
+          }
+        }
+      }
+    }
+
     // Try to find a waiting match within Elo range
     const { data: waitingMatches } = await supabase
       .from('matches')

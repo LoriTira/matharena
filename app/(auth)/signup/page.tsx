@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function SignupPage() {
+function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const supabase = createClient();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -33,7 +35,7 @@ export default function SignupPage() {
           username,
           display_name: username,
         },
-        emailRedirectTo: `${window.location.origin}/callback`,
+        emailRedirectTo: `${window.location.origin}/callback${redirect ? `?next=${encodeURIComponent(redirect)}` : ''}`,
       },
     });
 
@@ -41,7 +43,7 @@ export default function SignupPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      router.push(redirect || '/dashboard');
       router.refresh();
     }
   };
@@ -115,11 +117,23 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-white/30 text-sm">
           Already have an account?{' '}
-          <Link href="/login" className="text-white/60 underline underline-offset-2 decoration-white/15 hover:text-white/80 transition-colors">
+          <Link href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} className="text-white/60 underline underline-offset-2 decoration-white/15 hover:text-white/80 transition-colors">
             Sign in
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+        <div className="text-white/25">Loading...</div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }

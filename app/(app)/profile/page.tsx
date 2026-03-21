@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { Profile } from '@/types';
+import type { Profile, Challenge } from '@/types';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -14,7 +14,38 @@ export default function ProfilePage() {
   const [affiliationType, setAffiliationType] = useState<'school' | 'company' | ''>('');
   const [country, setCountry] = useState('');
   const [saving, setSaving] = useState(false);
+  const [friends, setFriends] = useState<{ id: string; username: string; display_name: string | null; elo_rating: number }[]>([]);
+  const [rechallengingId, setRechallengingId] = useState<string | null>(null);
   const supabase = createClient();
+
+  const fetchFriends = useCallback(async () => {
+    if (!user) return;
+    // Friends = unique opponents from completed challenges
+    const { data: completedChallenges } = await supabase
+      .from('challenges')
+      .select('sender_id, recipient_id')
+      .eq('status', 'completed')
+      .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
+
+    if (!completedChallenges || completedChallenges.length === 0) return;
+
+    const opponentIds = [...new Set(
+      (completedChallenges as Pick<Challenge, 'sender_id' | 'recipient_id'>[])
+        .map(c => c.sender_id === user.id ? c.recipient_id : c.sender_id)
+        .filter((id): id is string => id !== null)
+    )];
+
+    if (opponentIds.length === 0) return;
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, elo_rating')
+      .in('id', opponentIds);
+
+    if (profiles) {
+      setFriends(profiles as { id: string; username: string; display_name: string | null; elo_rating: number }[]);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -37,7 +68,8 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, [user]);
+    fetchFriends();
+  }, [user, fetchFriends]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -175,6 +207,53 @@ export default function ProfilePage() {
           <div className="font-mono text-2xl text-white/85 tabular-nums">{winRate}%</div>
         </div>
       </div>
+
+      {/* Friends */}
+      {friends.length > 0 && (
+        <div>
+          <div className="text-[9px] tracking-[3px] text-white/20 mb-4">FRIENDS</div>
+          <div className="border border-white/[0.04] rounded-sm overflow-hidden">
+            {friends.map((friend) => (
+              <div
+                key={friend.id}
+                className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.03] last:border-b-0"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full border border-white/[0.12] flex items-center justify-center text-[11px] text-white/50">
+                    {(friend.display_name || friend.username)[0]?.toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-[13px] text-white/60">{friend.display_name || friend.username}</div>
+                    <div className="font-mono text-[11px] text-white/20">Elo {friend.elo_rating}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    setRechallengingId(friend.id);
+                    try {
+                      const res = await fetch('/api/challenge/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ recipientId: friend.id }),
+                      });
+                      if (res.ok) {
+                        fetchFriends();
+                      }
+                    } catch {
+                      // silently fail
+                    }
+                    setRechallengingId(null);
+                  }}
+                  disabled={rechallengingId === friend.id}
+                  className="px-3 py-1.5 border border-white/[0.08] text-white/30 text-[10px] tracking-[1px] rounded-sm hover:border-white/[0.15] hover:text-white/50 transition-colors disabled:opacity-50"
+                >
+                  {rechallengingId === friend.id ? 'SENDING...' : 'RE-CHALLENGE'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
