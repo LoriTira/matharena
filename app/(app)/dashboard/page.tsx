@@ -203,7 +203,12 @@ export default function DashboardPage() {
                       /challenge/{challenge.code}
                     </div>
                   </div>
-                  <div className="text-[9px] tracking-[1.5px] text-white/15">PENDING</div>
+                  <button
+                    onClick={() => handleDecline(challenge.code)}
+                    className="px-2.5 py-1.5 border border-white/[0.08] text-white/20 text-[10px] rounded-sm hover:border-white/[0.15] hover:text-white/40 transition-colors"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
             ))}
