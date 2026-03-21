@@ -1,9 +1,26 @@
 'use client';
 
+import { Suspense, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useMatchmaking } from '@/hooks/useMatchmaking';
 
-export default function PlayPage() {
+function PlayContent() {
   const { isSearching, error, findMatch, cancel } = useMatchmaking();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const hasAutoSearched = useRef(false);
+
+  useEffect(() => {
+    if (
+      searchParams.get('autoSearch') === 'true' &&
+      !hasAutoSearched.current &&
+      !isSearching
+    ) {
+      hasAutoSearched.current = true;
+      router.replace('/play');
+      findMatch();
+    }
+  }, [searchParams, findMatch, isSearching, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
@@ -39,5 +56,17 @@ export default function PlayPage() {
         </button>
       )}
     </div>
+  );
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-white/25">Loading...</div>
+      </div>
+    }>
+      <PlayContent />
+    </Suspense>
   );
 }

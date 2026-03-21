@@ -229,7 +229,7 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
                     </div>
                     <Link
-                      href="/play"
+                      href="/play?autoSearch=true"
                       className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
                     >
                       PLAY NOW
@@ -289,7 +289,7 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
                     </div>
                     <Link
-                      href="/play"
+                      href="/play?autoSearch=true"
                       className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
                     >
                       PLAY NOW

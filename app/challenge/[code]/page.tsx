@@ -139,10 +139,10 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
         <div className="text-center">
           <h1 className="font-serif text-2xl font-light text-white/90 mb-2">Challenge Accepted</h1>
           <p className="text-white/25 text-sm mb-8">
-            Head to your dashboard and click &quot;Play Now&quot; when you&apos;re ready.
+            Click below to start searching for your match.
           </p>
-          <Link href="/dashboard" className="px-8 py-2.5 bg-white/90 text-[#050505] font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-white transition-colors">
-            GO TO DASHBOARD
+          <Link href="/play?autoSearch=true" className="px-8 py-2.5 bg-white/90 text-[#050505] font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-white transition-colors">
+            PLAY NOW
           </Link>
         </div>
       </div>
