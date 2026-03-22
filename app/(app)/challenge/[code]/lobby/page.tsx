@@ -1,17 +1,50 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import type { Challenge, Profile } from '@/types';
 
+function PlayerCard({ profile, online, isYou }: { profile: Profile | null; online: boolean; isYou: boolean }) {
+  if (!profile) return null;
+  const winRate = profile.games_played > 0
+    ? Math.round((profile.games_won / profile.games_played) * 100)
+    : 0;
+
+  return (
+    <div className={`border rounded-sm p-6 flex-1 min-w-[200px] transition-colors ${
+      isYou ? 'border-white/[0.12] bg-white/[0.03]' : 'border-white/[0.06] bg-white/[0.01]'
+    }`}>
+      <div className="flex items-center gap-2 mb-4">
+        <div className={`w-2 h-2 rounded-full transition-colors ${online ? 'bg-green-400/80' : 'bg-white/10'}`} />
+        <span className="text-[9px] tracking-[2px] text-white/30">
+          {online ? 'ONLINE' : 'OFFLINE'}
+        </span>
+      </div>
+      <div className="font-serif text-lg text-white/80 mb-1">
+        {profile.display_name || profile.username}
+      </div>
+      <div className="font-mono text-sm text-white/30 mb-3">
+        Elo {profile.elo_rating.toLocaleString()}
+      </div>
+      <div className="flex gap-4 text-[11px] text-white/20">
+        <span>{profile.games_played} played</span>
+        <span>{winRate}% win</span>
+      </div>
+      {isYou && (
+        <div className="text-[9px] tracking-[1.5px] text-white/15 mt-3">YOU</div>
+      )}
+    </div>
+  );
+}
+
 export default function ChallengeLobbyPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [senderProfile, setSenderProfile] = useState<Profile | null>(null);
@@ -23,7 +56,6 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   const [starting, setStarting] = useState(false);
 
   const startTriggeredRef = useRef(false);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Fetch challenge and profiles
   useEffect(() => {
@@ -49,7 +81,6 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       const c = data as Challenge;
 
-      // If challenge already has a match, redirect to it
       if (c.match_id) {
         router.replace(`/play/${c.match_id}`);
         return;
@@ -69,7 +100,6 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       setChallenge(c);
 
-      // Fetch both profiles
       const { data: sp } = await supabase
         .from('profiles')
         .select('*')
@@ -92,7 +122,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     fetchChallenge();
   }, [code, user, authLoading, router, supabase]);
 
-  // Start the match when both are online
+  // Start the match
   const startMatch = useCallback(async () => {
     if (startTriggeredRef.current) return;
     startTriggeredRef.current = true;
@@ -121,7 +151,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     }
   }, [code, router]);
 
-  // Set up Presence channel and challenge realtime subscription
+  // Presence channel — separate from postgres_changes for reliability
   useEffect(() => {
     if (!challenge || !user) return;
 
@@ -137,39 +167,40 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         setSenderOnline(sOn);
         setRecipientOnline(rOn);
 
-        // When both online, start the match
         if (sOn && rOn && !startTriggeredRef.current) {
           startMatch();
         }
       })
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'challenges',
-          filter: `id=eq.${challenge.id}`,
-        },
-        (payload) => {
-          const updated = payload.new as Challenge;
-          if (updated.match_id) {
-            router.replace(`/play/${updated.match_id}`);
-          }
-        }
-      )
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel.track({ user_id: user.id, online_at: new Date().toISOString() });
         }
       });
 
-    channelRef.current = channel;
-
     return () => {
       supabase.removeChannel(channel);
-      channelRef.current = null;
     };
-  }, [challenge, user, code, supabase, router, startMatch]);
+  }, [challenge, user, code, supabase, startMatch]);
+
+  // Polling fallback: check if challenge got a match_id every 3 seconds
+  // This ensures redirection works even if Presence or realtime has issues
+  useEffect(() => {
+    if (!challenge || starting) return;
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('challenges')
+        .select('match_id')
+        .eq('id', challenge.id)
+        .single();
+
+      if (data?.match_id) {
+        router.replace(`/play/${data.match_id}`);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [challenge, starting, supabase, router]);
 
   if (loading || authLoading) {
     return (
@@ -199,39 +230,6 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   const opponentProfile = isUserSender ? recipientProfile : senderProfile;
   const opponentOnline = isUserSender ? recipientOnline : senderOnline;
   const myOnline = isUserSender ? senderOnline : recipientOnline;
-
-  const PlayerCard = ({ profile, online, isYou }: { profile: Profile | null; online: boolean; isYou: boolean }) => {
-    if (!profile) return null;
-    const winRate = profile.games_played > 0
-      ? Math.round((profile.games_won / profile.games_played) * 100)
-      : 0;
-
-    return (
-      <div className={`border rounded-sm p-6 flex-1 min-w-[200px] transition-colors ${
-        isYou ? 'border-white/[0.12] bg-white/[0.03]' : 'border-white/[0.06] bg-white/[0.01]'
-      }`}>
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`w-2 h-2 rounded-full ${online ? 'bg-green-400/80' : 'bg-white/10'}`} />
-          <span className="text-[9px] tracking-[2px] text-white/30">
-            {online ? 'ONLINE' : 'OFFLINE'}
-          </span>
-        </div>
-        <div className="font-serif text-lg text-white/80 mb-1">
-          {profile.display_name || profile.username}
-        </div>
-        <div className="font-mono text-sm text-white/30 mb-3">
-          Elo {profile.elo_rating.toLocaleString()}
-        </div>
-        <div className="flex gap-4 text-[11px] text-white/20">
-          <span>{profile.games_played} played</span>
-          <span>{winRate}% win</span>
-        </div>
-        {isYou && (
-          <div className="text-[9px] tracking-[1.5px] text-white/15 mt-3">YOU</div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
