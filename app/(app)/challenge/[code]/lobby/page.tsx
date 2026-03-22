@@ -154,7 +154,8 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       }
 
       if (data.status === 'waiting') {
-        setMyReady(true);
+        setMyReady(data.myReady ?? true);
+        setOpponentReady(data.opponentReady ?? false);
       }
 
       if (data.error && res.status === 409) {
