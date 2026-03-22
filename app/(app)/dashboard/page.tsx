@@ -29,55 +29,89 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (profileData) setProfile(profileData as Profile);
+
+    const { data: matchData } = await supabase
+      .from('matches')
+      .select('*')
+      .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(5);
+
+    if (matchData) {
+      const matches = matchData as Match[];
+      setRecentMatches(matches);
+
+      const opponentIds = matches.map(m =>
+        m.player1_id === user.id ? m.player2_id : m.player1_id
+      ).filter((id): id is string => id !== null);
+
+      if (opponentIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, display_name')
+          .in('id', opponentIds);
+
+        if (profiles) {
+          const names: Record<string, string> = {};
+          for (const p of profiles) {
+            names[p.id] = p.display_name || p.username;
+          }
+          setOpponentNames(names);
+        }
+      }
+    }
+  }, [user, supabase]);
+
+  // Initial data fetch
+  useEffect(() => {
+    if (!user) return;
+    fetchData();
+    fetchChallenges();
+  }, [user, fetchData, fetchChallenges]);
+
+  // Realtime subscriptions for challenges and matches
   useEffect(() => {
     if (!user) return;
 
-    const fetchData = async () => {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileData) setProfile(profileData as Profile);
-
-      const { data: matchData } = await supabase
-        .from('matches')
-        .select('*')
-        .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false })
-        .limit(5);
-
-      if (matchData) {
-        const matches = matchData as Match[];
-        setRecentMatches(matches);
-
-        // Fetch opponent names
-        const opponentIds = matches.map(m =>
-          m.player1_id === user.id ? m.player2_id : m.player1_id
-        ).filter((id): id is string => id !== null);
-
-        if (opponentIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, username, display_name')
-            .in('id', opponentIds);
-
-          if (profiles) {
-            const names: Record<string, string> = {};
-            for (const p of profiles) {
-              names[p.id] = p.display_name || p.username;
-            }
-            setOpponentNames(names);
+    const channel = supabase
+      .channel('dashboard-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'challenges' },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as Record<string, unknown> | undefined;
+          if (row && (row.sender_id === user.id || row.recipient_id === user.id)) {
+            fetchChallenges();
           }
         }
-      }
-    };
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          if (row.player1_id === user.id || row.player2_id === user.id) {
+            fetchData();
+          }
+        }
+      )
+      .subscribe();
 
-    fetchData();
-    fetchChallenges();
-  }, [user]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, supabase, fetchData, fetchChallenges]);
 
   const handleDecline = async (challengeCode: string) => {
     try {
@@ -229,7 +263,7 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
                     </div>
                     <Link
-                      href="/play?autoSearch=true"
+                      href={`/challenge/${challenge.code}/lobby`}
                       className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
                     >
                       PLAY NOW
@@ -289,7 +323,7 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
                     </div>
                     <Link
-                      href="/play?autoSearch=true"
+                      href={`/challenge/${challenge.code}/lobby`}
                       className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
                     >
                       PLAY NOW

@@ -16,7 +16,7 @@ interface MatchBoardProps {
 }
 
 export function MatchBoard({ matchId }: MatchBoardProps) {
-  const { match, loading, submitAnswer, abandonMatch } = useMatch(matchId);
+  const { match, loading, submitAnswer, abandonMatch, refetchMatch } = useMatch(matchId);
   const { user } = useAuth();
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [player1Profile, setPlayer1Profile] = useState<Profile | null>(null);
@@ -60,14 +60,30 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         | ((correct: boolean) => void)
         | undefined;
 
+      // Server error (e.g. match already completed by opponent)
+      if (result.error) {
+        refetchMatch();
+        return;
+      }
+
+      // Correct answer that completed the match (we won)
+      if (result.correct && result.matchStatus === 'completed') {
+        feedbackFn?.(true);
+        refetchMatch();
+        return;
+      }
+
+      // Normal correct answer
       if (result.correct) {
         feedbackFn?.(true);
         setCurrentProblemIndex((prev) => prev + 1);
-      } else {
-        feedbackFn?.(false);
+        return;
       }
+
+      // Wrong answer
+      feedbackFn?.(false);
     },
-    [match, currentProblemIndex, submitAnswer]
+    [match, currentProblemIndex, submitAnswer, refetchMatch]
   );
 
   if (loading) {

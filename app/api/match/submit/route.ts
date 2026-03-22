@@ -89,13 +89,13 @@ export async function POST(request: Request) {
         // Calculate Elo
         const { data: player1Profile } = await supabase
           .from('profiles')
-          .select('elo_rating, games_played')
+          .select('elo_rating, games_played, games_won')
           .eq('id', match.player1_id)
           .single();
 
         const { data: player2Profile } = await supabase
           .from('profiles')
-          .select('elo_rating, games_played')
+          .select('elo_rating, games_played, games_won')
           .eq('id', match.player2_id)
           .single();
 
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
             .update({
               elo_rating: newRatingA,
               games_played: player1Profile.games_played + 1,
-              games_won: isPlayer1 ? (player1Profile.games_played + 1) : player1Profile.games_played,
+              games_won: isPlayer1 ? (player1Profile.games_won + 1) : player1Profile.games_won,
             })
             .eq('id', match.player1_id);
 
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
             .update({
               elo_rating: newRatingB,
               games_played: player2Profile.games_played + 1,
-              games_won: isPlayer2 ? (player2Profile.games_played + 1) : player2Profile.games_played,
+              games_won: isPlayer2 ? (player2Profile.games_won + 1) : player2Profile.games_won,
             })
             .eq('id', match.player2_id);
         }

@@ -9,22 +9,25 @@ export function useMatch(matchId: string) {
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
-  useEffect(() => {
-    // Fetch initial match state
-    const fetchMatch = async () => {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('id', matchId)
-        .single();
+  const refetchMatch = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('id', matchId)
+      .single();
 
-      if (!error && data) {
-        setMatch(data as Match);
-      }
+    if (!error && data) {
+      setMatch(data as Match);
+    }
+  }, [matchId, supabase]);
+
+  useEffect(() => {
+    const fetchInitial = async () => {
+      await refetchMatch();
       setLoading(false);
     };
 
-    fetchMatch();
+    fetchInitial();
 
     // Subscribe to realtime updates
     const channel = supabase
@@ -46,7 +49,7 @@ export function useMatch(matchId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [matchId]);
+  }, [matchId, refetchMatch, supabase]);
 
   const submitAnswer = useCallback(
     async (problemIndex: number, answer: number) => {
@@ -55,7 +58,11 @@ export function useMatch(matchId: string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId, problemIndex, answer }),
       });
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Request failed', ...data };
+      }
+      return data;
     },
     [matchId]
   );
@@ -69,5 +76,5 @@ export function useMatch(matchId: string) {
     return res.json();
   }, [matchId]);
 
-  return { match, loading, submitAnswer, abandonMatch };
+  return { match, loading, submitAnswer, abandonMatch, refetchMatch };
 }
