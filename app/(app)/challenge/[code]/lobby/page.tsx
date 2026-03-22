@@ -20,7 +20,7 @@ function PlayerCard({ profile, online, isYou }: { profile: Profile | null; onlin
       <div className="flex items-center gap-2 mb-4">
         <div className={`w-2 h-2 rounded-full transition-colors ${online ? 'bg-green-400/80' : 'bg-white/10'}`} />
         <span className="text-[9px] tracking-[2px] text-white/30">
-          {online ? 'ONLINE' : 'OFFLINE'}
+          {online ? 'READY' : 'WAITING'}
         </span>
       </div>
       <div className="font-serif text-lg text-white/80 mb-1">
@@ -51,11 +51,12 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   const [recipientProfile, setRecipientProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [senderOnline, setSenderOnline] = useState(false);
-  const [recipientOnline, setRecipientOnline] = useState(false);
+  const [myReady, setMyReady] = useState(false);
+  const [opponentReady, setOpponentReady] = useState(false);
   const [starting, setStarting] = useState(false);
 
-  const startTriggeredRef = useRef(false);
+  const registeredRef = useRef(false);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch challenge and profiles
   useEffect(() => {
@@ -81,9 +82,18 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       const c = data as Challenge;
 
+      // If challenge already has an active match, redirect to it
       if (c.match_id) {
-        router.replace(`/play/${c.match_id}`);
-        return;
+        const { data: match } = await supabase
+          .from('matches')
+          .select('id, status')
+          .eq('id', c.match_id)
+          .single();
+
+        if (match?.status === 'active' || match?.status === 'completed') {
+          router.replace(`/play/${c.match_id}`);
+          return;
+        }
       }
 
       if (c.status !== 'accepted') {
@@ -122,11 +132,11 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     fetchChallenge();
   }, [code, user, authLoading, router, supabase]);
 
-  // Start the match
-  const startMatch = useCallback(async () => {
-    if (startTriggeredRef.current) return;
-    startTriggeredRef.current = true;
-    setStarting(true);
+  // Register this player as ready (call /api/challenge/start)
+  // First player creates the waiting match, second player will activate it via polling
+  const registerReady = useCallback(async () => {
+    if (registeredRef.current) return;
+    registeredRef.current = true;
 
     try {
       const res = await fetch('/api/challenge/start', {
@@ -137,70 +147,80 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       const data = await res.json();
 
-      if (data.matchId) {
+      if (data.status === 'active' || data.status === 'completed') {
+        // Match is already active (both players ready or match exists)
+        setStarting(true);
         router.replace(`/play/${data.matchId}`);
-      } else {
-        setError(data.error || 'Failed to start match');
-        setStarting(false);
-        startTriggeredRef.current = false;
+        return;
+      }
+
+      if (data.status === 'waiting') {
+        // First player — match created as waiting
+        setMyReady(true);
+      }
+
+      if (data.error && res.status === 409) {
+        // Already in another match
+        setError(data.error);
       }
     } catch {
-      setError('Failed to start match');
-      setStarting(false);
-      startTriggeredRef.current = false;
+      // Retry on next poll cycle
+      registeredRef.current = false;
     }
   }, [code, router]);
 
-  // Presence channel — separate from postgres_changes for reliability
+  // Auto-register when challenge is loaded
   useEffect(() => {
-    if (!challenge || !user) return;
+    if (challenge && user && !registeredRef.current) {
+      registerReady();
+    }
+  }, [challenge, user, registerReady]);
 
-    const channel = supabase.channel(`lobby:${code}`, {
-      config: { presence: { key: user.id } },
-    });
+  // Poll: check challenge match status every 2 seconds
+  // When first player creates waiting match, second player's poll detects it and activates
+  useEffect(() => {
+    if (!challenge || !user || starting) return;
 
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const sOn = !!state[challenge.sender_id]?.length;
-        const rOn = !!state[challenge.recipient_id!]?.length;
-        setSenderOnline(sOn);
-        setRecipientOnline(rOn);
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/challenge/ready', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
 
-        if (sOn && rOn && !startTriggeredRef.current) {
-          startMatch();
+        const data = await res.json();
+
+        if (data.status === 'active') {
+          // Both players ready — match activated
+          setStarting(true);
+          setMyReady(true);
+          setOpponentReady(true);
+          if (pollRef.current) clearInterval(pollRef.current);
+          router.replace(`/play/${data.matchId}`);
+          return;
         }
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track({ user_id: user.id, online_at: new Date().toISOString() });
+
+        if (data.status === 'waiting') {
+          // Match exists but only one player ready
+          // If we haven't registered yet, we're the second player — ready endpoint activated it next call
+          setOpponentReady(true);
+          if (!registeredRef.current) {
+            registeredRef.current = true;
+            setMyReady(true);
+          }
         }
-      });
+      } catch {
+        // Silently retry next cycle
+      }
+    };
+
+    pollRef.current = setInterval(poll, 2000);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [challenge, user, code, supabase, startMatch]);
-
-  // Polling fallback: check if challenge got a match_id every 3 seconds
-  // This ensures redirection works even if Presence or realtime has issues
-  useEffect(() => {
-    if (!challenge || starting) return;
-
-    const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from('challenges')
-        .select('match_id')
-        .eq('id', challenge.id)
-        .single();
-
-      if (data?.match_id) {
-        router.replace(`/play/${data.match_id}`);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [challenge, starting, supabase, router]);
+  }, [challenge, user, starting, code, router]);
 
   if (loading || authLoading) {
     return (
@@ -228,8 +248,6 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
   const isUserSender = user?.id === challenge.sender_id;
   const opponentProfile = isUserSender ? recipientProfile : senderProfile;
-  const opponentOnline = isUserSender ? recipientOnline : senderOnline;
-  const myOnline = isUserSender ? senderOnline : recipientOnline;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
@@ -243,7 +261,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full max-w-lg">
         <PlayerCard
           profile={isUserSender ? senderProfile : recipientProfile}
-          online={myOnline}
+          online={myReady}
           isYou={true}
         />
         <div className="flex items-center justify-center">
@@ -251,7 +269,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         </div>
         <PlayerCard
           profile={opponentProfile}
-          online={opponentOnline}
+          online={opponentReady}
           isYou={false}
         />
       </div>
@@ -264,12 +282,12 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       ) : (
         <div className="text-center">
           <p className="text-white/30 text-[13px] mb-6">
-            {opponentOnline
+            {opponentReady
               ? 'Both players are here. Starting...'
               : `Waiting for ${opponentProfile?.display_name || opponentProfile?.username || 'opponent'} to join...`
             }
           </p>
-          {!opponentOnline && (
+          {!opponentReady && (
             <div className="w-10 h-10 mx-auto border border-white/10 border-t-white/40 rounded-full animate-spin" />
           )}
         </div>

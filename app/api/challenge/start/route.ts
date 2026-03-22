@@ -40,31 +40,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Challenge is not accepted' }, { status: 400 });
     }
 
-    // Verify caller is a participant
     if (challenge.sender_id !== user.id && challenge.recipient_id !== user.id) {
       return NextResponse.json({ error: 'Not a participant' }, { status: 403 });
     }
 
-    // Check expiry
     if (new Date(challenge.expires_at) < new Date()) {
       return NextResponse.json({ error: 'Challenge has expired' }, { status: 400 });
     }
 
-    // Idempotency: if challenge already has a match, return it
+    // If challenge already has a match, check its status
     if (challenge.match_id) {
       const { data: existingMatch } = await supabase
         .from('matches')
-        .select('id, status')
+        .select('id, status, player1_id, player2_id')
         .eq('id', challenge.match_id)
         .single();
 
       if (existingMatch) {
+        // If match is waiting, the second player activates it
+        if (existingMatch.status === 'waiting') {
+          const isAlreadyInMatch =
+            existingMatch.player1_id === user.id || existingMatch.player2_id === user.id;
+
+          if (isAlreadyInMatch) {
+            // Same player calling again — just return waiting status
+            return NextResponse.json({ matchId: existingMatch.id, status: 'waiting' });
+          }
+        }
+
+        // If match is active or completed, just return it
         return NextResponse.json({ matchId: existingMatch.id, status: existingMatch.status });
       }
     }
 
-    // Check neither player is in an existing active/waiting match
-    const { data: existingMatch } = await supabase
+    // Check the player isn't in another active/waiting match
+    const { data: playerMatch } = await supabase
       .from('matches')
       .select('id, status')
       .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
@@ -72,9 +82,9 @@ export async function POST(request: Request) {
       .limit(1)
       .single();
 
-    if (existingMatch) {
+    if (playerMatch) {
       return NextResponse.json(
-        { error: 'You are already in an active match', matchId: existingMatch.id },
+        { error: 'You are already in an active match', matchId: playerMatch.id },
         { status: 409 }
       );
     }
@@ -99,18 +109,18 @@ export async function POST(request: Request) {
     const avgElo = Math.round((senderProfile.elo_rating + recipientProfile.elo_rating) / 2);
     const problems = generateProblems(avgElo, GAME_CONFIG.TARGET_SCORE + GAME_CONFIG.PROBLEMS_BUFFER);
 
-    // Create the match
+    // Stage 1: First player creates a 'waiting' match
+    // Stage 2: Second player will activate it (handled above when match_id exists)
     const { data: newMatch, error: createError } = await supabase
       .from('matches')
       .insert({
         player1_id: challenge.sender_id,
         player2_id: challenge.recipient_id,
-        status: 'active',
+        status: 'waiting',
         problems: JSON.parse(JSON.stringify(problems)),
         avg_difficulty: avgElo,
         player1_elo_before: senderProfile.elo_rating,
         player2_elo_before: recipientProfile.elo_rating,
-        started_at: new Date().toISOString(),
         target_score: GAME_CONFIG.TARGET_SCORE,
       })
       .select('id, status')
@@ -140,13 +150,13 @@ export async function POST(request: Request) {
         .single();
 
       if (refreshed?.match_id) {
-        return NextResponse.json({ matchId: refreshed.match_id, status: 'active' });
+        return NextResponse.json({ matchId: refreshed.match_id, status: 'waiting' });
       }
 
       return NextResponse.json({ error: 'Failed to start challenge' }, { status: 500 });
     }
 
-    return NextResponse.json({ matchId: newMatch.id, status: 'active' });
+    return NextResponse.json({ matchId: newMatch.id, status: 'waiting' });
   } catch (error) {
     console.error('Challenge start error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
