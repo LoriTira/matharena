@@ -48,28 +48,69 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Challenge has expired' }, { status: 400 });
     }
 
-    // If challenge already has a match, check its status
+    const opponentId = challenge.sender_id === user.id ? challenge.recipient_id : challenge.sender_id;
+
+    // If challenge already has a match, handle based on state
     if (challenge.match_id) {
       const { data: existingMatch } = await supabase
         .from('matches')
-        .select('id, status, player1_id, player2_id')
+        .select('*')
         .eq('id', challenge.match_id)
         .single();
 
       if (existingMatch) {
-        // If match is waiting, the second player activates it
-        if (existingMatch.status === 'waiting') {
-          const isAlreadyInMatch =
-            existingMatch.player1_id === user.id || existingMatch.player2_id === user.id;
-
-          if (isAlreadyInMatch) {
-            // Same player calling again — just return waiting status
-            return NextResponse.json({ matchId: existingMatch.id, status: 'waiting' });
-          }
+        // Already active or completed — just redirect
+        if (existingMatch.status === 'active' || existingMatch.status === 'completed') {
+          return NextResponse.json({ matchId: existingMatch.id, status: existingMatch.status });
         }
 
-        // If match is active or completed, just return it
-        return NextResponse.json({ matchId: existingMatch.id, status: existingMatch.status });
+        // Match is waiting — check if THIS user is the one who created it
+        if (existingMatch.status === 'waiting') {
+          if (existingMatch.player1_id === user.id) {
+            // Same player polling again — still waiting for opponent
+            return NextResponse.json({ matchId: existingMatch.id, status: 'waiting' });
+          }
+
+          // Second player arriving! Activate the match
+          const { data: myProfile } = await supabase
+            .from('profiles')
+            .select('elo_rating')
+            .eq('id', user.id)
+            .single();
+
+          const { data: opponentProfile } = await supabase
+            .from('profiles')
+            .select('elo_rating')
+            .eq('id', existingMatch.player1_id)
+            .single();
+
+          if (!myProfile || !opponentProfile) {
+            return NextResponse.json({ error: 'Profiles not found' }, { status: 404 });
+          }
+
+          const avgElo = Math.round((myProfile.elo_rating + opponentProfile.elo_rating) / 2);
+          const problems = generateProblems(avgElo, GAME_CONFIG.TARGET_SCORE + GAME_CONFIG.PROBLEMS_BUFFER);
+
+          const { error: activateError } = await supabase
+            .from('matches')
+            .update({
+              player2_id: user.id,
+              status: 'active',
+              problems: JSON.parse(JSON.stringify(problems)),
+              avg_difficulty: avgElo,
+              player1_elo_before: opponentProfile.elo_rating,
+              player2_elo_before: myProfile.elo_rating,
+              started_at: new Date().toISOString(),
+            })
+            .eq('id', existingMatch.id)
+            .eq('status', 'waiting');
+
+          if (activateError) {
+            return NextResponse.json({ error: 'Failed to activate match' }, { status: 500 });
+          }
+
+          return NextResponse.json({ matchId: existingMatch.id, status: 'active' });
+        }
       }
     }
 
@@ -89,38 +130,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch both players' Elo
-    const { data: senderProfile } = await supabase
-      .from('profiles')
-      .select('elo_rating')
-      .eq('id', challenge.sender_id)
-      .single();
-
-    const { data: recipientProfile } = await supabase
-      .from('profiles')
-      .select('elo_rating')
-      .eq('id', challenge.recipient_id)
-      .single();
-
-    if (!senderProfile || !recipientProfile) {
-      return NextResponse.json({ error: 'Player profiles not found' }, { status: 404 });
-    }
-
-    const avgElo = Math.round((senderProfile.elo_rating + recipientProfile.elo_rating) / 2);
-    const problems = generateProblems(avgElo, GAME_CONFIG.TARGET_SCORE + GAME_CONFIG.PROBLEMS_BUFFER);
-
-    // Stage 1: First player creates a 'waiting' match
-    // Stage 2: Second player will activate it (handled above when match_id exists)
+    // First player: create a waiting match with only player1 set
     const { data: newMatch, error: createError } = await supabase
       .from('matches')
       .insert({
-        player1_id: challenge.sender_id,
-        player2_id: challenge.recipient_id,
+        player1_id: user.id,
         status: 'waiting',
-        problems: JSON.parse(JSON.stringify(problems)),
-        avg_difficulty: avgElo,
-        player1_elo_before: senderProfile.elo_rating,
-        player2_elo_before: recipientProfile.elo_rating,
+        avg_difficulty: 1200,
         target_score: GAME_CONFIG.TARGET_SCORE,
       })
       .select('id, status')
@@ -130,7 +146,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to create match' }, { status: 500 });
     }
 
-    // Link challenge to match (optimistic lock: only if match_id is still null)
+    // Link challenge to match (optimistic lock)
     const { data: updated } = await supabase
       .from('challenges')
       .update({ match_id: newMatch.id })

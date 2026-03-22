@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import type { Challenge, Profile } from '@/types';
 
-function PlayerCard({ profile, online, isYou }: { profile: Profile | null; online: boolean; isYou: boolean }) {
+function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready: boolean; isYou: boolean }) {
   if (!profile) return null;
   const winRate = profile.games_played > 0
     ? Math.round((profile.games_won / profile.games_played) * 100)
@@ -18,9 +18,9 @@ function PlayerCard({ profile, online, isYou }: { profile: Profile | null; onlin
       isYou ? 'border-white/[0.12] bg-white/[0.03]' : 'border-white/[0.06] bg-white/[0.01]'
     }`}>
       <div className="flex items-center gap-2 mb-4">
-        <div className={`w-2 h-2 rounded-full transition-colors ${online ? 'bg-green-400/80' : 'bg-white/10'}`} />
+        <div className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400/80' : 'bg-white/10'}`} />
         <span className="text-[9px] tracking-[2px] text-white/30">
-          {online ? 'READY' : 'WAITING'}
+          {ready ? 'READY' : 'WAITING'}
         </span>
       </div>
       <div className="font-serif text-lg text-white/80 mb-1">
@@ -55,7 +55,6 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   const [opponentReady, setOpponentReady] = useState(false);
   const [starting, setStarting] = useState(false);
 
-  const registeredRef = useRef(false);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch challenge and profiles
@@ -82,7 +81,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       const c = data as Challenge;
 
-      // If challenge already has an active match, redirect to it
+      // If challenge already has an active match, redirect
       if (c.match_id) {
         const { data: match } = await supabase
           .from('matches')
@@ -132,12 +131,10 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     fetchChallenge();
   }, [code, user, authLoading, router, supabase]);
 
-  // Register this player as ready (call /api/challenge/start)
-  // First player creates the waiting match, second player will activate it via polling
-  const registerReady = useCallback(async () => {
-    if (registeredRef.current) return;
-    registeredRef.current = true;
-
+  // Call /api/challenge/start — handles both stages:
+  // First player: creates waiting match. Second player: activates it.
+  // Same player calling again: returns current status without change.
+  const callStart = useCallback(async () => {
     try {
       const res = await fetch('/api/challenge/start', {
         method: 'POST',
@@ -147,80 +144,41 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       const data = await res.json();
 
-      if (data.status === 'active' || data.status === 'completed') {
-        // Match is already active (both players ready or match exists)
+      if (data.status === 'active') {
+        setMyReady(true);
+        setOpponentReady(true);
         setStarting(true);
+        if (pollRef.current) clearInterval(pollRef.current);
         router.replace(`/play/${data.matchId}`);
         return;
       }
 
       if (data.status === 'waiting') {
-        // First player — match created as waiting
         setMyReady(true);
       }
 
       if (data.error && res.status === 409) {
-        // Already in another match
         setError(data.error);
       }
     } catch {
-      // Retry on next poll cycle
-      registeredRef.current = false;
+      // Will retry on next poll
     }
   }, [code, router]);
 
-  // Auto-register when challenge is loaded
-  useEffect(() => {
-    if (challenge && user && !registeredRef.current) {
-      registerReady();
-    }
-  }, [challenge, user, registerReady]);
-
-  // Poll: check challenge match status every 2 seconds
-  // When first player creates waiting match, second player's poll detects it and activates
+  // Register + poll: call start immediately, then every 2s
   useEffect(() => {
     if (!challenge || !user || starting) return;
 
-    const poll = async () => {
-      try {
-        const res = await fetch('/api/challenge/ready', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code }),
-        });
+    // Initial call
+    callStart();
 
-        const data = await res.json();
-
-        if (data.status === 'active') {
-          // Both players ready — match activated
-          setStarting(true);
-          setMyReady(true);
-          setOpponentReady(true);
-          if (pollRef.current) clearInterval(pollRef.current);
-          router.replace(`/play/${data.matchId}`);
-          return;
-        }
-
-        if (data.status === 'waiting') {
-          // Match exists but only one player ready
-          // If we haven't registered yet, we're the second player — ready endpoint activated it next call
-          setOpponentReady(true);
-          if (!registeredRef.current) {
-            registeredRef.current = true;
-            setMyReady(true);
-          }
-        }
-      } catch {
-        // Silently retry next cycle
-      }
-    };
-
-    pollRef.current = setInterval(poll, 2000);
+    // Poll every 2 seconds
+    pollRef.current = setInterval(callStart, 2000);
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [challenge, user, starting, code, router]);
+  }, [challenge, user, starting, callStart]);
 
   if (loading || authLoading) {
     return (
@@ -261,7 +219,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full max-w-lg">
         <PlayerCard
           profile={isUserSender ? senderProfile : recipientProfile}
-          online={myReady}
+          ready={myReady}
           isYou={true}
         />
         <div className="flex items-center justify-center">
@@ -269,7 +227,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         </div>
         <PlayerCard
           profile={opponentProfile}
-          online={opponentReady}
+          ready={opponentReady}
           isYou={false}
         />
       </div>
