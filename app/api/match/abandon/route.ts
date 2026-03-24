@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 import { calculateElo } from '@/lib/match/elo';
 import { z } from 'zod';
@@ -81,7 +82,11 @@ export async function POST(request: Request) {
         updates.player1_elo_after = newRatingA;
         updates.player2_elo_after = newRatingB;
 
-        await supabase
+        // Use admin client to bypass RLS — the abandoner can't update
+        // the opponent's profile with the anon-key client
+        const admin = createAdminClient();
+
+        await (admin as unknown as typeof supabase)
           .from('profiles')
           .update({
             elo_rating: newRatingA,
@@ -90,7 +95,7 @@ export async function POST(request: Request) {
           })
           .eq('id', match.player1_id);
 
-        await supabase
+        await (admin as unknown as typeof supabase)
           .from('profiles')
           .update({
             elo_rating: newRatingB,

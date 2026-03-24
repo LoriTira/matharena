@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 import { calculateElo } from '@/lib/match/elo';
 import { checkAchievements } from '@/lib/achievements/checker';
@@ -113,8 +114,12 @@ export async function POST(request: Request) {
           updates.player1_elo_after = newRatingA;
           updates.player2_elo_after = newRatingB;
 
-          // Update both profiles
-          await supabase
+          // Update both profiles using admin client to bypass RLS
+          // (the authenticated user is the winner — RLS would block
+          //  updating the loser's profile with the anon-key client)
+          const admin = createAdminClient();
+
+          await (admin as unknown as typeof supabase)
             .from('profiles')
             .update({
               elo_rating: newRatingA,
@@ -123,7 +128,7 @@ export async function POST(request: Request) {
             })
             .eq('id', match.player1_id);
 
-          await supabase
+          await (admin as unknown as typeof supabase)
             .from('profiles')
             .update({
               elo_rating: newRatingB,
