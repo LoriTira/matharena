@@ -6,7 +6,7 @@ const resend = process.env.RESEND_API_KEY
 
 // Use EMAIL_FROM env var for production (requires verified domain in Resend).
 // Falls back to Resend's shared test domain which works without domain setup.
-const FROM_EMAIL = process.env.EMAIL_FROM || 'MathArena <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'MathArena <noreply@mathsarena.com>';
 
 export async function sendChallengeEmail({
   to,

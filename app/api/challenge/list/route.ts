@@ -10,12 +10,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch challenges where user is sender or recipient, not expired
+    // Fetch challenges where user is sender or recipient, not expired, not yet played
     const { data: challenges, error } = await supabase
       .from('challenges')
       .select('*')
       .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
       .in('status', ['pending', 'accepted'])
+      .is('match_id', null)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });
 

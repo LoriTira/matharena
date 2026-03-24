@@ -3,9 +3,10 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useMatchmaking } from '@/hooks/useMatchmaking';
+import { GAME_CONFIG } from '@/lib/constants';
 
 function PlayContent() {
-  const { isSearching, error, findMatch, cancel } = useMatchmaking();
+  const { isSearching, error, eloRange, findMatch, cancel } = useMatchmaking();
   const searchParams = useSearchParams();
   const router = useRouter();
   const hasAutoSearched = useRef(false);
@@ -40,6 +41,11 @@ function PlayContent() {
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border border-edge-strong border-t-ink-secondary rounded-full animate-spin" />
           <p className="text-ink-tertiary text-[15px]">Finding an opponent...</p>
+          {eloRange > GAME_CONFIG.MATCHMAKING_ELO_RANGE_INITIAL && (
+            <p className="text-ink-faint text-[12px] font-mono tabular-nums">
+              Widening search range&hellip; &plusmn;{eloRange} Elo
+            </p>
+          )}
           <button
             onClick={cancel}
             className="px-6 py-2 text-[12px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"

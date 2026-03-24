@@ -138,18 +138,39 @@ export async function POST(request: Request) {
     // Ensure player isn't in another active match
     const { data: playerMatch } = await supabase
       .from('matches')
-      .select('id, status')
+      .select('id, status, started_at')
       .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
       .in('status', ['active'])
       .limit(1)
       .single();
 
     if (playerMatch) {
-      return NextResponse.json(
-        { error: 'You are already in an active match', matchId: playerMatch.id },
-        { status: 409 }
-      );
+      // If the active match is stale (>10 min), abandon it automatically
+      const staleMs = GAME_CONFIG.MATCH_STALE_TIMEOUT_MINUTES * 60 * 1000;
+      const matchAge = playerMatch.started_at
+        ? Date.now() - new Date(playerMatch.started_at).getTime()
+        : Infinity;
+
+      if (matchAge > staleMs) {
+        await supabase
+          .from('matches')
+          .update({ status: 'abandoned', completed_at: new Date().toISOString() })
+          .eq('id', playerMatch.id)
+          .eq('status', 'active');
+      } else {
+        return NextResponse.json(
+          { error: 'You are already in an active match', matchId: playerMatch.id },
+          { status: 409 }
+        );
+      }
     }
+
+    // Also abandon any stale waiting matches from regular matchmaking
+    await supabase
+      .from('matches')
+      .update({ status: 'abandoned' })
+      .eq('player1_id', user.id)
+      .eq('status', 'waiting');
 
     // Fetch profiles for Elo and problem generation
     const [{ data: senderProfile }, { data: recipientProfile }] = await Promise.all([

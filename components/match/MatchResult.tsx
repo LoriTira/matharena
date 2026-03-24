@@ -345,31 +345,31 @@ export function MatchResult({
           <button
             onClick={handleRematch}
             disabled={rematchLoading}
-            className="px-10 py-3.5 font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors bg-accent text-on-accent hover:bg-accent/90 disabled:opacity-40"
+            className="px-12 py-4 font-semibold text-sm tracking-[2px] rounded-sm transition-colors bg-btn text-btn-text hover:bg-btn-hover disabled:opacity-40"
           >
             {rematchLoading ? 'CREATING...' : 'REMATCH'}
           </button>
         )}
 
-        <Link
-          href="/play"
-          className="px-6 py-3 border border-edge-strong text-ink-secondary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
-        >
-          PLAY AGAIN
-        </Link>
-
         {matchId && (
           <Link
             href={`/play/${matchId}/analysis`}
-            className="px-6 py-3 border border-edge-strong text-ink-secondary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+            className="px-6 py-3 border border-edge text-ink-tertiary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
           >
             GAME ANALYSIS
           </Link>
         )}
 
+        <Link
+          href="/play"
+          className="px-6 py-3 border border-edge text-ink-tertiary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+        >
+          PLAY AGAIN
+        </Link>
+
         <button
           onClick={handleShare}
-          className="px-5 py-2.5 border border-edge text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-tertiary"
+          className="px-5 py-2.5 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
         >
           SHARE
         </button>
