@@ -25,12 +25,6 @@ const NAV_GROUPS = [
       { name: 'Lessons', href: '/lessons' },
     ],
   },
-  {
-    label: 'SOCIAL',
-    items: [
-      { name: 'Leaderboard', href: '/leaderboard' },
-    ],
-  },
 ] as const;
 
 // ─── Shared styles ────────────────────────────────────────
@@ -133,6 +127,11 @@ export function Navbar() {
                           </div>
                         </Dropdown>
                       ))}
+
+                      {/* Leaderboard */}
+                      <Link href="/leaderboard" className={triggerClass}>
+                        RANKINGS
+                      </Link>
 
                       {/* Challenge CTA */}
                       <button
@@ -306,6 +305,17 @@ export function Navbar() {
                     ))}
                   </div>
                 ))}
+
+                {/* Leaderboard */}
+                <div className="mb-5">
+                  <Link
+                    href="/leaderboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2.5 text-[13px] text-white/50 hover:text-white/80 hover:bg-white/[0.04] rounded-sm transition-colors"
+                  >
+                    Rankings
+                  </Link>
+                </div>
 
                 {/* Profile link */}
                 <div className="mb-5">
