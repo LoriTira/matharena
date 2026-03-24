@@ -3,7 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { Profile, Challenge } from '@/types';
+import type { Profile, Challenge, UserAchievement } from '@/types';
+import { ACHIEVEMENTS } from '@/lib/achievements';
+import { AchievementBadge } from '@/components/ui/AchievementBadge';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -16,6 +19,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [friends, setFriends] = useState<{ id: string; username: string; display_name: string | null; elo_rating: number }[]>([]);
   const [rechallengingId, setRechallengingId] = useState<string | null>(null);
+  const [earnedAchievementIds, setEarnedAchievementIds] = useState<Set<string>>(new Set());
   const supabase = createClient();
 
   const fetchFriends = useCallback(async () => {
@@ -69,6 +73,22 @@ export default function ProfilePage() {
 
     fetchProfile();
     fetchFriends();
+
+    const fetchAchievements = async () => {
+      try {
+        const { data } = await supabase
+          .from('user_achievements')
+          .select('achievement_id')
+          .eq('user_id', user.id);
+
+        if (data) {
+          setEarnedAchievementIds(new Set((data as Pick<UserAchievement, 'achievement_id'>[]).map(a => a.achievement_id)));
+        }
+      } catch {
+        // Table may not exist yet; ignore
+      }
+    };
+    fetchAchievements();
   }, [user, fetchFriends]);
 
   const handleSave = async () => {
@@ -94,8 +114,44 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-white/25">Loading profile...</div>
+      <div className="max-w-2xl mx-auto space-y-8">
+        {/* Profile card skeleton */}
+        <div className="border border-white/[0.06] rounded-sm p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-14 h-14 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-7 w-48" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+            <Skeleton className="h-8 w-28" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-4 w-44" />
+          </div>
+        </div>
+
+        {/* Stats grid skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04] rounded-sm overflow-hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-[#050505] p-5 flex flex-col items-center gap-2">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          ))}
+        </div>
+
+        {/* Trophy case skeleton */}
+        <div>
+          <Skeleton className="h-3 w-24 mb-4" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -254,6 +310,34 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Trophy Case */}
+      <div>
+        <div className="text-[9px] tracking-[3px] text-white/20 mb-4">TROPHY CASE</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {[...ACHIEVEMENTS]
+            .sort((a, b) => {
+              const aUnlocked = earnedAchievementIds.has(a.id);
+              const bUnlocked = earnedAchievementIds.has(b.id);
+              if (aUnlocked && !bUnlocked) return -1;
+              if (!aUnlocked && bUnlocked) return 1;
+              return 0;
+            })
+            .map((achievement) => (
+              <AchievementBadge
+                key={achievement.id}
+                achievement={achievement}
+                unlocked={earnedAchievementIds.has(achievement.id)}
+                size="md"
+              />
+            ))}
+        </div>
+        {earnedAchievementIds.size > 0 && (
+          <div className="text-center text-white/15 text-[11px] mt-4">
+            {earnedAchievementIds.size} / {ACHIEVEMENTS.length} unlocked
+          </div>
+        )}
+      </div>
     </div>
   );
 }

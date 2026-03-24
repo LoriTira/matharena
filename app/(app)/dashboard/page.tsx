@@ -1,11 +1,16 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
-import type { Profile, Match, Challenge } from '@/types';
+import { Card } from '@/components/ui/Card';
+import Sparkline from '@/components/ui/Sparkline';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { RankBadge } from '@/components/ui/RankBadge';
+import { getRank } from '@/lib/ranks';
+import type { Profile, Match, Challenge, UserAchievement, AchievementDef } from '@/types';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -13,9 +18,16 @@ export default function DashboardPage() {
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
   const [opponentNames, setOpponentNames] = useState<Record<string, string>>({});
   const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [challengeProfiles, setChallengeProfiles] = useState<Record<string, { username: string; display_name: string | null; elo_rating: number; games_won: number; games_played: number }>>({});
+  const [challengeProfiles, setChallengeProfiles] = useState<
+    Record<string, { username: string; display_name: string | null; elo_rating: number; games_won: number; games_played: number }>
+  >({});
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
-  const supabase = createClient();
+  const [sparklineData, setSparklineData] = useState<number[]>([]);
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
+  const [achievements, setAchievements] = useState<(UserAchievement & { achievement?: AchievementDef })[]>([]);
+  const [dailyStreak, setDailyStreak] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const supabase = useMemo(() => createClient(), []);
 
   const fetchChallenges = useCallback(async () => {
     try {
@@ -40,6 +52,7 @@ export default function DashboardPage() {
 
     if (profileData) setProfile(profileData as Profile);
 
+    // Recent matches (5 for display)
     const { data: matchData } = await supabase
       .from('matches')
       .select('*')
@@ -52,9 +65,9 @@ export default function DashboardPage() {
       const matches = matchData as Match[];
       setRecentMatches(matches);
 
-      const opponentIds = matches.map(m =>
-        m.player1_id === user.id ? m.player2_id : m.player1_id
-      ).filter((id): id is string => id !== null);
+      const opponentIds = matches
+        .map((m) => (m.player1_id === user.id ? m.player2_id : m.player1_id))
+        .filter((id): id is string => id !== null);
 
       if (opponentIds.length > 0) {
         const { data: profiles } = await supabase
@@ -71,6 +84,63 @@ export default function DashboardPage() {
         }
       }
     }
+
+    // Sparkline data: last 20 completed matches, extract user's elo_after
+    const { data: sparklineMatches } = await supabase
+      .from('matches')
+      .select('player1_id, player2_id, player1_elo_after, player2_elo_after, completed_at')
+      .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: true })
+      .limit(20);
+
+    if (sparklineMatches && sparklineMatches.length > 0) {
+      const eloHistory = sparklineMatches.map((m) => {
+        const isP1 = m.player1_id === user.id;
+        return (isP1 ? m.player1_elo_after : m.player2_elo_after) ?? 1000;
+      });
+      setSparklineData(eloHistory);
+    }
+
+    // Online player count
+    try {
+      const { count } = await supabase
+        .from('matches')
+        .select('id', { count: 'exact', head: true })
+        .in('status', ['waiting', 'active']);
+      setOnlineCount(count ?? 0);
+    } catch {
+      setOnlineCount(null);
+    }
+
+    // Achievements (graceful — table may not exist yet)
+    try {
+      const { data: achievementData } = await supabase
+        .from('user_achievements')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('unlocked_at', { ascending: false })
+        .limit(3);
+
+      if (achievementData) {
+        setAchievements(achievementData as (UserAchievement & { achievement?: AchievementDef })[]);
+      }
+    } catch {
+      // Table doesn't exist yet — will be built in Phase 4
+    }
+
+    // Daily streak (graceful — API may not exist yet)
+    try {
+      const res = await fetch('/api/daily/streak');
+      if (res.ok) {
+        const data = await res.json();
+        setDailyStreak(data.streak ?? 0);
+      }
+    } catch {
+      // API doesn't exist yet
+    }
+
+    setLoading(false);
   }, [user, supabase]);
 
   // Initial data fetch
@@ -141,275 +211,353 @@ export default function DashboardPage() {
     }
   };
 
-  if (!profile) {
+  // Loading state: skeleton grid
+  if (loading || !profile) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-white/25">Loading...</div>
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-56" />
+          <Skeleton className="h-56" />
+        </div>
       </div>
     );
   }
 
-  const winRate = profile.games_played > 0
-    ? Math.round((profile.games_won / profile.games_played) * 100)
-    : 0;
+  // Derived data
+  const rank = getRank(profile.elo_rating);
+  const ptsToNext = rank.nextTierElo - profile.elo_rating;
 
   // Categorize challenges
-  const sentPending = challenges.filter(c => c.sender_id === user?.id && c.status === 'pending');
-  const sentAccepted = challenges.filter(c => c.sender_id === user?.id && c.status === 'accepted');
-  const receivedPending = challenges.filter(c => c.recipient_id === user?.id && c.status === 'pending');
-  const receivedAccepted = challenges.filter(c => c.recipient_id === user?.id && c.status === 'accepted');
+  const sentPending = challenges.filter((c) => c.sender_id === user?.id && c.status === 'pending');
+  const sentAccepted = challenges.filter((c) => c.sender_id === user?.id && c.status === 'accepted');
+  const receivedPending = challenges.filter((c) => c.recipient_id === user?.id && c.status === 'pending');
+  const receivedAccepted = challenges.filter((c) => c.recipient_id === user?.id && c.status === 'accepted');
   const activeChallenges = [...sentPending, ...sentAccepted, ...receivedPending, ...receivedAccepted];
 
   const getChallengeOpponentName = (challenge: Challenge) => {
     const opponentId = challenge.sender_id === user?.id ? challenge.recipient_id : challenge.sender_id;
     if (!opponentId) return null;
     const p = challengeProfiles[opponentId];
-    return p ? (p.display_name || p.username) : null;
+    return p ? p.display_name || p.username : null;
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       {/* Greeting */}
       <div>
         <h1 className="font-serif text-[28px] font-light text-white/85">
-          Good evening, {profile.display_name || profile.username}
+          Welcome back, {profile.display_name || profile.username}
         </h1>
         <p className="text-[13px] text-white/25 mt-1">Your mind is your weapon. Keep it sharp.</p>
       </div>
 
-      {/* Stats grid — 1px gap separators */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04] rounded-sm overflow-hidden">
-        <div className="bg-[#050505] p-6">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">RATING</div>
-          <div className="font-mono text-[28px] font-normal text-white/[0.88] tabular-nums">{profile.elo_rating}</div>
-        </div>
-        <div className="bg-[#050505] p-6">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">PLAYED</div>
-          <div className="font-mono text-[28px] font-normal text-white/[0.88] tabular-nums">{profile.games_played}</div>
-        </div>
-        <div className="bg-[#050505] p-6">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WINS</div>
-          <div className="font-mono text-[28px] font-normal text-white/[0.88] tabular-nums">{profile.games_won}</div>
-        </div>
-        <div className="bg-[#050505] p-6">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WIN RATE</div>
-          <div className="font-mono text-[28px] font-normal text-white/[0.88] tabular-nums">{winRate}%</div>
-        </div>
-      </div>
+      {/* 2-column responsive grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* ──────── Row 1 ──────── */}
 
-      {/* Challenge Hero Card */}
-      <div
-        onClick={() => setChallengeModalOpen(true)}
-        className="border border-white/[0.08] rounded-sm p-6 hover:border-white/[0.15] transition-colors cursor-pointer"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-serif text-base text-white/80 mb-1">Challenge a Friend</div>
-            <div className="text-[11px] text-white/25 leading-relaxed">Share a link and prove who&apos;s faster</div>
+        {/* 1. Quick Match Card */}
+        <Card variant="interactive" className="p-6">
+          <Link href="/play" className="block">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="font-serif text-lg text-white/80 mb-1">Ranked Match</div>
+                <div className="text-[11px] text-white/25 leading-relaxed">
+                  First to 5 wins, Elo on the line
+                </div>
+              </div>
+              {onlineCount !== null && (
+                <div className="flex items-center gap-1.5 text-[11px] text-white/30">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  ~{onlineCount} online
+                </div>
+              )}
+            </div>
+            <div className="inline-block px-6 py-2.5 bg-[#F59E0B] text-[#050505] text-[11px] tracking-[2px] font-bold rounded-sm hover:bg-[#F59E0B]/90 transition-colors">
+              PLAY NOW
+            </div>
+          </Link>
+        </Card>
+
+        {/* 2. Your Rating Card */}
+        <Card variant="default" className="p-6">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <div className="text-[9px] tracking-[2px] text-white/20 mb-2">YOUR RATING</div>
+              <div className="font-mono text-[36px] font-normal text-white/[0.88] tabular-nums leading-none">
+                {profile.elo_rating}
+              </div>
+            </div>
+            <RankBadge elo={profile.elo_rating} size="lg" showLabel />
           </div>
-          <button
-            className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setChallengeModalOpen(true);
-            }}
-          >
-            CREATE LINK
-          </button>
-        </div>
-      </div>
 
-      {/* Pending Challenges Section */}
-      {activeChallenges.length > 0 && (
-        <div>
-          <div className="text-[9px] tracking-[3px] text-white/20 mb-4">CHALLENGES</div>
-          <div className="space-y-2">
-            {/* Sent, pending — waiting for someone to accept */}
-            {sentPending.map((challenge) => (
+          {/* Sparkline */}
+          {sparklineData.length > 1 && (
+            <div className="mt-3 mb-3">
+              <Sparkline data={sparklineData} width={280} height={36} />
+            </div>
+          )}
+
+          {/* Tier progress bar */}
+          <div className="mt-3">
+            <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
               <div
-                key={challenge.id}
-                className="border border-white/[0.06] rounded-sm p-5 bg-white/[0.01]"
-              >
-                <div className="flex items-center justify-between">
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(rank.progress * 100, 100)}%`,
+                  backgroundColor: rank.color,
+                }}
+              />
+            </div>
+            {rank.tier !== 'Grandmaster' && (
+              <div className="text-[10px] text-white/25 mt-1.5 font-mono tabular-nums">
+                {ptsToNext} pts to {rank.tier === 'Bronze' ? 'Silver' : rank.tier === 'Silver' ? 'Gold' : rank.tier === 'Gold' ? 'Platinum' : rank.tier === 'Platinum' ? 'Diamond' : 'Grandmaster'}
+              </div>
+            )}
+            {rank.tier === 'Grandmaster' && (
+              <div className="text-[10px] mt-1.5 font-mono tabular-nums" style={{ color: rank.color }}>
+                Grandmaster
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* ──────── Row 2 ──────── */}
+
+        {/* 3. Daily Puzzle Card */}
+        <Card variant="highlight" className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <div className="font-serif text-lg text-white/80 mb-1">Daily Puzzle</div>
+              <div className="text-[11px] text-white/30 leading-relaxed">
+                5 problems, race the clock
+              </div>
+            </div>
+            <div className="text-[11px] text-white/25 flex items-center gap-1">
+              <span>🔥</span>
+              <span className="font-mono tabular-nums">{dailyStreak} day streak</span>
+            </div>
+          </div>
+          <Link
+            href="/daily"
+            className="inline-block px-5 py-2 border border-[#F59E0B]/40 text-[#F59E0B] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-[#F59E0B]/10 transition-colors"
+          >
+            SOLVE TODAY&apos;S PUZZLE
+          </Link>
+        </Card>
+
+        {/* 4. Recent Achievements Card */}
+        <Card variant="default" className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-[9px] tracking-[2px] text-white/20">ACHIEVEMENTS</div>
+            <Link href="/profile#achievements" className="text-[10px] text-white/20 hover:text-white/40 transition-colors">
+              View all &rarr;
+            </Link>
+          </div>
+          {achievements.length > 0 ? (
+            <div className="space-y-3">
+              {achievements.map((a) => (
+                <div key={a.id} className="flex items-center gap-3">
+                  <span className="text-base">{a.achievement?.icon ?? '🏆'}</span>
                   <div>
-                    <div className="text-[13px] text-white/50">Waiting for someone to accept</div>
-                    <div className="font-mono text-[11px] text-white/15 mt-1 truncate max-w-[220px]">
+                    <div className="text-[12px] text-white/60">{a.achievement?.name ?? 'Achievement'}</div>
+                    <div className="text-[10px] text-white/20">{a.achievement?.description ?? ''}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-[12px] text-white/20 py-4">
+              Play matches to earn achievements
+            </div>
+          )}
+        </Card>
+
+        {/* ──────── Row 3 ──────── */}
+
+        {/* 5. Recent Matches Card */}
+        <Card variant="default" className="p-6">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-4">RECENT MATCHES</div>
+          {recentMatches.length > 0 ? (
+            <div className="space-y-0 -mx-1">
+              {recentMatches.map((match) => {
+                const isPlayer1 = match.player1_id === user?.id;
+                const won = match.winner_id === user?.id;
+                const myScore = isPlayer1 ? match.player1_score : match.player2_score;
+                const theirScore = isPlayer1 ? match.player2_score : match.player1_score;
+                const eloChange = isPlayer1
+                  ? (match.player1_elo_after ?? 0) - (match.player1_elo_before ?? 0)
+                  : (match.player2_elo_after ?? 0) - (match.player2_elo_before ?? 0);
+                const opponentId = isPlayer1 ? match.player2_id : match.player1_id;
+                const opponentName = opponentId ? opponentNames[opponentId] ?? 'Opponent' : 'Opponent';
+
+                return (
+                  <div
+                    key={match.id}
+                    className="flex items-center justify-between px-1 py-2.5 border-b border-white/[0.03] last:border-b-0"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`font-mono text-[9px] tracking-[1px] px-1.5 py-0.5 rounded-sm ${
+                          won
+                            ? 'text-white/70 bg-white/[0.08]'
+                            : 'text-white/25 bg-white/[0.03]'
+                        }`}
+                      >
+                        {won ? 'W' : 'L'}
+                      </span>
+                      <span className="text-[12px] text-white/50">vs {opponentName}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono text-[11px] text-white/25 tabular-nums">
+                        {myScore}&ndash;{theirScore}
+                      </span>
+                      <span
+                        className={`font-mono text-[10px] tabular-nums w-10 text-right ${
+                          eloChange >= 0 ? 'text-white/50' : 'text-white/20'
+                        }`}
+                      >
+                        {eloChange >= 0 ? '+' : ''}
+                        {eloChange}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-[12px] text-white/20 py-4">
+              No matches played yet. Start a ranked match!
+            </div>
+          )}
+        </Card>
+
+        {/* 6. Challenges Card */}
+        <Card variant="default" className="p-6">
+          <div className="text-[9px] tracking-[2px] text-white/20 mb-4">CHALLENGES</div>
+
+          {activeChallenges.length > 0 ? (
+            <div className="space-y-2.5">
+              {/* Sent, pending */}
+              {sentPending.map((challenge) => (
+                <div
+                  key={challenge.id}
+                  className="flex items-center justify-between p-3 rounded-sm bg-white/[0.02] border border-white/[0.04]"
+                >
+                  <div>
+                    <div className="text-[12px] text-white/40">Waiting for opponent</div>
+                    <div className="font-mono text-[10px] text-white/15 mt-0.5 truncate max-w-[180px]">
                       /challenge/{challenge.code}
                     </div>
                   </div>
                   <button
                     onClick={() => handleDecline(challenge.code)}
-                    className="px-2.5 py-1.5 border border-white/[0.08] text-white/20 text-[10px] rounded-sm hover:border-white/[0.15] hover:text-white/40 transition-colors"
+                    className="px-2 py-1 border border-white/[0.08] text-white/20 text-[10px] rounded-sm hover:border-white/[0.15] hover:text-white/40 transition-colors"
                   >
                     ✕
                   </button>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {/* Sent, accepted — opponent accepted, you can play */}
-            {sentAccepted.map((challenge) => {
-              const opponentName = getChallengeOpponentName(challenge);
-              return (
-                <div
-                  key={challenge.id}
-                  className="border border-white/[0.08] rounded-sm p-5 bg-white/[0.03]"
-                >
-                  <div className="flex items-center justify-between">
+              {/* Sent, accepted */}
+              {sentAccepted.map((challenge) => {
+                const opponentName = getChallengeOpponentName(challenge);
+                return (
+                  <div
+                    key={challenge.id}
+                    className="flex items-center justify-between p-3 rounded-sm bg-white/[0.03] border border-white/[0.06]"
+                  >
                     <div>
-                      <div className="text-[13px] text-white/60">
+                      <div className="text-[12px] text-white/50">
                         {opponentName ? `${opponentName} accepted` : 'Challenge accepted'}
                       </div>
-                      <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
+                      <div className="text-[10px] text-white/20 mt-0.5">Ready to play</div>
                     </div>
                     <Link
                       href={`/challenge/${challenge.code}/lobby`}
-                      className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
+                      className="px-3 py-1 bg-white/90 text-[#050505] text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-white transition-colors"
                     >
-                      PLAY NOW
+                      PLAY
                     </Link>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            {/* Received, pending — you need to accept or decline */}
-            {receivedPending.map((challenge) => {
-              const opponentName = getChallengeOpponentName(challenge);
-              return (
-                <div
-                  key={challenge.id}
-                  className="border border-white/[0.08] rounded-sm p-5 bg-white/[0.02]"
-                >
-                  <div className="flex items-center justify-between">
+              {/* Received, pending */}
+              {receivedPending.map((challenge) => {
+                const opponentName = getChallengeOpponentName(challenge);
+                return (
+                  <div
+                    key={challenge.id}
+                    className="flex items-center justify-between p-3 rounded-sm bg-white/[0.02] border border-white/[0.04]"
+                  >
                     <div>
-                      <div className="text-[13px] text-white/60">
+                      <div className="text-[12px] text-white/50">
                         {opponentName ? `${opponentName} challenged you` : 'You received a challenge'}
                       </div>
-                      <div className="text-[11px] text-white/20 mt-0.5">Accept to start the match</div>
+                      <div className="text-[10px] text-white/20 mt-0.5">Accept to start</div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleAccept(challenge.code)}
-                        className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
+                        className="px-3 py-1 bg-white/90 text-[#050505] text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-white transition-colors"
                       >
                         ACCEPT
                       </button>
                       <button
                         onClick={() => handleDecline(challenge.code)}
-                        className="px-2.5 py-1.5 border border-white/[0.08] text-white/30 text-[10px] rounded-sm hover:border-white/[0.15] hover:text-white/50 transition-colors"
+                        className="px-2 py-1 border border-white/[0.08] text-white/25 text-[9px] rounded-sm hover:border-white/[0.15] hover:text-white/40 transition-colors"
                       >
                         ✕
                       </button>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            {/* Received, accepted — waiting to play */}
-            {receivedAccepted.map((challenge) => {
-              const opponentName = getChallengeOpponentName(challenge);
-              return (
-                <div
-                  key={challenge.id}
-                  className="border border-white/[0.06] rounded-sm p-5 bg-white/[0.01]"
-                >
-                  <div className="flex items-center justify-between">
+              {/* Received, accepted */}
+              {receivedAccepted.map((challenge) => {
+                const opponentName = getChallengeOpponentName(challenge);
+                return (
+                  <div
+                    key={challenge.id}
+                    className="flex items-center justify-between p-3 rounded-sm bg-white/[0.02] border border-white/[0.04]"
+                  >
                     <div>
-                      <div className="text-[13px] text-white/50">
+                      <div className="text-[12px] text-white/40">
                         {opponentName ? `Match vs ${opponentName}` : 'Challenge accepted'}
                       </div>
-                      <div className="text-[11px] text-white/20 mt-0.5">Ready to play</div>
+                      <div className="text-[10px] text-white/20 mt-0.5">Ready to play</div>
                     </div>
                     <Link
                       href={`/challenge/${challenge.code}/lobby`}
-                      className="px-4 py-1.5 bg-white/90 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-white transition-colors"
+                      className="px-3 py-1 bg-white/90 text-[#050505] text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-white transition-colors"
                     >
-                      PLAY NOW
+                      PLAY
                     </Link>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-[12px] text-white/20 py-2">
+              No active challenges
+            </div>
+          )}
 
-      {/* Quick actions */}
-      <div>
-        <div className="text-[9px] tracking-[3px] text-white/20 mb-4">QUICK ACTIONS</div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Link
-            href="/play"
-            className="border border-white/[0.06] rounded-sm p-6 bg-white/[0.015] hover:border-white/[0.12] transition-colors group"
+          {/* Challenge a Friend button */}
+          <button
+            onClick={() => setChallengeModalOpen(true)}
+            className="mt-4 w-full px-4 py-2 border border-white/[0.08] text-white/40 text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:border-white/[0.15] hover:text-white/60 transition-colors"
           >
-            <div className="font-serif text-2xl italic text-white/50 mb-3">&times;</div>
-            <div className="font-serif text-base text-white/80 mb-1">Ranked Match</div>
-            <div className="text-[11px] text-white/25 leading-relaxed">Find an opponent at your skill level</div>
-          </Link>
-          <Link
-            href="/practice"
-            className="border border-white/[0.06] rounded-sm p-6 bg-white/[0.015] hover:border-white/[0.12] transition-colors group"
-          >
-            <div className="font-serif text-2xl italic text-white/50 mb-3">&radic;</div>
-            <div className="font-serif text-base text-white/80 mb-1">Practice</div>
-            <div className="text-[11px] text-white/25 leading-relaxed">Train without pressure</div>
-          </Link>
-          <Link
-            href="/lessons"
-            className="border border-white/[0.06] rounded-sm p-6 bg-white/[0.015] hover:border-white/[0.12] transition-colors group"
-          >
-            <div className="font-serif text-2xl italic text-white/50 mb-3">&int;</div>
-            <div className="font-serif text-base text-white/80 mb-1">Lessons</div>
-            <div className="text-[11px] text-white/25 leading-relaxed">Learn mental math techniques</div>
-          </Link>
-        </div>
+            CHALLENGE A FRIEND
+          </button>
+        </Card>
       </div>
-
-      {/* Recent matches */}
-      {recentMatches.length > 0 && (
-        <div>
-          <div className="text-[9px] tracking-[3px] text-white/20 mb-4">RECENT MATCHES</div>
-          <div className="border border-white/[0.04] rounded-sm overflow-hidden">
-            {recentMatches.map((match) => {
-              const isPlayer1 = match.player1_id === user?.id;
-              const won = match.winner_id === user?.id;
-              const myScore = isPlayer1 ? match.player1_score : match.player2_score;
-              const theirScore = isPlayer1 ? match.player2_score : match.player1_score;
-              const eloChange = isPlayer1
-                ? (match.player1_elo_after ?? 0) - (match.player1_elo_before ?? 0)
-                : (match.player2_elo_after ?? 0) - (match.player2_elo_before ?? 0);
-              const opponentId = isPlayer1 ? match.player2_id : match.player1_id;
-              const opponentName = opponentId ? opponentNames[opponentId] ?? 'Opponent' : 'Opponent';
-
-              return (
-                <div
-                  key={match.id}
-                  className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.03] last:border-b-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`font-mono text-[10px] tracking-[1px] px-2 py-0.5 rounded-sm ${
-                      won
-                        ? 'text-white/70 bg-white/[0.08]'
-                        : 'text-white/25 bg-white/[0.03]'
-                    }`}>
-                      {won ? 'W' : 'L'}
-                    </span>
-                    <span className="text-[13px] text-white/60">vs {opponentName}</span>
-                  </div>
-                  <div className="font-mono text-xs text-white/30 tabular-nums">{myScore} &ndash; {theirScore}</div>
-                  <div className={`font-mono text-[11px] tabular-nums ${
-                    eloChange >= 0 ? 'text-white/50' : 'text-white/20'
-                  }`}>
-                    {eloChange >= 0 ? '+' : ''}{eloChange}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Challenge Modal */}
       <ChallengeModal

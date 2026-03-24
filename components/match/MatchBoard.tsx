@@ -1,15 +1,24 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useMatch } from '@/hooks/useMatch';
 import { useAuth } from '@/hooks/useAuth';
 import { ProblemDisplay } from './ProblemDisplay';
 import { AnswerInput } from './AnswerInput';
-import { ScoreBar } from './ScoreBar';
+import { ScoreDots } from './ScoreDots';
 import { Timer } from './Timer';
 import { MatchResult } from './MatchResult';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { createClient } from '@/lib/supabase/client';
-import type { Profile } from '@/types';
+import type { Profile, MatchEvent } from '@/types';
+
+interface MatchStats {
+  avgTimeMs: number;
+  accuracy: number;
+  fastestSolveMs: number;
+  totalPenalties: number;
+}
 
 interface MatchBoardProps {
   matchId: string;
@@ -21,6 +30,11 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [player1Profile, setPlayer1Profile] = useState<Profile | null>(null);
   const [player2Profile, setPlayer2Profile] = useState<Profile | null>(null);
+  const [showCountdown, setShowCountdown] = useState(true);
+  const [countdownValue, setCountdownValue] = useState<number | string | null>(3);
+  const [streak, setStreak] = useState(0);
+  const [matchStats, setMatchStats] = useState<MatchStats | null>(null);
+  const [newAchievements, setNewAchievements] = useState<{ id: string; name: string; description: string; icon: string; rarity: string }[]>([]);
   const supabase = createClient();
 
   // Fetch player profiles
@@ -50,6 +64,75 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     fetchProfiles();
   }, [match?.player1_id, match?.player2_id]);
 
+  // 5A: Countdown timer effect
+  useEffect(() => {
+    if (!showCountdown || match?.status !== 'active') return;
+
+    const sequence: (number | string)[] = [3, 2, 1, 'GO!'];
+    let step = 0;
+    setCountdownValue(sequence[step]);
+
+    const interval = setInterval(() => {
+      step += 1;
+      if (step < sequence.length) {
+        setCountdownValue(sequence[step]);
+      } else {
+        clearInterval(interval);
+        setShowCountdown(false);
+        setCountdownValue(null);
+      }
+    }, 800);
+
+    return () => clearInterval(interval);
+  }, [showCountdown, match?.status]);
+
+  // Fetch match events on completion to compute performance stats
+  useEffect(() => {
+    if (!match || !user) return;
+    if (match.status !== 'completed' && match.status !== 'abandoned') return;
+
+    const fetchStats = async () => {
+      const { data: events } = await supabase
+        .from('match_events')
+        .select('*')
+        .eq('match_id', matchId)
+        .eq('player_id', user.id)
+        .order('created_at', { ascending: true });
+
+      if (!events || events.length === 0) return;
+
+      const typedEvents = events as MatchEvent[];
+
+      const correctEvents = typedEvents.filter(e => e.event === 'answer_correct');
+      const wrongEvents = typedEvents.filter(e => e.event === 'answer_wrong');
+
+      // Compute per-problem solve times from elapsed_ms deltas
+      const solveTimes: number[] = [];
+      for (let i = 0; i < correctEvents.length; i++) {
+        if (i === 0) {
+          // First correct answer: time from match start (elapsed_ms is already from match start)
+          solveTimes.push(correctEvents[i].elapsed_ms);
+        } else {
+          solveTimes.push(correctEvents[i].elapsed_ms - correctEvents[i - 1].elapsed_ms);
+        }
+      }
+
+      const totalAttempts = correctEvents.length + wrongEvents.length;
+      const accuracy = totalAttempts > 0 ? (correctEvents.length / totalAttempts) * 100 : 0;
+      const avgTimeMs = solveTimes.length > 0 ? solveTimes.reduce((a, b) => a + b, 0) / solveTimes.length : 0;
+      const fastestSolveMs = solveTimes.length > 0 ? Math.min(...solveTimes) : 0;
+
+      setMatchStats({
+        avgTimeMs,
+        accuracy,
+        fastestSolveMs,
+        totalPenalties: wrongEvents.length,
+      });
+    };
+
+    fetchStats();
+  }, [match?.status, matchId, user?.id]);
+
   const handleSubmit = useCallback(
     async (answer: number) => {
       if (!match || match.status !== 'active') return;
@@ -69,6 +152,10 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
       // Correct answer that completed the match (we won)
       if (result.correct && result.matchStatus === 'completed') {
         feedbackFn?.(true);
+        setStreak((prev) => prev + 1);
+        if (result.newAchievements && result.newAchievements.length > 0) {
+          setNewAchievements(result.newAchievements);
+        }
         refetchMatch();
         return;
       }
@@ -76,12 +163,14 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
       // Normal correct answer
       if (result.correct) {
         feedbackFn?.(true);
+        setStreak((prev) => prev + 1);
         setCurrentProblemIndex((prev) => prev + 1);
         return;
       }
 
       // Wrong answer
       feedbackFn?.(false);
+      setStreak(0);
     },
     [match, currentProblemIndex, submitAnswer, refetchMatch]
   );
@@ -89,7 +178,20 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-white/25">Loading match...</div>
+        <div className="w-full max-w-md space-y-6">
+          <div className="border border-white/[0.06] rounded-sm p-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-12 w-48 mx-auto" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -124,6 +226,13 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         eloAfter={eloAfter}
         penalties={penalties}
         opponentName={opponentProfile?.username ?? 'Opponent'}
+        opponentElo={opponentProfile?.elo_rating}
+        avgTimeMs={matchStats?.avgTimeMs}
+        accuracy={matchStats?.accuracy}
+        fastestSolveMs={matchStats?.fastestSolveMs}
+        totalPenalties={matchStats?.totalPenalties}
+        newAchievements={newAchievements.length > 0 ? newAchievements : undefined}
+        opponentId={isPlayer1 ? match.player2_id ?? undefined : match.player1_id}
       />
     );
   }
@@ -156,39 +265,138 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     );
   }
 
+  // 5C: Match point detection
+  const isMatchPoint = match.player1_score === match.target_score - 1 || match.player2_score === match.target_score - 1;
+
+  const player1Name = player1Profile?.username ?? 'Player 1';
+  const player2Name = player2Profile?.username ?? 'Player 2';
+
   return (
-    <div className="flex flex-col items-center gap-8 py-8">
-      <div className="flex items-center justify-between w-full max-w-2xl">
-        <Timer startTime={match.started_at} isRunning={match.status === 'active'} />
-        <button
-          onClick={abandonMatch}
-          className="text-[10px] tracking-[1.5px] text-white/20 hover:text-red-400/60 transition-colors"
-        >
-          FORFEIT
-        </button>
+    <div className="relative">
+      {/* 5A: Countdown overlay */}
+      <AnimatePresence>
+        {showCountdown && countdownValue !== null && (
+          <motion.div
+            key="countdown-overlay"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/90"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={String(countdownValue)}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.5, opacity: 0 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 20,
+                  duration: 0.4,
+                }}
+                className={`text-8xl font-serif font-bold select-none ${
+                  countdownValue === 'GO!' ? 'text-[#F59E0B]' : 'text-white/90'
+                }`}
+              >
+                {countdownValue}
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 5C: Match point container with pulsing border */}
+      <div
+        className={`flex flex-col items-center gap-8 py-8 rounded-lg ${
+          isMatchPoint ? 'border border-[#F59E0B]/30 animate-gold-pulse p-4' : ''
+        }`}
+      >
+        {/* 5C: Match point text */}
+        <AnimatePresence>
+          {isMatchPoint && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="text-[10px] tracking-[3px] text-[#F59E0B]/70 font-mono"
+            >
+              MATCH POINT
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center justify-between w-full max-w-2xl">
+          <Timer startTime={match.started_at} isRunning={match.status === 'active'} />
+          <button
+            onClick={abandonMatch}
+            className="text-[10px] tracking-[1.5px] text-white/20 hover:text-red-400/60 transition-colors"
+          >
+            FORFEIT
+          </button>
+        </div>
+
+        {/* 5B: ScoreDots replacing ScoreBar */}
+        <div className="flex items-center justify-between w-full max-w-2xl">
+          <div className="flex flex-col items-start gap-1">
+            <span className="text-[10px] tracking-[1.5px] text-white/30">
+              {isPlayer1 ? player1Name : player2Name} {isPlayer1 ? '(YOU)' : ''}
+            </span>
+            <ScoreDots
+              score={isPlayer1 ? match.player1_score : match.player2_score}
+              targetScore={match.target_score}
+              color="gold"
+            />
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[10px] tracking-[1.5px] text-white/30">
+              {isPlayer1 ? player2Name : player1Name} {!isPlayer1 ? '(YOU)' : ''}
+            </span>
+            <ScoreDots
+              score={isPlayer1 ? match.player2_score : match.player1_score}
+              targetScore={match.target_score}
+              color="muted"
+            />
+          </div>
+        </div>
+
+        {/* Problem counter + 5E: Streak indicator */}
+        <div className="flex items-center gap-3">
+          <div className="text-[9px] tracking-[2px] text-white/20">
+            PROBLEM {currentProblemIndex + 1}
+          </div>
+          {streak >= 3 && (
+            <motion.div
+              key={streak}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-[#F59E0B] text-sm font-mono"
+            >
+              {'\uD83D\uDD25'} {streak}x
+            </motion.div>
+          )}
+        </div>
+
+        {/* 5D: Problem slide transitions */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentProblemIndex}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+          >
+            <ProblemDisplay
+              operand1={currentProblem.operand1}
+              operand2={currentProblem.operand2}
+              operation={currentProblem.operation}
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        <AnswerInput onSubmit={handleSubmit} disabled={match.status !== 'active'} />
       </div>
-
-      <ScoreBar
-        player1Score={match.player1_score}
-        player2Score={match.player2_score}
-        targetScore={match.target_score}
-        player1Name={player1Profile?.username ?? 'Player 1'}
-        player2Name={player2Profile?.username ?? 'Player 2'}
-        currentPlayerId={user.id}
-        player1Id={match.player1_id}
-      />
-
-      <div className="text-[9px] tracking-[2px] text-white/20">
-        PROBLEM {currentProblemIndex + 1}
-      </div>
-
-      <ProblemDisplay
-        operand1={currentProblem.operand1}
-        operand2={currentProblem.operand2}
-        operation={currentProblem.operation}
-      />
-
-      <AnswerInput onSubmit={handleSubmit} disabled={match.status !== 'active'} />
     </div>
   );
 }
