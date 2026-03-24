@@ -23,6 +23,7 @@ interface MatchResultProps {
   totalPenalties?: number;
   newAchievements?: { id: string; name: string; description: string; icon: string; rarity: string }[];
   opponentId?: string;
+  matchId?: string;
 }
 
 function VictoryBurst() {
@@ -102,6 +103,7 @@ export function MatchResult({
   totalPenalties,
   newAchievements,
   opponentId,
+  matchId,
 }: MatchResultProps) {
   const eloChange = eloAfter - eloBefore;
   const rankedUp = didRankChange(eloBefore, eloAfter) && eloAfter > eloBefore;
@@ -355,6 +357,15 @@ export function MatchResult({
         >
           PLAY AGAIN
         </Link>
+
+        {matchId && (
+          <Link
+            href={`/play/${matchId}/analysis`}
+            className="px-6 py-3 border border-edge-strong text-ink-secondary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+          >
+            GAME ANALYSIS
+          </Link>
+        )}
 
         <button
           onClick={handleShare}

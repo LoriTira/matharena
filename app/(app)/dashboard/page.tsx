@@ -10,7 +10,7 @@ import Sparkline from '@/components/ui/Sparkline';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { RankBadge } from '@/components/ui/RankBadge';
 import { getRank } from '@/lib/ranks';
-import type { Profile, Match, Challenge, UserAchievement, AchievementDef } from '@/types';
+import type { Profile, Match, Challenge } from '@/types';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -24,7 +24,6 @@ export default function DashboardPage() {
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [sparklineData, setSparklineData] = useState<number[]>([]);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
-  const [achievements, setAchievements] = useState<(UserAchievement & { achievement?: AchievementDef })[]>([]);
   const [dailyStreak, setDailyStreak] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
@@ -111,22 +110,6 @@ export default function DashboardPage() {
       setOnlineCount(count ?? 0);
     } catch {
       setOnlineCount(null);
-    }
-
-    // Achievements (graceful — table may not exist yet)
-    try {
-      const { data: achievementData } = await supabase
-        .from('user_achievements')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('unlocked_at', { ascending: false })
-        .limit(3);
-
-      if (achievementData) {
-        setAchievements(achievementData as (UserAchievement & { achievement?: AchievementDef })[]);
-      }
-    } catch {
-      // Table doesn't exist yet — will be built in Phase 4
     }
 
     // Daily streak (graceful — API may not exist yet)
@@ -479,36 +462,7 @@ export default function DashboardPage() {
           </Link>
         </Card>
 
-        {/* 4. Recent Achievements Card */}
-        <Card variant="default" className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-[11px] tracking-[2px] text-ink-faint">ACHIEVEMENTS</div>
-            <Link href="/profile#achievements" className="text-[12px] text-ink-faint hover:text-ink-tertiary transition-colors">
-              View all &rarr;
-            </Link>
-          </div>
-          {achievements.length > 0 ? (
-            <div className="space-y-3">
-              {achievements.map((a) => (
-                <div key={a.id} className="flex items-center gap-3">
-                  <span className="text-base">{a.achievement?.icon ?? '🏆'}</span>
-                  <div>
-                    <div className="text-[12px] text-ink-secondary">{a.achievement?.name ?? 'Achievement'}</div>
-                    <div className="text-[12px] text-ink-faint">{a.achievement?.description ?? ''}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-[12px] text-ink-faint py-4">
-              Play matches to earn achievements
-            </div>
-          )}
-        </Card>
-
-        {/* ──────── Row 3 ──────── */}
-
-        {/* 5. Recent Matches Card */}
+        {/* 4. Recent Matches Card */}
         <Card variant="default" className="p-6">
           <div className="text-[11px] tracking-[2px] text-ink-faint mb-4">RECENT MATCHES</div>
           {recentMatches.length > 0 ? (
@@ -525,9 +479,10 @@ export default function DashboardPage() {
                 const opponentName = opponentId ? opponentNames[opponentId] ?? 'Opponent' : 'Opponent';
 
                 return (
-                  <div
+                  <Link
                     key={match.id}
-                    className="flex items-center justify-between px-1 py-2.5 border-b border-edge-faint last:border-b-0"
+                    href={`/play/${match.id}/analysis`}
+                    className="flex items-center justify-between px-1 py-2.5 border-b border-edge-faint last:border-b-0 hover:bg-card transition-colors -mx-1 px-2 rounded-sm"
                   >
                     <div className="flex items-center gap-2.5">
                       <span
@@ -554,7 +509,7 @@ export default function DashboardPage() {
                         {eloChange}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -564,8 +519,6 @@ export default function DashboardPage() {
             </div>
           )}
         </Card>
-
-        {/* (Challenges card moved to top) */}
       </div>
 
       {/* Challenge Modal */}

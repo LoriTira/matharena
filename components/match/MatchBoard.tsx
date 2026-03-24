@@ -233,6 +233,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         totalPenalties={matchStats?.totalPenalties}
         newAchievements={newAchievements.length > 0 ? newAchievements : undefined}
         opponentId={isPlayer1 ? match.player2_id ?? undefined : match.player1_id}
+        matchId={matchId}
       />
     );
   }
