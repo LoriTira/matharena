@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/Skeleton';
 import type { Profile } from '@/types';
 
 export default function LeaderboardPage() {
@@ -45,10 +46,37 @@ export default function LeaderboardPage() {
       </div>
 
       {loading ? (
-        <div className="text-white/25 text-center py-12">Loading rankings...</div>
-      ) : (
         <div className="border border-white/[0.04] rounded-sm overflow-hidden">
           <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/[0.06]">
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20 w-16">#</th>
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20">PLAYER</th>
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20">COUNTRY</th>
+                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20">AFFILIATION</th>
+                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-white/20">RATING</th>
+                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-white/20">W/L</th>
+                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-white/20">WIN %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="border-b border-white/[0.03]">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-6" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-28" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-4 py-3 flex justify-end"><Skeleton className="h-4 w-12" /></td>
+                  <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-14" /></div></td>
+                  <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-10" /></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="border border-white/[0.04] rounded-sm overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-white/[0.06]">
                 <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-white/20 w-16">#</th>

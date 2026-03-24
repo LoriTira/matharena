@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/hooks/useToast';
 
 interface ChallengeModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface ChallengeModalProps {
 }
 
 export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
+  const { addToast } = useToast();
   const [challengeUrl, setChallengeUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -55,6 +57,7 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
     try {
       await navigator.clipboard.writeText(challengeUrl);
       setCopied(true);
+      addToast('Challenge link copied!', 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       const textarea = document.createElement('textarea');
@@ -64,6 +67,7 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
       document.execCommand('copy');
       document.body.removeChild(textarea);
       setCopied(true);
+      addToast('Challenge link copied!', 'success');
       setTimeout(() => setCopied(false), 2000);
     }
   };
