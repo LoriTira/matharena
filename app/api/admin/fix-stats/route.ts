@@ -1,6 +1,13 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
+interface MatchRow {
+  player1_id: string;
+  player2_id: string | null;
+  winner_id: string | null;
+  status: string;
+}
+
 /**
  * One-time admin endpoint to recalculate games_played and games_won
  * for all players from completed match history.
@@ -15,10 +22,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const admin = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = createAdminClient() as any;
 
     // Fetch all completed/abandoned matches that have a winner
-    const { data: matches, error: matchError } = await admin
+    const { data, error: matchError } = await admin
       .from('matches')
       .select('player1_id, player2_id, winner_id, status')
       .in('status', ['completed', 'abandoned'])
@@ -28,10 +36,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: matchError.message }, { status: 500 });
     }
 
+    const matches = (data ?? []) as MatchRow[];
+
     // Tally per player
     const stats: Record<string, { played: number; won: number }> = {};
 
-    for (const m of matches ?? []) {
+    for (const m of matches) {
       for (const pid of [m.player1_id, m.player2_id]) {
         if (!pid) continue;
         if (!stats[pid]) stats[pid] = { played: 0, won: 0 };
@@ -53,7 +63,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      matchesProcessed: matches?.length ?? 0,
+      matchesProcessed: matches.length,
       playersUpdated: updated,
       playerStats: stats,
     });
