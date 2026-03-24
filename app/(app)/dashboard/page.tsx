@@ -178,7 +178,12 @@ export default function DashboardPage() {
       )
       .subscribe();
 
+    // Polling fallback: refetch challenges every 3s so accepted challenges
+    // appear live even if Supabase realtime silently drops the event.
+    const pollInterval = setInterval(fetchChallenges, 3000);
+
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [user, supabase, fetchData, fetchChallenges]);
@@ -258,9 +263,133 @@ export default function DashboardPage() {
 
       {/* 2-column responsive grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* ──────── Challenges (top) ──────── */}
+
+        {/* 1. Challenges Card */}
+        <Card variant="default" className="p-6 md:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-[11px] tracking-[2px] text-ink-faint">CHALLENGES</div>
+            <button
+              onClick={() => setChallengeModalOpen(true)}
+              className="px-3 py-1 border border-edge text-ink-tertiary text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+            >
+              CHALLENGE A FRIEND
+            </button>
+          </div>
+
+          {activeChallenges.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {/* Received, pending */}
+              {receivedPending.map((challenge) => {
+                const opponentName = getChallengeOpponentName(challenge);
+                return (
+                  <div
+                    key={challenge.id}
+                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
+                  >
+                    <div>
+                      <div className="text-[12px] text-ink-secondary">
+                        {opponentName ? `${opponentName} challenged you` : 'You received a challenge'}
+                      </div>
+                      <div className="text-[12px] text-ink-faint mt-0.5">Accept to start</div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleAccept(challenge.code)}
+                        className="px-3 py-1 bg-btn text-btn-text text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
+                      >
+                        ACCEPT
+                      </button>
+                      <button
+                        onClick={() => handleDecline(challenge.code)}
+                        className="px-2 py-1 border border-edge text-ink-muted text-[11px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Sent, accepted — ready to play */}
+              {sentAccepted.map((challenge) => {
+                const opponentName = getChallengeOpponentName(challenge);
+                return (
+                  <div
+                    key={challenge.id}
+                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-accent/30"
+                  >
+                    <div>
+                      <div className="text-[12px] text-ink-secondary">
+                        {opponentName ? `${opponentName} accepted` : 'Challenge accepted'}
+                      </div>
+                      <div className="text-[12px] text-accent/70 mt-0.5">Ready to play</div>
+                    </div>
+                    <Link
+                      href={`/challenge/${challenge.code}/lobby`}
+                      className="px-4 py-1.5 bg-accent text-on-accent text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-accent/90 transition-colors"
+                    >
+                      PLAY
+                    </Link>
+                  </div>
+                );
+              })}
+
+              {/* Received, accepted — ready to play */}
+              {receivedAccepted.map((challenge) => {
+                const opponentName = getChallengeOpponentName(challenge);
+                return (
+                  <div
+                    key={challenge.id}
+                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-accent/30"
+                  >
+                    <div>
+                      <div className="text-[12px] text-ink-secondary">
+                        {opponentName ? `Match vs ${opponentName}` : 'Challenge accepted'}
+                      </div>
+                      <div className="text-[12px] text-accent/70 mt-0.5">Ready to play</div>
+                    </div>
+                    <Link
+                      href={`/challenge/${challenge.code}/lobby`}
+                      className="px-4 py-1.5 bg-accent text-on-accent text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-accent/90 transition-colors"
+                    >
+                      PLAY
+                    </Link>
+                  </div>
+                );
+              })}
+
+              {/* Sent, pending — waiting */}
+              {sentPending.map((challenge) => (
+                <div
+                  key={challenge.id}
+                  className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
+                >
+                  <div>
+                    <div className="text-[12px] text-ink-tertiary">Waiting for opponent</div>
+                    <div className="font-mono text-[12px] text-ink-faint mt-0.5 truncate max-w-[180px]">
+                      /challenge/{challenge.code}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDecline(challenge.code)}
+                    className="px-2 py-1 border border-edge text-ink-faint text-[12px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-[12px] text-ink-faint py-2">
+              No active challenges
+            </div>
+          )}
+        </Card>
+
         {/* ──────── Row 1 ──────── */}
 
-        {/* 1. Quick Match Card */}
+        {/* 2. Quick Match Card */}
         <Card variant="interactive" className="p-6">
           <Link href="/play" className="block">
             <div className="flex items-center justify-between mb-4">
@@ -436,127 +565,7 @@ export default function DashboardPage() {
           )}
         </Card>
 
-        {/* 6. Challenges Card */}
-        <Card variant="default" className="p-6">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-4">CHALLENGES</div>
-
-          {activeChallenges.length > 0 ? (
-            <div className="space-y-2.5">
-              {/* Sent, pending */}
-              {sentPending.map((challenge) => (
-                <div
-                  key={challenge.id}
-                  className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
-                >
-                  <div>
-                    <div className="text-[12px] text-ink-tertiary">Waiting for opponent</div>
-                    <div className="font-mono text-[12px] text-ink-faint mt-0.5 truncate max-w-[180px]">
-                      /challenge/{challenge.code}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDecline(challenge.code)}
-                    className="px-2 py-1 border border-edge text-ink-faint text-[12px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-
-              {/* Sent, accepted */}
-              {sentAccepted.map((challenge) => {
-                const opponentName = getChallengeOpponentName(challenge);
-                return (
-                  <div
-                    key={challenge.id}
-                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge"
-                  >
-                    <div>
-                      <div className="text-[12px] text-ink-secondary">
-                        {opponentName ? `${opponentName} accepted` : 'Challenge accepted'}
-                      </div>
-                      <div className="text-[12px] text-ink-faint mt-0.5">Ready to play</div>
-                    </div>
-                    <Link
-                      href={`/challenge/${challenge.code}/lobby`}
-                      className="px-3 py-1 bg-btn text-btn-text text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
-                    >
-                      PLAY
-                    </Link>
-                  </div>
-                );
-              })}
-
-              {/* Received, pending */}
-              {receivedPending.map((challenge) => {
-                const opponentName = getChallengeOpponentName(challenge);
-                return (
-                  <div
-                    key={challenge.id}
-                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
-                  >
-                    <div>
-                      <div className="text-[12px] text-ink-secondary">
-                        {opponentName ? `${opponentName} challenged you` : 'You received a challenge'}
-                      </div>
-                      <div className="text-[12px] text-ink-faint mt-0.5">Accept to start</div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => handleAccept(challenge.code)}
-                        className="px-3 py-1 bg-btn text-btn-text text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
-                      >
-                        ACCEPT
-                      </button>
-                      <button
-                        onClick={() => handleDecline(challenge.code)}
-                        className="px-2 py-1 border border-edge text-ink-muted text-[11px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Received, accepted */}
-              {receivedAccepted.map((challenge) => {
-                const opponentName = getChallengeOpponentName(challenge);
-                return (
-                  <div
-                    key={challenge.id}
-                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
-                  >
-                    <div>
-                      <div className="text-[12px] text-ink-tertiary">
-                        {opponentName ? `Match vs ${opponentName}` : 'Challenge accepted'}
-                      </div>
-                      <div className="text-[12px] text-ink-faint mt-0.5">Ready to play</div>
-                    </div>
-                    <Link
-                      href={`/challenge/${challenge.code}/lobby`}
-                      className="px-3 py-1 bg-btn text-btn-text text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
-                    >
-                      PLAY
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-[12px] text-ink-faint py-2">
-              No active challenges
-            </div>
-          )}
-
-          {/* Challenge a Friend button */}
-          <button
-            onClick={() => setChallengeModalOpen(true)}
-            className="mt-4 w-full px-4 py-2 border border-edge text-ink-tertiary text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
-          >
-            CHALLENGE A FRIEND
-          </button>
-        </Card>
+        {/* (Challenges card moved to top) */}
       </div>
 
       {/* Challenge Modal */}
