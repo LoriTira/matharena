@@ -19,7 +19,7 @@ function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready:
     }`}>
       <div className="flex items-center gap-2 mb-4">
         <div className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400/80' : 'bg-edge'}`} />
-        <span className="text-[9px] tracking-[2px] text-ink-muted">
+        <span className="text-[11px] tracking-[2px] text-ink-muted">
           {ready ? 'READY' : 'WAITING'}
         </span>
       </div>
@@ -34,7 +34,7 @@ function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready:
         <span>{winRate}% win</span>
       </div>
       {isYou && (
-        <div className="text-[9px] tracking-[1.5px] text-ink-faint mt-3">YOU</div>
+        <div className="text-[11px] tracking-[1.5px] text-ink-faint mt-3">YOU</div>
       )}
     </div>
   );
@@ -212,7 +212,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         <div className="text-red-400/60 text-sm">{error}</div>
         <button
           onClick={() => router.push('/dashboard')}
-          className="px-6 py-2.5 border border-edge text-ink-tertiary text-[10px] tracking-[1.5px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+          className="px-6 py-2.5 border border-edge text-ink-tertiary text-[12px] tracking-[1.5px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
         >
           DASHBOARD
         </button>
@@ -228,8 +228,8 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
       <div className="text-center">
-        <div className="text-[9px] tracking-[3px] text-ink-faint mb-2">CHALLENGE LOBBY</div>
-        <h1 className="font-serif text-3xl font-light text-ink">
+        <div className="text-[11px] tracking-[3px] text-ink-faint mb-2">CHALLENGE LOBBY</div>
+        <h1 className="font-serif text-3xl font-normal text-ink">
           {starting ? 'Starting match...' : 'Waiting for players'}
         </h1>
       </div>
@@ -271,7 +271,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       <button
         onClick={() => router.push('/dashboard')}
-        className="px-6 py-2 text-[10px] tracking-[1.5px] text-ink-faint hover:text-ink-tertiary transition-colors"
+        className="px-6 py-2 text-[12px] tracking-[1.5px] text-ink-faint hover:text-ink-tertiary transition-colors"
       >
         CANCEL
       </button>

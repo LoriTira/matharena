@@ -51,12 +51,12 @@ function SignupForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-page">
       <div className="w-full max-w-md p-8 border border-edge rounded-sm">
-        <h1 className="font-serif text-3xl font-light text-ink text-center mb-1">Join MathArena</h1>
+        <h1 className="font-serif text-3xl font-normal text-ink text-center mb-1">Join MathArena</h1>
         <p className="text-ink-muted text-center text-sm mb-8">Create your account and start competing</p>
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
+            <label htmlFor="username" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Username
             </label>
             <input
@@ -72,7 +72,7 @@ function SignupForm() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
+            <label htmlFor="email" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Email
             </label>
             <input
@@ -87,7 +87,7 @@ function SignupForm() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
+            <label htmlFor="password" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Password
             </label>
             <input

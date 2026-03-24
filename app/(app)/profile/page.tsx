@@ -165,12 +165,12 @@ export default function ProfilePage() {
       <div className="border border-edge rounded-sm p-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="font-serif text-3xl font-light text-ink">{profile.display_name || profile.username}</h1>
+            <h1 className="font-serif text-3xl font-normal text-ink">{profile.display_name || profile.username}</h1>
             <p className="text-ink-muted text-sm mt-1">@{profile.username}</p>
           </div>
           <button
             onClick={() => setEditing(!editing)}
-            className="px-4 py-2 text-[10px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
+            className="px-4 py-2 text-[12px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
           >
             {editing ? 'CANCEL' : 'EDIT PROFILE'}
           </button>
@@ -179,7 +179,7 @@ export default function ProfilePage() {
         {editing ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Display Name</label>
+              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Display Name</label>
               <input
                 type="text"
                 value={displayName}
@@ -188,7 +188,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Affiliation</label>
+              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Affiliation</label>
               <input
                 type="text"
                 value={affiliation}
@@ -198,7 +198,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Country</label>
+              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Country</label>
               <input
                 type="text"
                 value={country}
@@ -208,7 +208,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Type</label>
+              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Type</label>
               <select
                 value={affiliationType}
                 onChange={(e) => setAffiliationType(e.target.value as 'school' | 'company' | '')}
@@ -247,19 +247,19 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-shade rounded-sm overflow-hidden">
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">RATING</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">RATING</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{profile.elo_rating}</div>
         </div>
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_played}</div>
         </div>
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">WINS</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WINS</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_won}</div>
         </div>
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
         </div>
       </div>
@@ -267,7 +267,7 @@ export default function ProfilePage() {
       {/* Friends */}
       {friends.length > 0 && (
         <div>
-          <div className="text-[9px] tracking-[3px] text-ink-faint mb-4">FRIENDS</div>
+          <div className="text-[11px] tracking-[3px] text-ink-faint mb-4">FRIENDS</div>
           <div className="border border-edge-faint rounded-sm overflow-hidden">
             {friends.map((friend) => (
               <div
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                     setRechallengingId(null);
                   }}
                   disabled={rechallengingId === friend.id}
-                  className="px-3 py-1.5 border border-edge text-ink-muted text-[10px] tracking-[1px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 border border-edge text-ink-muted text-[12px] tracking-[1px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors disabled:opacity-50"
                 >
                   {rechallengingId === friend.id ? 'SENDING...' : 'RE-CHALLENGE'}
                 </button>
@@ -313,7 +313,7 @@ export default function ProfilePage() {
 
       {/* Trophy Case */}
       <div>
-        <div className="text-[9px] tracking-[3px] text-ink-faint mb-4">TROPHY CASE</div>
+        <div className="text-[11px] tracking-[3px] text-ink-faint mb-4">TROPHY CASE</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {[...ACHIEVEMENTS]
             .sort((a, b) => {

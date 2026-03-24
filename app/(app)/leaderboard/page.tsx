@@ -35,7 +35,7 @@ export default function LeaderboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-serif text-3xl font-light text-ink">Leaderboard</h1>
+        <h1 className="font-serif text-3xl font-normal text-ink">Leaderboard</h1>
         <input
           type="text"
           value={filter}
@@ -50,13 +50,13 @@ export default function LeaderboardPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-edge">
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint w-16">#</th>
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint">PLAYER</th>
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint">COUNTRY</th>
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint">AFFILIATION</th>
-                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-ink-faint">RATING</th>
-                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-ink-faint">W/L</th>
-                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-ink-faint">WIN %</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint w-16">#</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">PLAYER</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">COUNTRY</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">AFFILIATION</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
               </tr>
             </thead>
             <tbody>
@@ -79,13 +79,13 @@ export default function LeaderboardPage() {
           <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-edge">
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint w-16">#</th>
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint">PLAYER</th>
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint">COUNTRY</th>
-                <th className="px-4 py-3 text-left text-[9px] tracking-[2px] text-ink-faint">AFFILIATION</th>
-                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-ink-faint">RATING</th>
-                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-ink-faint">W/L</th>
-                <th className="px-4 py-3 text-right text-[9px] tracking-[2px] text-ink-faint">WIN %</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint w-16">#</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">PLAYER</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">COUNTRY</th>
+                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">AFFILIATION</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
               </tr>
             </thead>
             <tbody>

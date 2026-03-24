@@ -37,12 +37,12 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-page">
       <div className="w-full max-w-md p-8 border border-edge rounded-sm">
-        <h1 className="font-serif text-3xl font-light text-ink text-center mb-1">Welcome Back</h1>
+        <h1 className="font-serif text-3xl font-normal text-ink text-center mb-1">Welcome Back</h1>
         <p className="text-ink-muted text-center text-sm mb-8">Sign in to MathArena</p>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
+            <label htmlFor="email" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Email
             </label>
             <input
@@ -57,7 +57,7 @@ function LoginForm() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
+            <label htmlFor="password" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Password
             </label>
             <input

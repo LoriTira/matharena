@@ -250,7 +250,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Greeting */}
       <div>
-        <h1 className="font-serif text-[28px] font-light text-ink">
+        <h1 className="font-serif text-[28px] font-normal text-ink">
           Welcome back, {profile.display_name || profile.username}
         </h1>
         <p className="text-[13px] text-ink-muted mt-1">Your mind is your weapon. Keep it sharp.</p>
@@ -287,7 +287,7 @@ export default function DashboardPage() {
         <Card variant="default" className="p-6">
           <div className="flex items-start justify-between mb-3">
             <div>
-              <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">YOUR RATING</div>
+              <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">YOUR RATING</div>
               <div className="font-mono text-[36px] font-normal text-ink tabular-nums leading-none">
                 {profile.elo_rating}
               </div>
@@ -314,12 +314,12 @@ export default function DashboardPage() {
               />
             </div>
             {rank.tier !== 'Grandmaster' && (
-              <div className="text-[10px] text-ink-muted mt-1.5 font-mono tabular-nums">
+              <div className="text-[12px] text-ink-muted mt-1.5 font-mono tabular-nums">
                 {ptsToNext} pts to {rank.tier === 'Bronze' ? 'Silver' : rank.tier === 'Silver' ? 'Gold' : rank.tier === 'Gold' ? 'Platinum' : rank.tier === 'Platinum' ? 'Diamond' : 'Grandmaster'}
               </div>
             )}
             {rank.tier === 'Grandmaster' && (
-              <div className="text-[10px] mt-1.5 font-mono tabular-nums" style={{ color: rank.color }}>
+              <div className="text-[12px] mt-1.5 font-mono tabular-nums" style={{ color: rank.color }}>
                 Grandmaster
               </div>
             )}
@@ -344,7 +344,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/daily"
-            className="inline-block px-5 py-2 border border-accent/40 text-accent text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-glow transition-colors"
+            className="inline-block px-5 py-2 border border-accent/40 text-accent text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-glow transition-colors"
           >
             SOLVE TODAY&apos;S PUZZLE
           </Link>
@@ -353,8 +353,8 @@ export default function DashboardPage() {
         {/* 4. Recent Achievements Card */}
         <Card variant="default" className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="text-[9px] tracking-[2px] text-ink-faint">ACHIEVEMENTS</div>
-            <Link href="/profile#achievements" className="text-[10px] text-ink-faint hover:text-ink-tertiary transition-colors">
+            <div className="text-[11px] tracking-[2px] text-ink-faint">ACHIEVEMENTS</div>
+            <Link href="/profile#achievements" className="text-[12px] text-ink-faint hover:text-ink-tertiary transition-colors">
               View all &rarr;
             </Link>
           </div>
@@ -365,7 +365,7 @@ export default function DashboardPage() {
                   <span className="text-base">{a.achievement?.icon ?? '🏆'}</span>
                   <div>
                     <div className="text-[12px] text-ink-secondary">{a.achievement?.name ?? 'Achievement'}</div>
-                    <div className="text-[10px] text-ink-faint">{a.achievement?.description ?? ''}</div>
+                    <div className="text-[12px] text-ink-faint">{a.achievement?.description ?? ''}</div>
                   </div>
                 </div>
               ))}
@@ -381,7 +381,7 @@ export default function DashboardPage() {
 
         {/* 5. Recent Matches Card */}
         <Card variant="default" className="p-6">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-4">RECENT MATCHES</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-4">RECENT MATCHES</div>
           {recentMatches.length > 0 ? (
             <div className="space-y-0 -mx-1">
               {recentMatches.map((match) => {
@@ -402,7 +402,7 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-center gap-2.5">
                       <span
-                        className={`font-mono text-[9px] tracking-[1px] px-1.5 py-0.5 rounded-sm ${
+                        className={`font-mono text-[11px] tracking-[1px] px-1.5 py-0.5 rounded-sm ${
                           won
                             ? 'text-ink-secondary bg-shade'
                             : 'text-ink-muted bg-card'
@@ -417,7 +417,7 @@ export default function DashboardPage() {
                         {myScore}&ndash;{theirScore}
                       </span>
                       <span
-                        className={`font-mono text-[10px] tabular-nums w-10 text-right ${
+                        className={`font-mono text-[12px] tabular-nums w-10 text-right ${
                           eloChange >= 0 ? 'text-ink-secondary' : 'text-ink-faint'
                         }`}
                       >
@@ -438,7 +438,7 @@ export default function DashboardPage() {
 
         {/* 6. Challenges Card */}
         <Card variant="default" className="p-6">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-4">CHALLENGES</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-4">CHALLENGES</div>
 
           {activeChallenges.length > 0 ? (
             <div className="space-y-2.5">
@@ -450,13 +450,13 @@ export default function DashboardPage() {
                 >
                   <div>
                     <div className="text-[12px] text-ink-tertiary">Waiting for opponent</div>
-                    <div className="font-mono text-[10px] text-ink-faint mt-0.5 truncate max-w-[180px]">
+                    <div className="font-mono text-[12px] text-ink-faint mt-0.5 truncate max-w-[180px]">
                       /challenge/{challenge.code}
                     </div>
                   </div>
                   <button
                     onClick={() => handleDecline(challenge.code)}
-                    className="px-2 py-1 border border-edge text-ink-faint text-[10px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
+                    className="px-2 py-1 border border-edge text-ink-faint text-[12px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
                   >
                     ✕
                   </button>
@@ -475,11 +475,11 @@ export default function DashboardPage() {
                       <div className="text-[12px] text-ink-secondary">
                         {opponentName ? `${opponentName} accepted` : 'Challenge accepted'}
                       </div>
-                      <div className="text-[10px] text-ink-faint mt-0.5">Ready to play</div>
+                      <div className="text-[12px] text-ink-faint mt-0.5">Ready to play</div>
                     </div>
                     <Link
                       href={`/challenge/${challenge.code}/lobby`}
-                      className="px-3 py-1 bg-btn text-btn-text text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
+                      className="px-3 py-1 bg-btn text-btn-text text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
                     >
                       PLAY
                     </Link>
@@ -499,18 +499,18 @@ export default function DashboardPage() {
                       <div className="text-[12px] text-ink-secondary">
                         {opponentName ? `${opponentName} challenged you` : 'You received a challenge'}
                       </div>
-                      <div className="text-[10px] text-ink-faint mt-0.5">Accept to start</div>
+                      <div className="text-[12px] text-ink-faint mt-0.5">Accept to start</div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleAccept(challenge.code)}
-                        className="px-3 py-1 bg-btn text-btn-text text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
+                        className="px-3 py-1 bg-btn text-btn-text text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
                       >
                         ACCEPT
                       </button>
                       <button
                         onClick={() => handleDecline(challenge.code)}
-                        className="px-2 py-1 border border-edge text-ink-muted text-[9px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
+                        className="px-2 py-1 border border-edge text-ink-muted text-[11px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
                       >
                         ✕
                       </button>
@@ -531,11 +531,11 @@ export default function DashboardPage() {
                       <div className="text-[12px] text-ink-tertiary">
                         {opponentName ? `Match vs ${opponentName}` : 'Challenge accepted'}
                       </div>
-                      <div className="text-[10px] text-ink-faint mt-0.5">Ready to play</div>
+                      <div className="text-[12px] text-ink-faint mt-0.5">Ready to play</div>
                     </div>
                     <Link
                       href={`/challenge/${challenge.code}/lobby`}
-                      className="px-3 py-1 bg-btn text-btn-text text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
+                      className="px-3 py-1 bg-btn text-btn-text text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
                     >
                       PLAY
                     </Link>
@@ -552,7 +552,7 @@ export default function DashboardPage() {
           {/* Challenge a Friend button */}
           <button
             onClick={() => setChallengeModalOpen(true)}
-            className="mt-4 w-full px-4 py-2 border border-edge text-ink-tertiary text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+            className="mt-4 w-full px-4 py-2 border border-edge text-ink-tertiary text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
           >
             CHALLENGE A FRIEND
           </button>

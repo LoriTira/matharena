@@ -110,10 +110,10 @@ function LeaderboardTable({
       {/* Header */}
       <div className="flex items-center justify-between px-2 py-2 border-b border-edge">
         <div className="flex items-center gap-3">
-          <span className="text-[9px] tracking-[1px] text-ink-faint w-6 text-center">#</span>
-          <span className="text-[9px] tracking-[1px] text-ink-faint">PLAYER</span>
+          <span className="text-[11px] tracking-[1px] text-ink-faint w-6 text-center">#</span>
+          <span className="text-[11px] tracking-[1px] text-ink-faint">PLAYER</span>
         </div>
-        <span className="text-[9px] tracking-[1px] text-ink-faint">TIME</span>
+        <span className="text-[11px] tracking-[1px] text-ink-faint">TIME</span>
       </div>
       {/* Rows */}
       {top10.map((entry) => (
@@ -163,13 +163,13 @@ function ResultsView({
           transition={{ duration: 0.5, type: 'spring' }}
           className="text-center"
         >
-          <h1 className="font-serif text-3xl md:text-4xl font-light text-accent">
+          <h1 className="font-serif text-3xl md:text-4xl font-normal text-accent">
             PUZZLE COMPLETE!
           </h1>
         </motion.div>
       ) : (
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-ink-secondary">
+          <h1 className="font-serif text-2xl font-normal text-ink-secondary">
             Today&apos;s Puzzle
           </h1>
           <p className="text-[11px] text-ink-muted mt-1">You already completed today&apos;s puzzle</p>
@@ -178,7 +178,7 @@ function ResultsView({
 
       {/* Total Time */}
       <div className="text-center">
-        <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">TOTAL TIME</div>
+        <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">TOTAL TIME</div>
         <div className="font-mono text-[48px] md:text-[56px] font-normal text-ink tabular-nums leading-none">
           {formatTotalTime(totalTimeMs)}
         </div>
@@ -187,11 +187,11 @@ function ResultsView({
       {/* Per-problem times */}
       {problemTimes.length > 0 && (
         <Card variant="default" className="p-4">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-3">PROBLEM TIMES</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-3">PROBLEM TIMES</div>
           <div className="grid grid-cols-5 gap-2">
             {problemTimes.map((time, i) => (
               <div key={i} className="text-center">
-                <div className="text-[10px] text-ink-muted mb-1">#{i + 1}</div>
+                <div className="text-[12px] text-ink-muted mb-1">#{i + 1}</div>
                 <div className="font-mono text-[14px] text-ink-secondary tabular-nums">
                   {formatProblemTime(time)}
                 </div>
@@ -205,22 +205,22 @@ function ResultsView({
       <div className="grid grid-cols-2 gap-4">
         {result && (
           <Card variant="highlight" className="p-4 text-center">
-            <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">YOUR RANK</div>
+            <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">YOUR RANK</div>
             <div className="font-mono text-[28px] text-accent tabular-nums leading-none">
               #{result.rank}
             </div>
-            <div className="text-[10px] text-ink-muted mt-1.5">
+            <div className="text-[12px] text-ink-muted mt-1.5">
               out of {result.totalPlayers} player{result.totalPlayers !== 1 ? 's' : ''}
             </div>
           </Card>
         )}
         <Card variant="default" className="p-4 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">STREAK</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">STREAK</div>
           <div className="font-mono text-[28px] text-ink-secondary tabular-nums leading-none flex items-center justify-center gap-1.5">
             <span className="text-xl">🔥</span>
             {streak}
           </div>
-          <div className="text-[10px] text-ink-muted mt-1.5">
+          <div className="text-[12px] text-ink-muted mt-1.5">
             day{streak !== 1 ? 's' : ''} in a row
           </div>
         </Card>
@@ -228,7 +228,7 @@ function ResultsView({
 
       {/* Leaderboard */}
       <Card variant="default" className="p-4">
-        <div className="text-[9px] tracking-[2px] text-ink-faint mb-3">TODAY&apos;S LEADERBOARD</div>
+        <div className="text-[11px] tracking-[2px] text-ink-faint mb-3">TODAY&apos;S LEADERBOARD</div>
         <LeaderboardTable leaderboard={leaderboard} />
       </Card>
 
@@ -236,7 +236,7 @@ function ResultsView({
       <div className="text-center pt-2">
         <Link
           href="/dashboard"
-          className="inline-block px-8 py-3 border border-edge text-ink-tertiary text-[10px] tracking-[2px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+          className="inline-block px-8 py-3 border border-edge text-ink-tertiary text-[12px] tracking-[2px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
         >
           BACK TO DASHBOARD
         </Link>
@@ -323,7 +323,7 @@ export default function DailyPuzzlePage() {
         <CountdownOverlay onComplete={handleCountdownComplete} />
         {/* Underlying content so the page isn't blank after overlay fades */}
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 opacity-0">
-          <h1 className="font-serif text-3xl font-light text-ink">DAILY PUZZLE</h1>
+          <h1 className="font-serif text-3xl font-normal text-ink">DAILY PUZZLE</h1>
         </div>
       </div>
     );
@@ -338,10 +338,10 @@ export default function DailyPuzzlePage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-serif text-xl font-light text-ink">DAILY PUZZLE</h1>
+            <h1 className="font-serif text-xl font-normal text-ink">DAILY PUZZLE</h1>
           </div>
           <div className="text-right">
-            <div className="text-[9px] tracking-[2px] text-ink-faint mb-1">
+            <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">
               PROBLEM {currentIndex + 1}/5
             </div>
             <TimerDisplay startTime={puzzleStartTime} />

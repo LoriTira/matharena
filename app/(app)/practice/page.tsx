@@ -55,13 +55,13 @@ export default function PracticePage() {
   if (!started) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
-        <h1 className="font-serif text-4xl font-light text-ink">Practice Mode</h1>
-        <p className="text-ink-tertiary text-[15px] font-light">Train your mental math skills. No rating impact.</p>
+        <h1 className="font-serif text-4xl font-normal text-ink">Practice Mode</h1>
+        <p className="text-ink-tertiary text-[15px] font-normal">Train your mental math skills. No rating impact.</p>
 
         <div className="space-y-6 w-full max-w-md">
           {/* Operation selector */}
           <div>
-            <label className="block text-[9px] tracking-[2px] text-ink-muted mb-3 uppercase">Operation</label>
+            <label className="block text-[11px] tracking-[2px] text-ink-muted mb-3 uppercase">Operation</label>
             <div className="grid grid-cols-4 gap-2">
               {operations.map((op) => (
                 <button
@@ -81,7 +81,7 @@ export default function PracticePage() {
 
           {/* Difficulty selector */}
           <div>
-            <label className="block text-[9px] tracking-[2px] text-ink-muted mb-3 uppercase">
+            <label className="block text-[11px] tracking-[2px] text-ink-muted mb-3 uppercase">
               Difficulty: <span className="font-mono text-ink-secondary">{difficulty}</span>
             </label>
             <input
@@ -92,7 +92,7 @@ export default function PracticePage() {
               onChange={(e) => setDifficulty(parseInt(e.target.value))}
               className="w-full"
             />
-            <div className="flex justify-between text-[10px] text-ink-faint mt-2 tracking-wide">
+            <div className="flex justify-between text-[12px] text-ink-faint mt-2 tracking-wide">
               <span>Beginner</span>
               <span>Master</span>
             </div>
@@ -113,15 +113,15 @@ export default function PracticePage() {
     <div className="flex flex-col items-center gap-8 py-8">
       <div className="flex items-center gap-8">
         <div className="text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-1">CORRECT</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">CORRECT</div>
           <div className="font-mono text-2xl text-ink-secondary tabular-nums">{stats.correct}</div>
         </div>
         <div className="text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-1">WRONG</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">WRONG</div>
           <div className="font-mono text-2xl text-ink-muted tabular-nums">{stats.wrong}</div>
         </div>
         <div className="text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-1">STREAK</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">STREAK</div>
           <div className="font-mono text-2xl text-ink-secondary tabular-nums">{stats.streak}</div>
         </div>
       </div>

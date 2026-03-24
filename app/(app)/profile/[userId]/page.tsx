@@ -60,7 +60,7 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
       </Link>
 
       <div className="border border-edge rounded-sm p-8">
-        <h1 className="font-serif text-3xl font-light text-ink">{profile.display_name || profile.username}</h1>
+        <h1 className="font-serif text-3xl font-normal text-ink">{profile.display_name || profile.username}</h1>
         <p className="text-ink-muted text-sm mt-1">@{profile.username}</p>
         {profile.country && (
           <p className="text-ink-secondary text-sm mt-3">
@@ -78,19 +78,19 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-shade rounded-sm overflow-hidden">
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">RATING</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">RATING</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{profile.elo_rating}</div>
         </div>
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_played}</div>
         </div>
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">WINS</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WINS</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_won}</div>
         </div>
         <div className="bg-page p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
         </div>
       </div>

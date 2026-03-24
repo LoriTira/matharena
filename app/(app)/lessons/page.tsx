@@ -42,8 +42,8 @@ export default function LessonsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="font-serif text-3xl font-light text-ink">Lessons</h1>
-        <p className="text-ink-muted mt-2 text-[15px] font-light">Learn mental math tricks and techniques to improve your speed.</p>
+        <h1 className="font-serif text-3xl font-normal text-ink">Lessons</h1>
+        <p className="text-ink-muted mt-2 text-[15px] font-normal">Learn mental math tricks and techniques to improve your speed.</p>
       </div>
 
       {Object.entries(grouped).map(([category, categoryLessons]) => (
@@ -56,7 +56,7 @@ export default function LessonsPage() {
                 href={`/lessons/${lesson.slug}`}
                 className="border border-edge rounded-sm p-6 bg-card hover:border-edge-strong transition-colors group"
               >
-                <span className="inline-block px-2 py-0.5 text-[9px] tracking-[1.5px] text-ink-muted border border-edge rounded-sm uppercase">
+                <span className="inline-block px-2 py-0.5 text-[11px] tracking-[1.5px] text-ink-muted border border-edge rounded-sm uppercase">
                   {lesson.category}
                 </span>
                 <h3 className="font-serif text-base text-ink mt-3 group-hover:text-ink transition-colors">

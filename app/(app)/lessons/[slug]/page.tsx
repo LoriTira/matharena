@@ -55,10 +55,10 @@ export default function LessonPage({ params }: LessonPageProps) {
         Back to lessons
       </Link>
 
-      <h1 className="font-serif text-3xl font-light text-white/90 mt-6">{lesson.title}</h1>
+      <h1 className="font-serif text-3xl font-normal text-white/90 mt-6">{lesson.title}</h1>
 
       {lesson.description && (
-        <p className="text-white/35 mt-2 font-light">{lesson.description}</p>
+        <p className="text-white/35 mt-2 font-normal">{lesson.description}</p>
       )}
 
       <div className="w-10 h-px bg-white/10 my-8" />
@@ -66,10 +66,10 @@ export default function LessonPage({ params }: LessonPageProps) {
       <div className="max-w-none">
         {lesson.content.split('\n').map((line, i) => {
           if (line.startsWith('# ')) {
-            return <h1 key={i} className="font-serif text-2xl font-light text-white/85 mt-8 mb-3">{line.slice(2)}</h1>;
+            return <h1 key={i} className="font-serif text-2xl font-normal text-white/85 mt-8 mb-3">{line.slice(2)}</h1>;
           }
           if (line.startsWith('## ')) {
-            return <h2 key={i} className="font-serif text-xl font-light text-white/75 mt-6 mb-2">{line.slice(3)}</h2>;
+            return <h2 key={i} className="font-serif text-xl font-normal text-white/75 mt-6 mb-2">{line.slice(3)}</h2>;
           }
           if (line.startsWith('- ')) {
             return <li key={i} className="text-white/50 ml-4 leading-relaxed">{renderInline(line.slice(2))}</li>;

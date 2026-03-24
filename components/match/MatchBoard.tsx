@@ -245,7 +245,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         <div className="text-[15px] text-ink-tertiary">Waiting for opponent...</div>
         <button
           onClick={abandonMatch}
-          className="px-4 py-2 text-[10px] tracking-[1.5px] text-ink-muted hover:text-ink-tertiary transition-colors"
+          className="px-4 py-2 text-[12px] tracking-[1.5px] text-ink-muted hover:text-ink-tertiary transition-colors"
         >
           CANCEL
         </button>
@@ -320,7 +320,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.4 }}
-              className="text-[10px] tracking-[3px] text-accent/70 font-mono"
+              className="text-[12px] tracking-[3px] text-accent/70 font-mono"
             >
               MATCH POINT
             </motion.div>
@@ -331,7 +331,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
           <Timer startTime={match.started_at} isRunning={match.status === 'active'} />
           <button
             onClick={abandonMatch}
-            className="text-[10px] tracking-[1.5px] text-ink-faint hover:text-red-400/60 transition-colors"
+            className="text-[12px] tracking-[1.5px] text-ink-faint hover:text-red-400/60 transition-colors"
           >
             FORFEIT
           </button>
@@ -340,7 +340,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         {/* 5B: ScoreDots replacing ScoreBar */}
         <div className="flex items-center justify-between w-full max-w-2xl">
           <div className="flex flex-col items-start gap-1">
-            <span className="text-[10px] tracking-[1.5px] text-ink-muted">
+            <span className="text-[12px] tracking-[1.5px] text-ink-muted">
               {isPlayer1 ? player1Name : player2Name} {isPlayer1 ? '(YOU)' : ''}
             </span>
             <ScoreDots
@@ -350,7 +350,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
             />
           </div>
           <div className="flex flex-col items-end gap-1">
-            <span className="text-[10px] tracking-[1.5px] text-ink-muted">
+            <span className="text-[12px] tracking-[1.5px] text-ink-muted">
               {isPlayer1 ? player2Name : player1Name} {!isPlayer1 ? '(YOU)' : ''}
             </span>
             <ScoreDots
@@ -363,7 +363,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
 
         {/* Problem counter + 5E: Streak indicator */}
         <div className="flex items-center gap-3">
-          <div className="text-[9px] tracking-[2px] text-ink-faint">
+          <div className="text-[11px] tracking-[2px] text-ink-faint">
             PROBLEM {currentProblemIndex + 1}
           </div>
           {streak >= 3 && (

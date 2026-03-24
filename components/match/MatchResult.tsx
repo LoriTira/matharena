@@ -157,7 +157,7 @@ export function MatchResult({
 
       {/* Result heading */}
       <motion.div
-        className={`font-serif text-5xl md:text-6xl font-light ${won ? 'text-accent' : 'text-ink-tertiary'}`}
+        className={`font-serif text-5xl md:text-6xl font-normal ${won ? 'text-accent' : 'text-ink-tertiary'}`}
         initial={{ scale: won ? 0.5 : 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={won ? { type: 'spring', stiffness: 200, damping: 15, delay: 0.3 } : { duration: 0.8, delay: 0.2 }}
@@ -226,7 +226,7 @@ export function MatchResult({
             transition={{ delay: 1.2, duration: 0.8, ease: 'easeOut' }}
           />
         </div>
-        <div className="text-[10px] text-ink-faint text-center font-mono">
+        <div className="text-[12px] text-ink-faint text-center font-mono">
           {newRank.tier === 'Grandmaster'
             ? 'Grandmaster'
             : nextTierName
@@ -245,7 +245,7 @@ export function MatchResult({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1.4, type: 'spring', stiffness: 200 }}
           >
-            <span className="text-[10px] tracking-[2px] text-accent font-semibold">RANK UP!</span>
+            <span className="text-[12px] tracking-[2px] text-accent font-semibold">RANK UP!</span>
             <RankBadge elo={eloAfter} size="lg" showLabel />
           </motion.div>
         )}
@@ -294,7 +294,7 @@ export function MatchResult({
       {/* Motivational copy for losses */}
       {!won && winsToRecover > 0 && (
         <motion.div
-          className="text-ink-muted text-[13px] font-light"
+          className="text-ink-muted text-[13px] font-normal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.3 }}
@@ -311,7 +311,7 @@ export function MatchResult({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.6 }}
         >
-          <div className="text-[9px] tracking-[2px] text-accent">
+          <div className="text-[11px] tracking-[2px] text-accent">
             {newAchievements.length === 1 ? 'ACHIEVEMENT UNLOCKED' : 'ACHIEVEMENTS UNLOCKED'}
           </div>
           {newAchievements.map((a, i) => (
@@ -358,14 +358,14 @@ export function MatchResult({
 
         <button
           onClick={handleShare}
-          className="px-5 py-2.5 border border-edge text-ink-muted text-[10px] tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-tertiary"
+          className="px-5 py-2.5 border border-edge text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-tertiary"
         >
           SHARE
         </button>
 
         <Link
           href="/dashboard"
-          className="px-5 py-2.5 text-ink-muted text-[10px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
+          className="px-5 py-2.5 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
         >
           DASHBOARD
         </Link>

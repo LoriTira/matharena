@@ -29,7 +29,7 @@ const NAV_GROUPS = [
 
 // ─── Shared styles ────────────────────────────────────────
 const triggerClass =
-  'text-[10px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors select-none';
+  'text-[12px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors select-none';
 
 const dropdownItemClass =
   'block px-4 py-2.5 text-[11px] text-ink-secondary hover:text-ink hover:bg-tint transition-colors';
@@ -79,7 +79,7 @@ export function Navbar() {
             {/* ── Logo ─────────────────────────────────── */}
             <Link href={user ? '/dashboard' : '/'} className="flex items-center">
               <span className="font-serif text-base font-bold text-ink tracking-[1px]">
-                MATH<span className="font-light text-ink-tertiary">ARENA</span>
+                MATH<span className="font-normal text-ink-tertiary">ARENA</span>
               </span>
             </Link>
 
@@ -136,7 +136,7 @@ export function Navbar() {
                       {/* Challenge CTA */}
                       <button
                         onClick={() => setChallengeModalOpen(true)}
-                        className="px-3.5 py-1.5 bg-accent text-on-accent text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
+                        className="px-3.5 py-1.5 bg-accent text-on-accent text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
                       >
                         CHALLENGE
                       </button>
@@ -174,13 +174,13 @@ export function Navbar() {
                     <>
                       <Link
                         href="/leaderboard"
-                        className="text-[10px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors"
+                        className="text-[12px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors"
                       >
                         RANKINGS
                       </Link>
                       <Link
                         href="/login"
-                        className="px-4 py-1.5 border border-edge-strong rounded-sm text-[10px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
+                        className="px-4 py-1.5 border border-edge-strong rounded-sm text-[12px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
                       >
                         SIGN IN
                       </Link>
@@ -197,7 +197,7 @@ export function Navbar() {
                   {/* Challenge CTA — always visible on mobile */}
                   <button
                     onClick={() => setChallengeModalOpen(true)}
-                    className="px-3 py-1.5 bg-accent text-on-accent text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
+                    className="px-3 py-1.5 bg-accent text-on-accent text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
                   >
                     CHALLENGE
                   </button>
@@ -225,7 +225,7 @@ export function Navbar() {
               {!loading && !user && (
                 <Link
                   href="/login"
-                  className="px-4 py-1.5 border border-edge-strong rounded-sm text-[10px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
+                  className="px-4 py-1.5 border border-edge-strong rounded-sm text-[12px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
                 >
                   SIGN IN
                 </Link>
@@ -290,7 +290,7 @@ export function Navbar() {
               <div className="flex-1 overflow-y-auto py-4 px-2">
                 {NAV_GROUPS.map((group) => (
                   <div key={group.label} className="mb-5">
-                    <div className="px-3 mb-1.5 text-[9px] tracking-[2px] text-ink-faint uppercase">
+                    <div className="px-3 mb-1.5 text-[11px] tracking-[2px] text-ink-faint uppercase">
                       {group.label}
                     </div>
                     {group.items.map((item) => (
@@ -319,7 +319,7 @@ export function Navbar() {
 
                 {/* Profile link */}
                 <div className="mb-5">
-                  <div className="px-3 mb-1.5 text-[9px] tracking-[2px] text-ink-faint uppercase">
+                  <div className="px-3 mb-1.5 text-[11px] tracking-[2px] text-ink-faint uppercase">
                     ACCOUNT
                   </div>
                   <Link

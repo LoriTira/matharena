@@ -101,7 +101,7 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
         </button>
 
         <div className="text-center mb-6">
-          <h2 className="font-serif text-xl font-light text-ink">Challenge a Friend</h2>
+          <h2 className="font-serif text-xl font-normal text-ink">Challenge a Friend</h2>
           <p className="text-ink-muted text-sm mt-1">Share this link to start a match</p>
         </div>
 
@@ -127,7 +127,7 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
               </span>
               <button
                 onClick={handleCopy}
-                className="px-4 py-1.5 bg-btn text-btn-text text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-btn-hover transition-colors whitespace-nowrap"
+                className="px-4 py-1.5 bg-btn text-btn-text text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-btn-hover transition-colors whitespace-nowrap"
               >
                 {copied ? 'COPIED' : 'COPY'}
               </button>

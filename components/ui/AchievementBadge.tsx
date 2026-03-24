@@ -48,7 +48,7 @@ export function AchievementBadge({ achievement, unlocked = false, size = 'md', c
         title={unlocked ? `${achievement.name}: ${achievement.description}` : 'Locked'}
       >
         <span className="text-sm">{unlocked ? achievement.icon : '?'}</span>
-        <span className="text-[10px] text-ink-secondary">{unlocked ? achievement.name : '???'}</span>
+        <span className="text-[12px] text-ink-secondary">{unlocked ? achievement.name : '???'}</span>
       </span>
     );
   }

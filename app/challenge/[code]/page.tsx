@@ -90,7 +90,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-ink mb-2">Challenge Not Found</h1>
+          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Not Found</h1>
           <p className="text-ink-muted text-sm mb-8">This challenge link may have expired or is invalid.</p>
           <Link href="/" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
             GO TO MATHARENA
@@ -107,7 +107,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-ink mb-2">Challenge Expired</h1>
+          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Expired</h1>
           <p className="text-ink-muted text-sm mb-8">This challenge is no longer available.</p>
           <Link href="/" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
             GO TO MATHARENA
@@ -122,7 +122,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-ink mb-2">Challenge Completed</h1>
+          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Completed</h1>
           <p className="text-ink-muted text-sm mb-8">This challenge has already been played.</p>
           <Link href="/dashboard" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
             DASHBOARD
@@ -137,7 +137,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-ink mb-2">Challenge Accepted</h1>
+          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Accepted</h1>
           <p className="text-ink-muted text-sm mb-8">
             Click below to start searching for your match.
           </p>
@@ -154,7 +154,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-ink mb-2">Challenge Taken</h1>
+          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Taken</h1>
           <p className="text-ink-muted text-sm mb-8">Someone else already accepted this challenge.</p>
           <Link href="/" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
             GO TO MATHARENA
@@ -169,7 +169,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-ink mb-2">Your Challenge</h1>
+          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Your Challenge</h1>
           <p className="text-ink-muted text-sm mb-8">Share this link with a friend to challenge them.</p>
           <Link href="/dashboard" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
             DASHBOARD
@@ -187,10 +187,10 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
   return (
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="text-center">
-        <div className="text-[9px] tracking-[3px] text-ink-faint mb-6 uppercase">
+        <div className="text-[11px] tracking-[3px] text-ink-faint mb-6 uppercase">
           You&apos;ve been challenged
         </div>
-        <h1 className="font-serif text-4xl font-light text-ink mb-2">
+        <h1 className="font-serif text-4xl font-normal text-ink mb-2">
           {sender.display_name || sender.username}
         </h1>
         <p className="font-mono text-sm text-ink-muted mb-10">

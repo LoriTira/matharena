@@ -24,8 +24,8 @@ function PlayContent() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
-      <h1 className="font-serif text-4xl font-light text-ink">Ranked Match</h1>
-      <p className="text-ink-tertiary text-[15px] max-w-md text-center leading-relaxed font-light">
+      <h1 className="font-serif text-4xl font-normal text-ink">Ranked Match</h1>
+      <p className="text-ink-tertiary text-[15px] max-w-md text-center leading-relaxed font-normal">
         Compete head-to-head against another player. First to solve 5 problems wins.
         Your Elo rating is on the line.
       </p>
@@ -42,7 +42,7 @@ function PlayContent() {
           <p className="text-ink-tertiary text-[15px]">Finding an opponent...</p>
           <button
             onClick={cancel}
-            className="px-6 py-2 text-[10px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
+            className="px-6 py-2 text-[12px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
           >
             CANCEL
           </button>

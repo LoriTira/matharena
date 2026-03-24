@@ -74,7 +74,7 @@ const sizes = { sm: 14, md: 20, lg: 28 };
 export function RankBadge({ elo, size = 'md', showLabel = false }: RankBadgeProps) {
   const rank = getRank(elo);
   const iconSize = sizes[size];
-  const textSize = size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[11px]' : 'text-[13px]';
+  const textSize = size === 'sm' ? 'text-[11px]' : size === 'md' ? 'text-[11px]' : 'text-[13px]';
 
   return (
     <span className="inline-flex items-center gap-1.5">
