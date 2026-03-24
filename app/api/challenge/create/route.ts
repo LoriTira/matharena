@@ -1,9 +1,52 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { sendChallengeEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 function generateCode(): string {
   return crypto.randomBytes(4).toString('base64url').slice(0, 6);
+}
+
+async function sendEmailNotification(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  senderId: string,
+  recipientId: string,
+  challengeCode: string,
+  origin: string
+) {
+  try {
+    // Get sender profile for their display name
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('username, display_name')
+      .eq('id', senderId)
+      .single();
+
+    const senderName = senderProfile?.display_name || senderProfile?.username || 'Someone';
+
+    // Get recipient email via admin client
+    let recipientEmail: string | null = null;
+    try {
+      const { createAdminClient } = await import('@/lib/supabase/admin');
+      const admin = createAdminClient();
+      const { data } = await admin.auth.admin.getUserById(recipientId);
+      recipientEmail = data?.user?.email ?? null;
+    } catch {
+      // Service role key not configured — skip email
+      return;
+    }
+
+    if (!recipientEmail) return;
+
+    const challengeUrl = `${origin}/challenge/${challengeCode}`;
+    await sendChallengeEmail({
+      to: recipientEmail,
+      challengerName: senderName,
+      challengeUrl,
+    });
+  } catch (e) {
+    console.error('Email notification failed:', e);
+  }
 }
 
 export async function POST(request: Request) {
@@ -25,7 +68,7 @@ export async function POST(request: Request) {
       sender_id: user.id,
     };
 
-    // Re-challenge flow: recipient is pre-filled, status is accepted
+    // Direct challenge to a friend: recipient is pre-filled, status is accepted
     if (recipientId) {
       if (recipientId === user.id) {
         return NextResponse.json({ error: 'Cannot challenge yourself' }, { status: 400 });
@@ -55,6 +98,12 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 });
         }
 
+        // Send email notification for direct challenges (fire-and-forget)
+        if (recipientId) {
+          const origin = request.headers.get('origin') || '';
+          sendEmailNotification(supabase, user.id, recipientId, retry.code, origin);
+        }
+
         return NextResponse.json({
           challenge: retry,
           url: `/challenge/${retry.code}`,
@@ -62,6 +111,12 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 });
+    }
+
+    // Send email notification for direct challenges (fire-and-forget)
+    if (recipientId) {
+      const origin = request.headers.get('origin') || '';
+      sendEmailNotification(supabase, user.id, recipientId, challenge.code, origin);
     }
 
     return NextResponse.json({
