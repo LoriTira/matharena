@@ -60,6 +60,7 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const recipientId: string | undefined = body.recipientId;
+    const isRematch: boolean = body.rematch === true;
 
     const code = generateCode();
 
@@ -68,14 +69,18 @@ export async function POST(request: Request) {
       sender_id: user.id,
     };
 
-    // Direct challenge to a friend: recipient is pre-filled, status is accepted
     if (recipientId) {
       if (recipientId === user.id) {
         return NextResponse.json({ error: 'Cannot challenge yourself' }, { status: 400 });
       }
       insertData.recipient_id = recipientId;
-      insertData.status = 'accepted';
-      insertData.accepted_at = new Date().toISOString();
+
+      if (isRematch) {
+        // Rematch from post-match screen: both players are present, auto-accept
+        insertData.status = 'accepted';
+        insertData.accepted_at = new Date().toISOString();
+      }
+      // Otherwise stays 'pending' — friend needs to accept via link/email
     }
 
     const { data: challenge, error: createError } = await supabase

@@ -61,6 +61,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cannot accept your own challenge' }, { status: 400 });
     }
 
+    // If challenge was sent to a specific friend, only they can accept
+    if (challenge.recipient_id && challenge.recipient_id !== user.id) {
+      return NextResponse.json({ error: 'This challenge was sent to someone else' }, { status: 403 });
+    }
+
     // Accept the challenge
     const { data: updated, error: updateError } = await supabase
       .from('challenges')

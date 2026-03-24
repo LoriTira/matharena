@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/useToast';
-import { useRouter } from 'next/navigation';
 import { RankBadge } from '@/components/ui/RankBadge';
 
 interface Friend {
@@ -23,7 +22,6 @@ type Tab = 'friends' | 'link';
 
 export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
   const { addToast } = useToast();
-  const router = useRouter();
   const [tab, setTab] = useState<Tab>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
@@ -104,10 +102,10 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
       });
 
       if (res.ok) {
-        const data = await res.json();
         addToast(`Challenge sent to ${friend.display_name || friend.username}!`, 'success');
         onClose();
-        router.push(`/challenge/${data.challenge.code}/lobby`);
+        // Stay on dashboard — challenge will appear in the challenges card
+        // once the friend accepts via the email link
       } else {
         const data = await res.json();
         addToast(data.error || 'Failed to send challenge', 'error');

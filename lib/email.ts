@@ -4,7 +4,9 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'MathArena <noreply@matharena.com>';
+// Use EMAIL_FROM env var for production (requires verified domain in Resend).
+// Falls back to Resend's shared test domain which works without domain setup.
+const FROM_EMAIL = process.env.EMAIL_FROM || 'MathArena <onboarding@resend.dev>';
 
 export async function sendChallengeEmail({
   to,
@@ -18,7 +20,7 @@ export async function sendChallengeEmail({
   if (!resend) return;
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to,
       subject: `${challengerName} challenged you on MathArena`,
@@ -40,6 +42,7 @@ export async function sendChallengeEmail({
         </div>
       `,
     });
+    console.log('Challenge email sent:', { to, result });
   } catch (e) {
     console.error('Failed to send challenge email:', e);
   }

@@ -137,7 +137,7 @@ export function MatchResult({
       const res = await fetch('/api/challenge/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipientId: opponentId }),
+        body: JSON.stringify({ recipientId: opponentId, rematch: true }),
       });
       if (res.ok) {
         const data = await res.json();
