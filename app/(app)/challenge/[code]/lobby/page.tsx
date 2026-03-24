@@ -159,6 +159,12 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       }
 
       if (data.error && res.status === 409) {
+        // Already in an active match — redirect to it instead of dead-end error
+        if (data.matchId) {
+          if (pollRef.current) clearInterval(pollRef.current);
+          router.replace(`/play/${data.matchId}`);
+          return;
+        }
         setError(data.error);
       }
     } catch {
@@ -178,8 +184,19 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+
+      // Clear heartbeat so the server doesn't think we're still in the lobby.
+      // This prevents a match from being created after we've left.
+      if (challenge && user) {
+        const col = challenge.sender_id === user.id ? 'sender_ready_at' : 'recipient_ready_at';
+        supabase
+          .from('challenges')
+          .update({ [col]: null })
+          .eq('id', challenge.id)
+          .then(() => {});
+      }
     };
-  }, [challenge, user, starting, callStart]);
+  }, [challenge, user, starting, callStart, supabase]);
 
   if (loading || authLoading) {
     return (
