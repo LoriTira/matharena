@@ -55,7 +55,7 @@ export default function Sparkline({
   } else if (last < first) {
     lineColor = 'rgba(248, 113, 113, 0.6)';
   } else {
-    lineColor = 'rgba(255, 255, 255, 0.3)';
+    lineColor = 'rgba(128, 128, 128, 0.5)';
   }
 
   const gradientId = `sparkline-fill-${id}`;

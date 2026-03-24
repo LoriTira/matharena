@@ -4,9 +4,9 @@ import type { AchievementDef } from '@/types';
 
 const rarityStyles = {
   common: {
-    border: 'border-white/[0.08]',
+    border: 'border-edge',
     glow: '',
-    label: 'text-white/30',
+    label: 'text-ink-muted',
     labelText: 'COMMON',
   },
   rare: {
@@ -43,12 +43,12 @@ export function AchievementBadge({ achievement, unlocked = false, size = 'md', c
     return (
       <span
         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-sm border ${
-          unlocked ? rarity.border : 'border-white/[0.04]'
+          unlocked ? rarity.border : 'border-edge-faint'
         } ${unlocked ? '' : 'opacity-40 grayscale'} ${className}`}
         title={unlocked ? `${achievement.name}: ${achievement.description}` : 'Locked'}
       >
         <span className="text-sm">{unlocked ? achievement.icon : '?'}</span>
-        <span className="text-[10px] text-white/50">{unlocked ? achievement.name : '???'}</span>
+        <span className="text-[10px] text-ink-secondary">{unlocked ? achievement.name : '???'}</span>
       </span>
     );
   }
@@ -57,13 +57,13 @@ export function AchievementBadge({ achievement, unlocked = false, size = 'md', c
     return (
       <div
         className={`flex flex-col items-center gap-3 p-6 rounded-sm border ${
-          unlocked ? `${rarity.border} ${rarity.glow}` : 'border-white/[0.04]'
+          unlocked ? `${rarity.border} ${rarity.glow}` : 'border-edge-faint'
         } ${unlocked ? '' : 'opacity-30 grayscale'} ${className}`}
       >
         <span className="text-4xl">{unlocked ? achievement.icon : '?'}</span>
         <div className="text-center">
-          <div className="text-[13px] text-white/80 font-medium">{unlocked ? achievement.name : '???'}</div>
-          <div className="text-[11px] text-white/30 mt-1">{unlocked ? achievement.description : 'Keep playing to unlock'}</div>
+          <div className="text-[13px] text-ink font-medium">{unlocked ? achievement.name : '???'}</div>
+          <div className="text-[11px] text-ink-muted mt-1">{unlocked ? achievement.description : 'Keep playing to unlock'}</div>
         </div>
         {unlocked && (
           <span className={`text-[8px] tracking-[2px] font-semibold ${rarity.label}`}>
@@ -78,20 +78,20 @@ export function AchievementBadge({ achievement, unlocked = false, size = 'md', c
   return (
     <div
       className={`flex items-center gap-3 p-3.5 rounded-sm border ${
-        unlocked ? `${rarity.border} ${rarity.glow}` : 'border-white/[0.04]'
+        unlocked ? `${rarity.border} ${rarity.glow}` : 'border-edge-faint'
       } ${unlocked ? '' : 'opacity-30 grayscale'} ${className}`}
     >
       <span className="text-2xl flex-shrink-0 w-8 text-center">{unlocked ? achievement.icon : '?'}</span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-[12px] text-white/70 font-medium truncate">{unlocked ? achievement.name : '???'}</span>
+          <span className="text-[12px] text-ink-secondary font-medium truncate">{unlocked ? achievement.name : '???'}</span>
           {unlocked && (
             <span className={`text-[7px] tracking-[1.5px] font-semibold flex-shrink-0 ${rarity.label}`}>
               {rarity.labelText}
             </span>
           )}
         </div>
-        <div className="text-[11px] text-white/25 mt-0.5 truncate">
+        <div className="text-[11px] text-ink-muted mt-0.5 truncate">
           {unlocked ? achievement.description : 'Keep playing to unlock'}
         </div>
       </div>

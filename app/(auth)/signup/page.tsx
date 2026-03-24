@@ -49,14 +49,14 @@ function SignupForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#050505]">
-      <div className="w-full max-w-md p-8 border border-white/[0.06] rounded-sm">
-        <h1 className="font-serif text-3xl font-light text-white/90 text-center mb-1">Join MathArena</h1>
-        <p className="text-white/25 text-center text-sm mb-8">Create your account and start competing</p>
+    <div className="min-h-screen flex items-center justify-center bg-page">
+      <div className="w-full max-w-md p-8 border border-edge rounded-sm">
+        <h1 className="font-serif text-3xl font-light text-ink text-center mb-1">Join MathArena</h1>
+        <p className="text-ink-muted text-center text-sm mb-8">Create your account and start competing</p>
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">
+            <label htmlFor="username" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Username
             </label>
             <input
@@ -64,7 +64,7 @@ function SignupForm() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+              className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
               placeholder="mathwizard42"
               required
               minLength={3}
@@ -72,7 +72,7 @@ function SignupForm() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">
+            <label htmlFor="email" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Email
             </label>
             <input
@@ -80,14 +80,14 @@ function SignupForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+              className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
               placeholder="you@example.com"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">
+            <label htmlFor="password" className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">
               Password
             </label>
             <input
@@ -95,7 +95,7 @@ function SignupForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+              className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
               placeholder="••••••••"
               required
               minLength={6}
@@ -109,15 +109,15 @@ function SignupForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-white/90 text-[#050505] font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-white/30 text-sm">
+        <p className="mt-6 text-center text-ink-muted text-sm">
           Already have an account?{' '}
-          <Link href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} className="text-white/60 underline underline-offset-2 decoration-white/15 hover:text-white/80 transition-colors">
+          <Link href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} className="text-ink-secondary underline underline-offset-2 decoration-edge hover:text-ink transition-colors">
             Sign in
           </Link>
         </p>
@@ -129,8 +129,8 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
-        <div className="text-white/25">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-page">
+        <div className="text-ink-muted">Loading...</div>
       </div>
     }>
       <SignupForm />

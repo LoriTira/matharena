@@ -27,7 +27,7 @@ export default function LessonsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-white/25">Loading lessons...</div>
+        <div className="text-ink-muted">Loading lessons...</div>
       </div>
     );
   }
@@ -42,28 +42,28 @@ export default function LessonsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="font-serif text-3xl font-light text-white/90">Lessons</h1>
-        <p className="text-white/30 mt-2 text-[15px] font-light">Learn mental math tricks and techniques to improve your speed.</p>
+        <h1 className="font-serif text-3xl font-light text-ink">Lessons</h1>
+        <p className="text-ink-muted mt-2 text-[15px] font-light">Learn mental math tricks and techniques to improve your speed.</p>
       </div>
 
       {Object.entries(grouped).map(([category, categoryLessons]) => (
         <div key={category}>
-          <h2 className="font-serif text-lg text-white/70 capitalize mb-4">{category}</h2>
+          <h2 className="font-serif text-lg text-ink-secondary capitalize mb-4">{category}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {categoryLessons.map((lesson) => (
               <Link
                 key={lesson.id}
                 href={`/lessons/${lesson.slug}`}
-                className="border border-white/[0.06] rounded-sm p-6 bg-white/[0.015] hover:border-white/[0.12] transition-colors group"
+                className="border border-edge rounded-sm p-6 bg-card hover:border-edge-strong transition-colors group"
               >
-                <span className="inline-block px-2 py-0.5 text-[9px] tracking-[1.5px] text-white/30 border border-white/[0.08] rounded-sm uppercase">
+                <span className="inline-block px-2 py-0.5 text-[9px] tracking-[1.5px] text-ink-muted border border-edge rounded-sm uppercase">
                   {lesson.category}
                 </span>
-                <h3 className="font-serif text-base text-white/80 mt-3 group-hover:text-white/95 transition-colors">
+                <h3 className="font-serif text-base text-ink mt-3 group-hover:text-ink transition-colors">
                   {lesson.title}
                 </h3>
                 {lesson.description && (
-                  <p className="text-white/25 text-sm mt-2 leading-relaxed">{lesson.description}</p>
+                  <p className="text-ink-muted text-sm mt-2 leading-relaxed">{lesson.description}</p>
                 )}
               </Link>
             ))}

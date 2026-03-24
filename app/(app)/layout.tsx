@@ -1,5 +1,4 @@
 import { Navbar } from '@/components/layout/Navbar';
-import { MathTexture } from '@/components/layout/MathTexture';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 
 export const dynamic = 'force-dynamic';
@@ -7,10 +6,9 @@ export const dynamic = 'force-dynamic';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-[#050505] relative">
-        <MathTexture />
+      <div className="min-h-screen bg-page">
         <Navbar />
-        <main className="relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           {children}
         </main>
       </div>

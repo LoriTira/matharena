@@ -51,7 +51,7 @@ function CountdownOverlay({ onComplete }: { onComplete: () => void }) {
   }, [count, onComplete]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-page/95">
       <AnimatePresence mode="wait">
         <motion.div
           key={count}
@@ -82,7 +82,7 @@ function TimerDisplay({ startTime }: { startTime: number }) {
   }, [startTime]);
 
   return (
-    <span className="font-mono text-2xl text-white/60 tabular-nums">
+    <span className="font-mono text-2xl text-ink-secondary tabular-nums">
       {formatTotalTime(elapsed)}
     </span>
   );
@@ -99,7 +99,7 @@ function LeaderboardTable({
 
   if (top10.length === 0) {
     return (
-      <div className="text-[12px] text-white/20 py-4 text-center">
+      <div className="text-[12px] text-ink-faint py-4 text-center">
         No entries yet. Be the first!
       </div>
     );
@@ -108,26 +108,26 @@ function LeaderboardTable({
   return (
     <div className="space-y-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 border-b border-white/[0.06]">
+      <div className="flex items-center justify-between px-2 py-2 border-b border-edge">
         <div className="flex items-center gap-3">
-          <span className="text-[9px] tracking-[1px] text-white/20 w-6 text-center">#</span>
-          <span className="text-[9px] tracking-[1px] text-white/20">PLAYER</span>
+          <span className="text-[9px] tracking-[1px] text-ink-faint w-6 text-center">#</span>
+          <span className="text-[9px] tracking-[1px] text-ink-faint">PLAYER</span>
         </div>
-        <span className="text-[9px] tracking-[1px] text-white/20">TIME</span>
+        <span className="text-[9px] tracking-[1px] text-ink-faint">TIME</span>
       </div>
       {/* Rows */}
       {top10.map((entry) => (
         <div
           key={`${entry.rank}-${entry.username}`}
-          className="flex items-center justify-between px-2 py-2.5 border-b border-white/[0.03] last:border-b-0"
+          className="flex items-center justify-between px-2 py-2.5 border-b border-edge-faint last:border-b-0"
         >
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] text-white/30 w-6 text-center tabular-nums">
+            <span className="font-mono text-[11px] text-ink-muted w-6 text-center tabular-nums">
               {entry.rank}
             </span>
-            <span className="text-[12px] text-white/60">{entry.username}</span>
+            <span className="text-[12px] text-ink-secondary">{entry.username}</span>
           </div>
-          <span className="font-mono text-[11px] text-white/40 tabular-nums">
+          <span className="font-mono text-[11px] text-ink-tertiary tabular-nums">
             {formatLeaderboardTime(entry.total_time_ms)}
           </span>
         </div>
@@ -163,23 +163,23 @@ function ResultsView({
           transition={{ duration: 0.5, type: 'spring' }}
           className="text-center"
         >
-          <h1 className="font-serif text-3xl md:text-4xl font-light text-[#F59E0B]">
+          <h1 className="font-serif text-3xl md:text-4xl font-light text-accent">
             PUZZLE COMPLETE!
           </h1>
         </motion.div>
       ) : (
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-light text-white/70">
+          <h1 className="font-serif text-2xl font-light text-ink-secondary">
             Today&apos;s Puzzle
           </h1>
-          <p className="text-[11px] text-white/25 mt-1">You already completed today&apos;s puzzle</p>
+          <p className="text-[11px] text-ink-muted mt-1">You already completed today&apos;s puzzle</p>
         </div>
       )}
 
       {/* Total Time */}
       <div className="text-center">
-        <div className="text-[9px] tracking-[2px] text-white/20 mb-2">TOTAL TIME</div>
-        <div className="font-mono text-[48px] md:text-[56px] font-normal text-white/[0.88] tabular-nums leading-none">
+        <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">TOTAL TIME</div>
+        <div className="font-mono text-[48px] md:text-[56px] font-normal text-ink tabular-nums leading-none">
           {formatTotalTime(totalTimeMs)}
         </div>
       </div>
@@ -187,12 +187,12 @@ function ResultsView({
       {/* Per-problem times */}
       {problemTimes.length > 0 && (
         <Card variant="default" className="p-4">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-3">PROBLEM TIMES</div>
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-3">PROBLEM TIMES</div>
           <div className="grid grid-cols-5 gap-2">
             {problemTimes.map((time, i) => (
               <div key={i} className="text-center">
-                <div className="text-[10px] text-white/25 mb-1">#{i + 1}</div>
-                <div className="font-mono text-[14px] text-white/60 tabular-nums">
+                <div className="text-[10px] text-ink-muted mb-1">#{i + 1}</div>
+                <div className="font-mono text-[14px] text-ink-secondary tabular-nums">
                   {formatProblemTime(time)}
                 </div>
               </div>
@@ -205,22 +205,22 @@ function ResultsView({
       <div className="grid grid-cols-2 gap-4">
         {result && (
           <Card variant="highlight" className="p-4 text-center">
-            <div className="text-[9px] tracking-[2px] text-white/20 mb-2">YOUR RANK</div>
-            <div className="font-mono text-[28px] text-[#F59E0B] tabular-nums leading-none">
+            <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">YOUR RANK</div>
+            <div className="font-mono text-[28px] text-accent tabular-nums leading-none">
               #{result.rank}
             </div>
-            <div className="text-[10px] text-white/25 mt-1.5">
+            <div className="text-[10px] text-ink-muted mt-1.5">
               out of {result.totalPlayers} player{result.totalPlayers !== 1 ? 's' : ''}
             </div>
           </Card>
         )}
         <Card variant="default" className="p-4 text-center">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">STREAK</div>
-          <div className="font-mono text-[28px] text-white/70 tabular-nums leading-none flex items-center justify-center gap-1.5">
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">STREAK</div>
+          <div className="font-mono text-[28px] text-ink-secondary tabular-nums leading-none flex items-center justify-center gap-1.5">
             <span className="text-xl">🔥</span>
             {streak}
           </div>
-          <div className="text-[10px] text-white/25 mt-1.5">
+          <div className="text-[10px] text-ink-muted mt-1.5">
             day{streak !== 1 ? 's' : ''} in a row
           </div>
         </Card>
@@ -228,7 +228,7 @@ function ResultsView({
 
       {/* Leaderboard */}
       <Card variant="default" className="p-4">
-        <div className="text-[9px] tracking-[2px] text-white/20 mb-3">TODAY&apos;S LEADERBOARD</div>
+        <div className="text-[9px] tracking-[2px] text-ink-faint mb-3">TODAY&apos;S LEADERBOARD</div>
         <LeaderboardTable leaderboard={leaderboard} />
       </Card>
 
@@ -236,7 +236,7 @@ function ResultsView({
       <div className="text-center pt-2">
         <Link
           href="/dashboard"
-          className="inline-block px-8 py-3 border border-white/[0.08] text-white/40 text-[10px] tracking-[2px] font-semibold rounded-sm hover:border-white/[0.15] hover:text-white/60 transition-colors"
+          className="inline-block px-8 py-3 border border-edge text-ink-tertiary text-[10px] tracking-[2px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
         >
           BACK TO DASHBOARD
         </Link>
@@ -323,7 +323,7 @@ export default function DailyPuzzlePage() {
         <CountdownOverlay onComplete={handleCountdownComplete} />
         {/* Underlying content so the page isn't blank after overlay fades */}
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 opacity-0">
-          <h1 className="font-serif text-3xl font-light text-white/90">DAILY PUZZLE</h1>
+          <h1 className="font-serif text-3xl font-light text-ink">DAILY PUZZLE</h1>
         </div>
       </div>
     );
@@ -338,10 +338,10 @@ export default function DailyPuzzlePage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-serif text-xl font-light text-white/80">DAILY PUZZLE</h1>
+            <h1 className="font-serif text-xl font-light text-ink">DAILY PUZZLE</h1>
           </div>
           <div className="text-right">
-            <div className="text-[9px] tracking-[2px] text-white/20 mb-1">
+            <div className="text-[9px] tracking-[2px] text-ink-faint mb-1">
               PROBLEM {currentIndex + 1}/5
             </div>
             <TimerDisplay startTime={puzzleStartTime} />
@@ -355,10 +355,10 @@ export default function DailyPuzzlePage() {
               key={i}
               className={`w-2.5 h-2.5 rounded-full transition-colors ${
                 i < currentIndex
-                  ? 'bg-[#F59E0B]'
+                  ? 'bg-accent'
                   : i === currentIndex
-                    ? 'bg-white/60'
-                    : 'bg-white/[0.08]'
+                    ? 'bg-ink-secondary'
+                    : 'bg-shade'
               }`}
             />
           ))}

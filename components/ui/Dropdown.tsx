@@ -55,7 +55,7 @@ export function Dropdown({ trigger, children, align = 'right' }: DropdownProps) 
             style={{ transformOrigin: 'top' }}
             className={`
               absolute top-full mt-2 z-50 min-w-[160px]
-              bg-[#0a0a0a] border border-white/[0.08] rounded-sm shadow-xl
+              bg-panel border border-edge rounded-sm shadow-xl
               ${align === 'right' ? 'right-0' : 'left-0'}
             `}
           >

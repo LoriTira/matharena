@@ -157,7 +157,7 @@ export function MatchResult({
 
       {/* Result heading */}
       <motion.div
-        className={`font-serif text-5xl md:text-6xl font-light ${won ? 'text-[#F59E0B]' : 'text-white/40'}`}
+        className={`font-serif text-5xl md:text-6xl font-light ${won ? 'text-accent' : 'text-ink-tertiary'}`}
         initial={{ scale: won ? 0.5 : 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={won ? { type: 'spring', stiffness: 200, damping: 15, delay: 0.3 } : { duration: 0.8, delay: 0.2 }}
@@ -167,7 +167,7 @@ export function MatchResult({
 
       {/* Opponent info */}
       <motion.div
-        className="text-[13px] text-white/30 flex items-center gap-2"
+        className="text-[13px] text-ink-muted flex items-center gap-2"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
@@ -176,22 +176,22 @@ export function MatchResult({
         {opponentElo && (
           <span className="inline-flex items-center gap-1 ml-1">
             <RankBadge elo={opponentElo} size="sm" />
-            <span className="font-mono text-white/20">{opponentElo}</span>
+            <span className="font-mono text-ink-faint">{opponentElo}</span>
           </span>
         )}
       </motion.div>
 
       {/* Score */}
       <motion.div
-        className="font-mono text-4xl font-medium text-white/80 tabular-nums"
+        className="font-mono text-4xl font-medium text-ink tabular-nums"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
       >
         <AnimatedNumber value={myScore} duration={0.8} />
-        <span className="text-white/20 mx-2">&ndash;</span>
+        <span className="text-ink-faint mx-2">&ndash;</span>
         <AnimatedNumber value={theirScore} duration={0.8} />
-        <span className="text-white/15 text-lg ml-2">/ {targetScore}</span>
+        <span className="text-ink-faint text-lg ml-2">/ {targetScore}</span>
       </motion.div>
 
       {/* Elo change */}
@@ -201,10 +201,10 @@ export function MatchResult({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.0 }}
       >
-        <div className={`font-mono text-3xl font-medium tabular-nums ${eloChange >= 0 ? 'text-[#F59E0B]' : 'text-red-400/60'}`}>
+        <div className={`font-mono text-3xl font-medium tabular-nums ${eloChange >= 0 ? 'text-accent' : 'text-red-400/60'}`}>
           {eloChange >= 0 ? '+' : ''}<AnimatedNumber value={eloChange} duration={1.2} /> Elo
         </div>
-        <div className="text-white/20 text-sm font-mono tabular-nums flex items-center gap-2">
+        <div className="text-ink-faint text-sm font-mono tabular-nums flex items-center gap-2">
           {eloBefore} &rarr; {eloAfter}
           <RankBadge elo={eloAfter} size="sm" showLabel />
         </div>
@@ -217,7 +217,7 @@ export function MatchResult({
         animate={{ opacity: 1 }}
         transition={{ delay: 1.1 }}
       >
-        <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="h-1.5 w-full rounded-full bg-shade overflow-hidden">
           <motion.div
             className="h-full rounded-full"
             style={{ backgroundColor: newRank.color }}
@@ -226,7 +226,7 @@ export function MatchResult({
             transition={{ delay: 1.2, duration: 0.8, ease: 'easeOut' }}
           />
         </div>
-        <div className="text-[10px] text-white/20 text-center font-mono">
+        <div className="text-[10px] text-ink-faint text-center font-mono">
           {newRank.tier === 'Grandmaster'
             ? 'Grandmaster'
             : nextTierName
@@ -240,12 +240,12 @@ export function MatchResult({
       <AnimatePresence>
         {rankedUp && (
           <motion.div
-            className="px-6 py-3 rounded-sm border border-[#F59E0B]/30 bg-[#F59E0B]/[0.06] flex items-center gap-3"
+            className="px-6 py-3 rounded-sm border border-accent/30 bg-accent-glow flex items-center gap-3"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1.4, type: 'spring', stiffness: 200 }}
           >
-            <span className="text-[10px] tracking-[2px] text-[#F59E0B] font-semibold">RANK UP!</span>
+            <span className="text-[10px] tracking-[2px] text-accent font-semibold">RANK UP!</span>
             <RankBadge elo={eloAfter} size="lg" showLabel />
           </motion.div>
         )}
@@ -254,7 +254,7 @@ export function MatchResult({
       {/* Performance stats */}
       {hasStats && (
         <motion.div
-          className="grid grid-cols-2 gap-[1px] w-full max-w-xs bg-white/[0.06] rounded-sm overflow-hidden"
+          className="grid grid-cols-2 gap-[1px] w-full max-w-xs bg-shade rounded-sm overflow-hidden"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.3 }}
@@ -267,13 +267,13 @@ export function MatchResult({
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
-              className="bg-[#050505] px-4 py-3 flex flex-col items-center gap-1"
+              className="bg-page px-4 py-3 flex flex-col items-center gap-1"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.4 + i * 0.08 }}
             >
-              <div className="text-[8px] tracking-[1.5px] text-white/25">{stat.label}</div>
-              <div className="font-mono text-[15px] text-white/70 tabular-nums">{stat.value}</div>
+              <div className="text-[8px] tracking-[1.5px] text-ink-muted">{stat.label}</div>
+              <div className="font-mono text-[15px] text-ink-secondary tabular-nums">{stat.value}</div>
             </motion.div>
           ))}
         </motion.div>
@@ -282,7 +282,7 @@ export function MatchResult({
       {/* Penalties (only if no stats section) */}
       {!hasStats && penalties > 0 && (
         <motion.div
-          className="text-white/20 text-xs"
+          className="text-ink-faint text-xs"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
@@ -294,7 +294,7 @@ export function MatchResult({
       {/* Motivational copy for losses */}
       {!won && winsToRecover > 0 && (
         <motion.div
-          className="text-white/25 text-[13px] font-light"
+          className="text-ink-muted text-[13px] font-light"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.3 }}
@@ -311,7 +311,7 @@ export function MatchResult({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.6 }}
         >
-          <div className="text-[9px] tracking-[2px] text-[#F59E0B]">
+          <div className="text-[9px] tracking-[2px] text-accent">
             {newAchievements.length === 1 ? 'ACHIEVEMENT UNLOCKED' : 'ACHIEVEMENTS UNLOCKED'}
           </div>
           {newAchievements.map((a, i) => (
@@ -320,12 +320,12 @@ export function MatchResult({
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.8 + i * 0.2 }}
-              className="w-full border border-[#F59E0B]/20 bg-[#F59E0B]/[0.04] rounded-sm px-4 py-3 flex items-center gap-3"
+              className="w-full border border-accent/20 bg-accent-glow rounded-sm px-4 py-3 flex items-center gap-3"
             >
               <span className="text-2xl">{a.icon}</span>
               <div>
-                <div className="text-sm text-white/80 font-medium">{a.name}</div>
-                <div className="text-[11px] text-white/30">{a.description}</div>
+                <div className="text-sm text-ink font-medium">{a.name}</div>
+                <div className="text-[11px] text-ink-muted">{a.description}</div>
               </div>
             </motion.div>
           ))}
@@ -341,7 +341,7 @@ export function MatchResult({
       >
         <Link
           href="/play"
-          className="px-10 py-3.5 font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors bg-[#F59E0B] text-[#050505] hover:bg-[#F59E0B]/90"
+          className="px-10 py-3.5 font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors bg-accent text-on-accent hover:bg-accent/90"
         >
           PLAY AGAIN
         </Link>
@@ -350,7 +350,7 @@ export function MatchResult({
           <button
             onClick={handleRematch}
             disabled={rematchLoading}
-            className="px-6 py-3 border border-white/[0.12] text-white/50 text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-white/25 hover:text-white/70 disabled:opacity-40"
+            className="px-6 py-3 border border-edge-strong text-ink-secondary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary disabled:opacity-40"
           >
             {rematchLoading ? 'CREATING...' : 'REMATCH'}
           </button>
@@ -358,14 +358,14 @@ export function MatchResult({
 
         <button
           onClick={handleShare}
-          className="px-5 py-2.5 border border-white/[0.08] text-white/30 text-[10px] tracking-[1.5px] rounded-sm transition-colors hover:border-white/15 hover:text-white/50"
+          className="px-5 py-2.5 border border-edge text-ink-muted text-[10px] tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-tertiary"
         >
           SHARE
         </button>
 
         <Link
           href="/dashboard"
-          className="px-5 py-2.5 text-white/25 text-[10px] tracking-[1.5px] rounded-sm transition-colors hover:text-white/50"
+          className="px-5 py-2.5 text-ink-muted text-[10px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
         >
           DASHBOARD
         </Link>

@@ -1,31 +1,109 @@
 @import "tailwindcss";
 
+/* ─── Light mode (default) ──────────────────────────── */
 :root {
-  --bg-base: #050505;
-  --bg-surface: rgba(255, 255, 255, 0.02);
-  --bg-hover: rgba(255, 255, 255, 0.04);
-  --border-default: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --text-primary: rgba(255, 255, 255, 0.9);
-  --text-secondary: rgba(255, 255, 255, 0.5);
-  --text-muted: rgba(255, 255, 255, 0.25);
-  --text-faint: rgba(255, 255, 255, 0.15);
-  --feedback-correct: rgba(74, 222, 128, 0.7);
-  --feedback-wrong: rgba(248, 113, 113, 0.7);
+  color-scheme: light dark;
 
-  --accent: #F59E0B;
-  --accent-muted: rgba(245, 158, 11, 0.6);
-  --accent-subtle: rgba(245, 158, 11, 0.15);
-  --accent-glow: rgba(245, 158, 11, 0.08);
+  --bg-base: #f5f5f7;
+  --bg-raised: #ffffff;
+  --bg-inset: #ebebed;
+  --bg-surface: rgba(0, 0, 0, 0.025);
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --bg-subtle: rgba(0, 0, 0, 0.04);
+  --border-hairline: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.18);
+  --text-primary: rgba(0, 0, 0, 0.87);
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --text-tertiary: rgba(0, 0, 0, 0.4);
+  --text-muted: rgba(0, 0, 0, 0.25);
+  --text-faint: rgba(0, 0, 0, 0.12);
+  --nav-bg: rgba(245, 245, 247, 0.8);
+  --overlay: rgba(0, 0, 0, 0.3);
+  --cta-bg: rgba(0, 0, 0, 0.87);
+  --cta-text: #ffffff;
+  --cta-hover: rgba(0, 0, 0, 0.95);
+  --accent: #b45309;
+  --accent-muted: rgba(180, 83, 9, 0.7);
+  --accent-subtle: rgba(180, 83, 9, 0.12);
+  --accent-glow: rgba(180, 83, 9, 0.06);
+  --on-accent: #ffffff;
+  --feedback-correct: rgba(22, 163, 74, 0.8);
+  --feedback-wrong: rgba(220, 38, 38, 0.8);
 }
 
-/* MathTexture drift animation */
-@keyframes texture-drift {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(-40px, -40px); }
+/* ─── Dark mode ─────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-base: #111113;
+    --bg-raised: #1a1a1e;
+    --bg-inset: #0c0c0e;
+    --bg-surface: rgba(255, 255, 255, 0.03);
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-subtle: rgba(255, 255, 255, 0.06);
+    --border-hairline: rgba(255, 255, 255, 0.05);
+    --border-default: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.15);
+    --text-primary: rgba(255, 255, 255, 0.9);
+    --text-secondary: rgba(255, 255, 255, 0.55);
+    --text-tertiary: rgba(255, 255, 255, 0.38);
+    --text-muted: rgba(255, 255, 255, 0.25);
+    --text-faint: rgba(255, 255, 255, 0.15);
+    --nav-bg: rgba(17, 17, 19, 0.8);
+    --overlay: rgba(0, 0, 0, 0.6);
+    --cta-bg: rgba(255, 255, 255, 0.9);
+    --cta-text: #111113;
+    --cta-hover: #ffffff;
+    --accent: #F59E0B;
+    --accent-muted: rgba(245, 158, 11, 0.6);
+    --accent-subtle: rgba(245, 158, 11, 0.15);
+    --accent-glow: rgba(245, 158, 11, 0.08);
+    --on-accent: #111113;
+    --feedback-correct: rgba(74, 222, 128, 0.7);
+    --feedback-wrong: rgba(248, 113, 113, 0.7);
+  }
 }
 
-/* Shake animation for wrong answers */
+/* ─── Tailwind theme tokens ─────────────────────────── */
+@theme inline {
+  --color-page: var(--bg-base);
+  --color-panel: var(--bg-raised);
+  --color-inset: var(--bg-inset);
+  --color-card: var(--bg-surface);
+  --color-tint: var(--bg-hover);
+  --color-shade: var(--bg-subtle);
+  --color-chrome: var(--nav-bg);
+  --color-scrim: var(--overlay);
+
+  --color-ink: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-ink-muted: var(--text-muted);
+  --color-ink-faint: var(--text-faint);
+
+  --color-edge: var(--border-default);
+  --color-edge-strong: var(--border-strong);
+  --color-edge-faint: var(--border-hairline);
+
+  --color-btn: var(--cta-bg);
+  --color-btn-text: var(--cta-text);
+  --color-btn-hover: var(--cta-hover);
+
+  --color-accent: var(--accent);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-glow: var(--accent-glow);
+  --color-on-accent: var(--on-accent);
+
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  --font-mono: var(--font-jetbrains);
+}
+
+/* ─── Animations ────────────────────────────────────── */
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
@@ -36,7 +114,6 @@
   animation: shake 0.5s ease-in-out;
 }
 
-/* Score bounce */
 @keyframes score-bounce {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.25); }
@@ -46,7 +123,6 @@
   animation: score-bounce 0.4s ease-out;
 }
 
-/* Gold pulse for match point */
 @keyframes gold-pulse {
   0%, 100% { border-color: rgba(245, 158, 11, 0.2); }
   50% { border-color: rgba(245, 158, 11, 0.5); }
@@ -56,21 +132,18 @@
   animation: gold-pulse 2s ease-in-out infinite;
 }
 
-/* Victory burst */
 @keyframes burst-ray {
   0% { opacity: 0; transform: scaleY(0); }
   50% { opacity: 1; }
   100% { opacity: 0; transform: scaleY(1); }
 }
 
-/* Countdown pulse */
 @keyframes countdown-pulse {
   0% { transform: scale(0.5); opacity: 0; }
   50% { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Skeleton shimmer */
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
@@ -80,13 +153,7 @@
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-@theme inline {
-  --color-background: var(--bg-base);
-  --color-foreground: var(--text-primary);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
-  --font-mono: var(--font-jetbrains);
-}
+/* ─── Base styles ───────────────────────────────────── */
 
 body {
   background: var(--bg-base);
@@ -124,14 +191,14 @@ input[type="number"] {
   left: 0;
   width: 0;
   height: 1px;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--text-muted);
   transition: width 0.2s ease;
 }
 .nav-underline:hover::after {
   width: 100%;
 }
 
-/* Custom range slider for practice mode */
+/* Custom range slider */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -142,7 +209,7 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-track {
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-default);
   border-radius: 1px;
 }
 
@@ -151,14 +218,14 @@ input[type="range"]::-webkit-slider-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--text-primary);
   margin-top: -6px;
   border: none;
 }
 
 input[type="range"]::-moz-range-track {
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-default);
   border-radius: 1px;
   border: none;
 }
@@ -167,6 +234,6 @@ input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--text-primary);
   border: none;
 }

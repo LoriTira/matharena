@@ -8,10 +8,10 @@ interface CardProps {
 }
 
 const variantStyles: Record<string, string> = {
-  default: 'border border-white/[0.06] bg-white/[0.015]',
+  default: 'border border-edge bg-card',
   interactive:
-    'border border-white/[0.06] bg-white/[0.015] hover:border-white/[0.12] hover:scale-[1.005] transition-all cursor-pointer',
-  highlight: 'border border-[#F59E0B]/20 bg-[#F59E0B]/[0.04]',
+    'border border-edge bg-card hover:border-edge-strong hover:scale-[1.005] transition-all cursor-pointer',
+  highlight: 'border border-accent/20 bg-accent-glow',
 };
 
 export function Card({

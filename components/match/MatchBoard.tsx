@@ -179,7 +179,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-full max-w-md space-y-6">
-          <div className="border border-white/[0.06] rounded-sm p-8 space-y-6">
+          <div className="border border-edge rounded-sm p-8 space-y-6">
             <div className="flex items-center justify-between">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-16" />
@@ -241,11 +241,11 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   if (match.status === 'waiting') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-12 h-12 border border-white/20 border-t-white/60 rounded-full animate-spin" />
-        <div className="text-[15px] text-white/40">Waiting for opponent...</div>
+        <div className="w-12 h-12 border border-edge-strong border-t-ink-secondary rounded-full animate-spin" />
+        <div className="text-[15px] text-ink-tertiary">Waiting for opponent...</div>
         <button
           onClick={abandonMatch}
-          className="px-4 py-2 text-[10px] tracking-[1.5px] text-white/30 hover:text-white/50 transition-colors"
+          className="px-4 py-2 text-[10px] tracking-[1.5px] text-ink-muted hover:text-ink-tertiary transition-colors"
         >
           CANCEL
         </button>
@@ -260,7 +260,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   if (!currentProblem) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-white/25">Waiting for results...</div>
+        <div className="text-ink-muted">Waiting for results...</div>
       </div>
     );
   }
@@ -281,7 +281,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/90"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-page/90"
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -296,7 +296,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
                   duration: 0.4,
                 }}
                 className={`text-8xl font-serif font-bold select-none ${
-                  countdownValue === 'GO!' ? 'text-[#F59E0B]' : 'text-white/90'
+                  countdownValue === 'GO!' ? 'text-accent' : 'text-ink'
                 }`}
               >
                 {countdownValue}
@@ -309,7 +309,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
       {/* 5C: Match point container with pulsing border */}
       <div
         className={`flex flex-col items-center gap-8 py-8 rounded-lg ${
-          isMatchPoint ? 'border border-[#F59E0B]/30 animate-gold-pulse p-4' : ''
+          isMatchPoint ? 'border border-accent/30 animate-gold-pulse p-4' : ''
         }`}
       >
         {/* 5C: Match point text */}
@@ -320,7 +320,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.4 }}
-              className="text-[10px] tracking-[3px] text-[#F59E0B]/70 font-mono"
+              className="text-[10px] tracking-[3px] text-accent/70 font-mono"
             >
               MATCH POINT
             </motion.div>
@@ -331,7 +331,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
           <Timer startTime={match.started_at} isRunning={match.status === 'active'} />
           <button
             onClick={abandonMatch}
-            className="text-[10px] tracking-[1.5px] text-white/20 hover:text-red-400/60 transition-colors"
+            className="text-[10px] tracking-[1.5px] text-ink-faint hover:text-red-400/60 transition-colors"
           >
             FORFEIT
           </button>
@@ -340,7 +340,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         {/* 5B: ScoreDots replacing ScoreBar */}
         <div className="flex items-center justify-between w-full max-w-2xl">
           <div className="flex flex-col items-start gap-1">
-            <span className="text-[10px] tracking-[1.5px] text-white/30">
+            <span className="text-[10px] tracking-[1.5px] text-ink-muted">
               {isPlayer1 ? player1Name : player2Name} {isPlayer1 ? '(YOU)' : ''}
             </span>
             <ScoreDots
@@ -350,7 +350,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
             />
           </div>
           <div className="flex flex-col items-end gap-1">
-            <span className="text-[10px] tracking-[1.5px] text-white/30">
+            <span className="text-[10px] tracking-[1.5px] text-ink-muted">
               {isPlayer1 ? player2Name : player1Name} {!isPlayer1 ? '(YOU)' : ''}
             </span>
             <ScoreDots
@@ -363,7 +363,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
 
         {/* Problem counter + 5E: Streak indicator */}
         <div className="flex items-center gap-3">
-          <div className="text-[9px] tracking-[2px] text-white/20">
+          <div className="text-[9px] tracking-[2px] text-ink-faint">
             PROBLEM {currentProblemIndex + 1}
           </div>
           {streak >= 3 && (
@@ -371,7 +371,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
               key={streak}
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="text-[#F59E0B] text-sm font-mono"
+              className="text-accent text-sm font-mono"
             >
               {'\uD83D\uDD25'} {streak}x
             </motion.div>

@@ -15,26 +15,26 @@ function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready:
 
   return (
     <div className={`border rounded-sm p-6 flex-1 min-w-[200px] transition-colors ${
-      isYou ? 'border-white/[0.12] bg-white/[0.03]' : 'border-white/[0.06] bg-white/[0.01]'
+      isYou ? 'border-edge-strong bg-card' : 'border-edge bg-card'
     }`}>
       <div className="flex items-center gap-2 mb-4">
-        <div className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400/80' : 'bg-white/10'}`} />
-        <span className="text-[9px] tracking-[2px] text-white/30">
+        <div className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400/80' : 'bg-edge'}`} />
+        <span className="text-[9px] tracking-[2px] text-ink-muted">
           {ready ? 'READY' : 'WAITING'}
         </span>
       </div>
-      <div className="font-serif text-lg text-white/80 mb-1">
+      <div className="font-serif text-lg text-ink mb-1">
         {profile.display_name || profile.username}
       </div>
-      <div className="font-mono text-sm text-white/30 mb-3">
+      <div className="font-mono text-sm text-ink-muted mb-3">
         Elo {profile.elo_rating.toLocaleString()}
       </div>
-      <div className="flex gap-4 text-[11px] text-white/20">
+      <div className="flex gap-4 text-[11px] text-ink-faint">
         <span>{profile.games_played} played</span>
         <span>{winRate}% win</span>
       </div>
       {isYou && (
-        <div className="text-[9px] tracking-[1.5px] text-white/15 mt-3">YOU</div>
+        <div className="text-[9px] tracking-[1.5px] text-ink-faint mt-3">YOU</div>
       )}
     </div>
   );
@@ -201,7 +201,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-white/25">Loading...</div>
+        <div className="text-ink-muted">Loading...</div>
       </div>
     );
   }
@@ -212,7 +212,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         <div className="text-red-400/60 text-sm">{error}</div>
         <button
           onClick={() => router.push('/dashboard')}
-          className="px-6 py-2.5 border border-white/[0.08] text-white/40 text-[10px] tracking-[1.5px] rounded-sm hover:border-white/20 hover:text-white/60 transition-colors"
+          className="px-6 py-2.5 border border-edge text-ink-tertiary text-[10px] tracking-[1.5px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
         >
           DASHBOARD
         </button>
@@ -228,8 +228,8 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
       <div className="text-center">
-        <div className="text-[9px] tracking-[3px] text-white/20 mb-2">CHALLENGE LOBBY</div>
-        <h1 className="font-serif text-3xl font-light text-white/90">
+        <div className="text-[9px] tracking-[3px] text-ink-faint mb-2">CHALLENGE LOBBY</div>
+        <h1 className="font-serif text-3xl font-light text-ink">
           {starting ? 'Starting match...' : 'Waiting for players'}
         </h1>
       </div>
@@ -241,7 +241,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
           isYou={true}
         />
         <div className="flex items-center justify-center">
-          <span className="font-serif text-xl text-white/20 italic">vs</span>
+          <span className="font-serif text-xl text-ink-faint italic">vs</span>
         </div>
         <PlayerCard
           profile={opponentProfile}
@@ -252,26 +252,26 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       {starting ? (
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border border-white/20 border-t-white/60 rounded-full animate-spin" />
-          <p className="text-white/40 text-[13px]">Creating match...</p>
+          <div className="w-10 h-10 border border-edge-strong border-t-ink-secondary rounded-full animate-spin" />
+          <p className="text-ink-tertiary text-[13px]">Creating match...</p>
         </div>
       ) : (
         <div className="text-center">
-          <p className="text-white/30 text-[13px] mb-6">
+          <p className="text-ink-muted text-[13px] mb-6">
             {opponentReady
               ? 'Both players are here. Starting...'
               : `Waiting for ${opponentProfile?.display_name || opponentProfile?.username || 'opponent'} to join...`
             }
           </p>
           {!opponentReady && (
-            <div className="w-10 h-10 mx-auto border border-white/10 border-t-white/40 rounded-full animate-spin" />
+            <div className="w-10 h-10 mx-auto border border-edge border-t-ink-tertiary rounded-full animate-spin" />
           )}
         </div>
       )}
 
       <button
         onClick={() => router.push('/dashboard')}
-        className="px-6 py-2 text-[10px] tracking-[1.5px] text-white/20 hover:text-white/40 transition-colors"
+        className="px-6 py-2 text-[10px] tracking-[1.5px] text-ink-faint hover:text-ink-tertiary transition-colors"
       >
         CANCEL
       </button>

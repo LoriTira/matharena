@@ -29,10 +29,10 @@ const NAV_GROUPS = [
 
 // ─── Shared styles ────────────────────────────────────────
 const triggerClass =
-  'text-[10px] tracking-[1.5px] text-white/25 hover:text-white/70 transition-colors select-none';
+  'text-[10px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors select-none';
 
 const dropdownItemClass =
-  'block px-4 py-2.5 text-[11px] text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-colors';
+  'block px-4 py-2.5 text-[11px] text-ink-secondary hover:text-ink hover:bg-tint transition-colors';
 
 // ─── Component ────────────────────────────────────────────
 export function Navbar() {
@@ -73,13 +73,13 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="border-b border-white/[0.04] bg-[#050505]/85 backdrop-blur-xl sticky top-0 z-50">
+      <nav className="border-b border-edge-faint bg-chrome backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* ── Logo ─────────────────────────────────── */}
             <Link href={user ? '/dashboard' : '/'} className="flex items-center">
-              <span className="font-serif text-base font-bold text-white/90 tracking-[1px]">
-                MATH<span className="font-light text-white/35">ARENA</span>
+              <span className="font-serif text-base font-bold text-ink tracking-[1px]">
+                MATH<span className="font-light text-ink-tertiary">ARENA</span>
               </span>
             </Link>
 
@@ -136,7 +136,7 @@ export function Navbar() {
                       {/* Challenge CTA */}
                       <button
                         onClick={() => setChallengeModalOpen(true)}
-                        className="px-3.5 py-1.5 bg-amber-500 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-amber-400 transition-colors"
+                        className="px-3.5 py-1.5 bg-accent text-on-accent text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
                       >
                         CHALLENGE
                       </button>
@@ -146,11 +146,11 @@ export function Navbar() {
                         align="right"
                         trigger={
                           <div className="flex items-center gap-2 cursor-pointer group">
-                            <div className="w-7 h-7 rounded-full border border-white/[0.12] flex items-center justify-center text-[11px] text-white/50 group-hover:border-white/25 transition-colors">
+                            <div className="w-7 h-7 rounded-full border border-edge-strong flex items-center justify-center text-[11px] text-ink-secondary group-hover:border-edge-strong transition-colors">
                               {avatarInitial}
                             </div>
                             {username && (
-                              <span className="text-[11px] text-white/40 group-hover:text-white/70 transition-colors hidden lg:inline">
+                              <span className="text-[11px] text-ink-tertiary group-hover:text-ink-secondary transition-colors hidden lg:inline">
                                 {username}
                               </span>
                             )}
@@ -163,7 +163,7 @@ export function Navbar() {
                           </Link>
                           <button
                             onClick={handleLogout}
-                            className={`${dropdownItemClass} w-full text-left text-white/30 hover:text-red-400/80`}
+                            className={`${dropdownItemClass} w-full text-left text-ink-muted hover:text-red-400/80`}
                           >
                             Sign Out
                           </button>
@@ -174,13 +174,13 @@ export function Navbar() {
                     <>
                       <Link
                         href="/leaderboard"
-                        className="text-[10px] tracking-[1.5px] text-white/25 hover:text-white/70 transition-colors"
+                        className="text-[10px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors"
                       >
                         RANKINGS
                       </Link>
                       <Link
                         href="/login"
-                        className="px-4 py-1.5 border border-white/[0.15] rounded-sm text-[10px] tracking-[1.5px] text-white/60 hover:text-white/90 hover:border-white/25 transition-colors"
+                        className="px-4 py-1.5 border border-edge-strong rounded-sm text-[10px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
                       >
                         SIGN IN
                       </Link>
@@ -197,7 +197,7 @@ export function Navbar() {
                   {/* Challenge CTA — always visible on mobile */}
                   <button
                     onClick={() => setChallengeModalOpen(true)}
-                    className="px-3 py-1.5 bg-amber-500 text-[#050505] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-amber-400 transition-colors"
+                    className="px-3 py-1.5 bg-accent text-on-accent text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
                   >
                     CHALLENGE
                   </button>
@@ -205,7 +205,7 @@ export function Navbar() {
                   {/* Hamburger */}
                   <button
                     onClick={() => setMobileMenuOpen(true)}
-                    className="p-1.5 text-white/40 hover:text-white/70 transition-colors"
+                    className="p-1.5 text-ink-tertiary hover:text-ink-secondary transition-colors"
                     aria-label="Open menu"
                   >
                     <svg
@@ -225,7 +225,7 @@ export function Navbar() {
               {!loading && !user && (
                 <Link
                   href="/login"
-                  className="px-4 py-1.5 border border-white/[0.15] rounded-sm text-[10px] tracking-[1.5px] text-white/60 hover:text-white/90 hover:border-white/25 transition-colors"
+                  className="px-4 py-1.5 border border-edge-strong rounded-sm text-[10px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
                 >
                   SIGN IN
                 </Link>
@@ -245,7 +245,7 @@ export function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
+              className="fixed inset-0 bg-scrim backdrop-blur-sm z-50 md:hidden"
               onClick={() => setMobileMenuOpen(false)}
             />
 
@@ -255,23 +255,23 @@ export function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 bottom-0 w-72 bg-[#0a0a0a] border-l border-white/[0.06] z-50 md:hidden flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-72 bg-panel border-l border-edge z-50 md:hidden flex flex-col"
             >
               {/* Panel header */}
-              <div className="flex items-center justify-between px-5 h-14 border-b border-white/[0.06]">
+              <div className="flex items-center justify-between px-5 h-14 border-b border-edge">
                 {user && (
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full border border-white/[0.12] flex items-center justify-center text-[11px] text-white/50">
+                    <div className="w-7 h-7 rounded-full border border-edge-strong flex items-center justify-center text-[11px] text-ink-secondary">
                       {avatarInitial}
                     </div>
-                    <span className="text-[12px] text-white/60">
+                    <span className="text-[12px] text-ink-secondary">
                       {username ?? user.email}
                     </span>
                   </div>
                 )}
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 text-white/40 hover:text-white/70 transition-colors"
+                  className="p-1.5 text-ink-tertiary hover:text-ink-secondary transition-colors"
                   aria-label="Close menu"
                 >
                   <svg
@@ -290,7 +290,7 @@ export function Navbar() {
               <div className="flex-1 overflow-y-auto py-4 px-2">
                 {NAV_GROUPS.map((group) => (
                   <div key={group.label} className="mb-5">
-                    <div className="px-3 mb-1.5 text-[9px] tracking-[2px] text-white/20 uppercase">
+                    <div className="px-3 mb-1.5 text-[9px] tracking-[2px] text-ink-faint uppercase">
                       {group.label}
                     </div>
                     {group.items.map((item) => (
@@ -298,7 +298,7 @@ export function Navbar() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block px-3 py-2.5 text-[13px] text-white/50 hover:text-white/80 hover:bg-white/[0.04] rounded-sm transition-colors"
+                        className="block px-3 py-2.5 text-[13px] text-ink-secondary hover:text-ink hover:bg-tint rounded-sm transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -311,7 +311,7 @@ export function Navbar() {
                   <Link
                     href="/leaderboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2.5 text-[13px] text-white/50 hover:text-white/80 hover:bg-white/[0.04] rounded-sm transition-colors"
+                    className="block px-3 py-2.5 text-[13px] text-ink-secondary hover:text-ink hover:bg-tint rounded-sm transition-colors"
                   >
                     Rankings
                   </Link>
@@ -319,13 +319,13 @@ export function Navbar() {
 
                 {/* Profile link */}
                 <div className="mb-5">
-                  <div className="px-3 mb-1.5 text-[9px] tracking-[2px] text-white/20 uppercase">
+                  <div className="px-3 mb-1.5 text-[9px] tracking-[2px] text-ink-faint uppercase">
                     ACCOUNT
                   </div>
                   <Link
                     href="/profile"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2.5 text-[13px] text-white/50 hover:text-white/80 hover:bg-white/[0.04] rounded-sm transition-colors"
+                    className="block px-3 py-2.5 text-[13px] text-ink-secondary hover:text-ink hover:bg-tint rounded-sm transition-colors"
                   >
                     Profile
                   </Link>
@@ -333,10 +333,10 @@ export function Navbar() {
               </div>
 
               {/* Sign out at bottom */}
-              <div className="border-t border-white/[0.06] px-2 py-3">
+              <div className="border-t border-edge px-2 py-3">
                 <button
                   onClick={handleLogout}
-                  className="w-full px-3 py-2.5 text-left text-[13px] text-white/30 hover:text-red-400/80 hover:bg-white/[0.04] rounded-sm transition-colors"
+                  className="w-full px-3 py-2.5 text-left text-[13px] text-ink-muted hover:text-red-400/80 hover:bg-tint rounded-sm transition-colors"
                 >
                   Sign Out
                 </button>

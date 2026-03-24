@@ -116,7 +116,7 @@ export default function ProfilePage() {
     return (
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Profile card skeleton */}
-        <div className="border border-white/[0.06] rounded-sm p-8">
+        <div className="border border-edge rounded-sm p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Skeleton className="w-14 h-14 rounded-full" />
@@ -134,9 +134,9 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats grid skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04] rounded-sm overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-shade rounded-sm overflow-hidden">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-[#050505] p-5 flex flex-col items-center gap-2">
+            <div key={i} className="bg-page p-5 flex flex-col items-center gap-2">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-8 w-16" />
             </div>
@@ -162,15 +162,15 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="border border-white/[0.06] rounded-sm p-8">
+      <div className="border border-edge rounded-sm p-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="font-serif text-3xl font-light text-white/90">{profile.display_name || profile.username}</h1>
-            <p className="text-white/25 text-sm mt-1">@{profile.username}</p>
+            <h1 className="font-serif text-3xl font-light text-ink">{profile.display_name || profile.username}</h1>
+            <p className="text-ink-muted text-sm mt-1">@{profile.username}</p>
           </div>
           <button
             onClick={() => setEditing(!editing)}
-            className="px-4 py-2 text-[10px] tracking-[1.5px] text-white/30 border border-white/[0.08] hover:border-white/20 hover:text-white/50 rounded-sm transition-colors"
+            className="px-4 py-2 text-[10px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
           >
             {editing ? 'CANCEL' : 'EDIT PROFILE'}
           </button>
@@ -179,40 +179,40 @@ export default function ProfilePage() {
         {editing ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Display Name</label>
+              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Display Name</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Affiliation</label>
+              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Affiliation</label>
               <input
                 type="text"
                 value={affiliation}
                 onChange={(e) => setAffiliation(e.target.value)}
                 placeholder="MIT, Google, etc."
-                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Country</label>
+              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Country</label>
               <input
                 type="text"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 placeholder="United States, France, etc."
-                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[9px] tracking-[2px] text-white/25 mb-2 uppercase">Type</label>
+              <label className="block text-[9px] tracking-[2px] text-ink-muted mb-2 uppercase">Type</label>
               <select
                 value={affiliationType}
                 onChange={(e) => setAffiliationType(e.target.value as 'school' | 'company' | '')}
-                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-sm text-white/80 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
               >
                 <option value="">None</option>
                 <option value="school">School</option>
@@ -222,7 +222,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 bg-white/90 text-[#050505] font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-white disabled:opacity-50"
+              className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50"
             >
               {saving ? 'SAVING...' : 'SAVE CHANGES'}
             </button>
@@ -230,14 +230,14 @@ export default function ProfilePage() {
         ) : (
           <>
             {profile.country && (
-              <p className="text-white/50 text-sm">
-                <span className="text-white/20">Country: </span>
+              <p className="text-ink-secondary text-sm">
+                <span className="text-ink-faint">Country: </span>
                 {profile.country}
               </p>
             )}
             {profile.affiliation && (
-              <p className="text-white/50 text-sm mt-1">
-                <span className="text-white/20 capitalize">{profile.affiliation_type}: </span>
+              <p className="text-ink-secondary text-sm mt-1">
+                <span className="text-ink-faint capitalize">{profile.affiliation_type}: </span>
                 {profile.affiliation}
               </p>
             )}
@@ -245,42 +245,42 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04] rounded-sm overflow-hidden">
-        <div className="bg-[#050505] p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">RATING</div>
-          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.elo_rating}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-shade rounded-sm overflow-hidden">
+        <div className="bg-page p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">RATING</div>
+          <div className="font-mono text-2xl text-ink tabular-nums">{profile.elo_rating}</div>
         </div>
-        <div className="bg-[#050505] p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">GAMES</div>
-          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.games_played}</div>
+        <div className="bg-page p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
+          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_played}</div>
         </div>
-        <div className="bg-[#050505] p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WINS</div>
-          <div className="font-mono text-2xl text-white/85 tabular-nums">{profile.games_won}</div>
+        <div className="bg-page p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">WINS</div>
+          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_won}</div>
         </div>
-        <div className="bg-[#050505] p-5 text-center">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-2">WIN RATE</div>
-          <div className="font-mono text-2xl text-white/85 tabular-nums">{winRate}%</div>
+        <div className="bg-page p-5 text-center">
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
+          <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
         </div>
       </div>
 
       {/* Friends */}
       {friends.length > 0 && (
         <div>
-          <div className="text-[9px] tracking-[3px] text-white/20 mb-4">FRIENDS</div>
-          <div className="border border-white/[0.04] rounded-sm overflow-hidden">
+          <div className="text-[9px] tracking-[3px] text-ink-faint mb-4">FRIENDS</div>
+          <div className="border border-edge-faint rounded-sm overflow-hidden">
             {friends.map((friend) => (
               <div
                 key={friend.id}
-                className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.03] last:border-b-0"
+                className="flex items-center justify-between px-5 py-3.5 border-b border-edge-faint last:border-b-0"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full border border-white/[0.12] flex items-center justify-center text-[11px] text-white/50">
+                  <div className="w-7 h-7 rounded-full border border-edge-strong flex items-center justify-center text-[11px] text-ink-secondary">
                     {(friend.display_name || friend.username)[0]?.toUpperCase()}
                   </div>
                   <div>
-                    <div className="text-[13px] text-white/60">{friend.display_name || friend.username}</div>
-                    <div className="font-mono text-[11px] text-white/20">Elo {friend.elo_rating}</div>
+                    <div className="text-[13px] text-ink-secondary">{friend.display_name || friend.username}</div>
+                    <div className="font-mono text-[11px] text-ink-faint">Elo {friend.elo_rating}</div>
                   </div>
                 </div>
                 <button
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                     setRechallengingId(null);
                   }}
                   disabled={rechallengingId === friend.id}
-                  className="px-3 py-1.5 border border-white/[0.08] text-white/30 text-[10px] tracking-[1px] rounded-sm hover:border-white/[0.15] hover:text-white/50 transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 border border-edge text-ink-muted text-[10px] tracking-[1px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors disabled:opacity-50"
                 >
                   {rechallengingId === friend.id ? 'SENDING...' : 'RE-CHALLENGE'}
                 </button>
@@ -313,7 +313,7 @@ export default function ProfilePage() {
 
       {/* Trophy Case */}
       <div>
-        <div className="text-[9px] tracking-[3px] text-white/20 mb-4">TROPHY CASE</div>
+        <div className="text-[9px] tracking-[3px] text-ink-faint mb-4">TROPHY CASE</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {[...ACHIEVEMENTS]
             .sort((a, b) => {
@@ -333,7 +333,7 @@ export default function ProfilePage() {
             ))}
         </div>
         {earnedAchievementIds.size > 0 && (
-          <div className="text-center text-white/15 text-[11px] mt-4">
+          <div className="text-center text-ink-faint text-[11px] mt-4">
             {earnedAchievementIds.size} / {ACHIEVEMENTS.length} unlocked
           </div>
         )}

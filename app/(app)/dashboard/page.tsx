@@ -250,10 +250,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Greeting */}
       <div>
-        <h1 className="font-serif text-[28px] font-light text-white/85">
+        <h1 className="font-serif text-[28px] font-light text-ink">
           Welcome back, {profile.display_name || profile.username}
         </h1>
-        <p className="text-[13px] text-white/25 mt-1">Your mind is your weapon. Keep it sharp.</p>
+        <p className="text-[13px] text-ink-muted mt-1">Your mind is your weapon. Keep it sharp.</p>
       </div>
 
       {/* 2-column responsive grid */}
@@ -265,19 +265,19 @@ export default function DashboardPage() {
           <Link href="/play" className="block">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="font-serif text-lg text-white/80 mb-1">Ranked Match</div>
-                <div className="text-[11px] text-white/25 leading-relaxed">
+                <div className="font-serif text-lg text-ink mb-1">Ranked Match</div>
+                <div className="text-[11px] text-ink-muted leading-relaxed">
                   First to 5 wins, Elo on the line
                 </div>
               </div>
               {onlineCount !== null && (
-                <div className="flex items-center gap-1.5 text-[11px] text-white/30">
+                <div className="flex items-center gap-1.5 text-[11px] text-ink-muted">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   ~{onlineCount} online
                 </div>
               )}
             </div>
-            <div className="inline-block px-6 py-2.5 bg-[#F59E0B] text-[#050505] text-[11px] tracking-[2px] font-bold rounded-sm hover:bg-[#F59E0B]/90 transition-colors">
+            <div className="inline-block px-6 py-2.5 bg-accent text-on-accent text-[11px] tracking-[2px] font-bold rounded-sm hover:bg-accent/90 transition-colors">
               PLAY NOW
             </div>
           </Link>
@@ -287,8 +287,8 @@ export default function DashboardPage() {
         <Card variant="default" className="p-6">
           <div className="flex items-start justify-between mb-3">
             <div>
-              <div className="text-[9px] tracking-[2px] text-white/20 mb-2">YOUR RATING</div>
-              <div className="font-mono text-[36px] font-normal text-white/[0.88] tabular-nums leading-none">
+              <div className="text-[9px] tracking-[2px] text-ink-faint mb-2">YOUR RATING</div>
+              <div className="font-mono text-[36px] font-normal text-ink tabular-nums leading-none">
                 {profile.elo_rating}
               </div>
             </div>
@@ -304,7 +304,7 @@ export default function DashboardPage() {
 
           {/* Tier progress bar */}
           <div className="mt-3">
-            <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="h-1 w-full rounded-full bg-shade overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -314,7 +314,7 @@ export default function DashboardPage() {
               />
             </div>
             {rank.tier !== 'Grandmaster' && (
-              <div className="text-[10px] text-white/25 mt-1.5 font-mono tabular-nums">
+              <div className="text-[10px] text-ink-muted mt-1.5 font-mono tabular-nums">
                 {ptsToNext} pts to {rank.tier === 'Bronze' ? 'Silver' : rank.tier === 'Silver' ? 'Gold' : rank.tier === 'Gold' ? 'Platinum' : rank.tier === 'Platinum' ? 'Diamond' : 'Grandmaster'}
               </div>
             )}
@@ -332,19 +332,19 @@ export default function DashboardPage() {
         <Card variant="highlight" className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <div className="font-serif text-lg text-white/80 mb-1">Daily Puzzle</div>
-              <div className="text-[11px] text-white/30 leading-relaxed">
+              <div className="font-serif text-lg text-ink mb-1">Daily Puzzle</div>
+              <div className="text-[11px] text-ink-muted leading-relaxed">
                 5 problems, race the clock
               </div>
             </div>
-            <div className="text-[11px] text-white/25 flex items-center gap-1">
+            <div className="text-[11px] text-ink-muted flex items-center gap-1">
               <span>🔥</span>
               <span className="font-mono tabular-nums">{dailyStreak} day streak</span>
             </div>
           </div>
           <Link
             href="/daily"
-            className="inline-block px-5 py-2 border border-[#F59E0B]/40 text-[#F59E0B] text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-[#F59E0B]/10 transition-colors"
+            className="inline-block px-5 py-2 border border-accent/40 text-accent text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-glow transition-colors"
           >
             SOLVE TODAY&apos;S PUZZLE
           </Link>
@@ -353,8 +353,8 @@ export default function DashboardPage() {
         {/* 4. Recent Achievements Card */}
         <Card variant="default" className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="text-[9px] tracking-[2px] text-white/20">ACHIEVEMENTS</div>
-            <Link href="/profile#achievements" className="text-[10px] text-white/20 hover:text-white/40 transition-colors">
+            <div className="text-[9px] tracking-[2px] text-ink-faint">ACHIEVEMENTS</div>
+            <Link href="/profile#achievements" className="text-[10px] text-ink-faint hover:text-ink-tertiary transition-colors">
               View all &rarr;
             </Link>
           </div>
@@ -364,14 +364,14 @@ export default function DashboardPage() {
                 <div key={a.id} className="flex items-center gap-3">
                   <span className="text-base">{a.achievement?.icon ?? '🏆'}</span>
                   <div>
-                    <div className="text-[12px] text-white/60">{a.achievement?.name ?? 'Achievement'}</div>
-                    <div className="text-[10px] text-white/20">{a.achievement?.description ?? ''}</div>
+                    <div className="text-[12px] text-ink-secondary">{a.achievement?.name ?? 'Achievement'}</div>
+                    <div className="text-[10px] text-ink-faint">{a.achievement?.description ?? ''}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-[12px] text-white/20 py-4">
+            <div className="text-[12px] text-ink-faint py-4">
               Play matches to earn achievements
             </div>
           )}
@@ -381,7 +381,7 @@ export default function DashboardPage() {
 
         {/* 5. Recent Matches Card */}
         <Card variant="default" className="p-6">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-4">RECENT MATCHES</div>
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-4">RECENT MATCHES</div>
           {recentMatches.length > 0 ? (
             <div className="space-y-0 -mx-1">
               {recentMatches.map((match) => {
@@ -398,27 +398,27 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={match.id}
-                    className="flex items-center justify-between px-1 py-2.5 border-b border-white/[0.03] last:border-b-0"
+                    className="flex items-center justify-between px-1 py-2.5 border-b border-edge-faint last:border-b-0"
                   >
                     <div className="flex items-center gap-2.5">
                       <span
                         className={`font-mono text-[9px] tracking-[1px] px-1.5 py-0.5 rounded-sm ${
                           won
-                            ? 'text-white/70 bg-white/[0.08]'
-                            : 'text-white/25 bg-white/[0.03]'
+                            ? 'text-ink-secondary bg-shade'
+                            : 'text-ink-muted bg-card'
                         }`}
                       >
                         {won ? 'W' : 'L'}
                       </span>
-                      <span className="text-[12px] text-white/50">vs {opponentName}</span>
+                      <span className="text-[12px] text-ink-secondary">vs {opponentName}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="font-mono text-[11px] text-white/25 tabular-nums">
+                      <span className="font-mono text-[11px] text-ink-muted tabular-nums">
                         {myScore}&ndash;{theirScore}
                       </span>
                       <span
                         className={`font-mono text-[10px] tabular-nums w-10 text-right ${
-                          eloChange >= 0 ? 'text-white/50' : 'text-white/20'
+                          eloChange >= 0 ? 'text-ink-secondary' : 'text-ink-faint'
                         }`}
                       >
                         {eloChange >= 0 ? '+' : ''}
@@ -430,7 +430,7 @@ export default function DashboardPage() {
               })}
             </div>
           ) : (
-            <div className="text-[12px] text-white/20 py-4">
+            <div className="text-[12px] text-ink-faint py-4">
               No matches played yet. Start a ranked match!
             </div>
           )}
@@ -438,7 +438,7 @@ export default function DashboardPage() {
 
         {/* 6. Challenges Card */}
         <Card variant="default" className="p-6">
-          <div className="text-[9px] tracking-[2px] text-white/20 mb-4">CHALLENGES</div>
+          <div className="text-[9px] tracking-[2px] text-ink-faint mb-4">CHALLENGES</div>
 
           {activeChallenges.length > 0 ? (
             <div className="space-y-2.5">
@@ -446,17 +446,17 @@ export default function DashboardPage() {
               {sentPending.map((challenge) => (
                 <div
                   key={challenge.id}
-                  className="flex items-center justify-between p-3 rounded-sm bg-white/[0.02] border border-white/[0.04]"
+                  className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
                 >
                   <div>
-                    <div className="text-[12px] text-white/40">Waiting for opponent</div>
-                    <div className="font-mono text-[10px] text-white/15 mt-0.5 truncate max-w-[180px]">
+                    <div className="text-[12px] text-ink-tertiary">Waiting for opponent</div>
+                    <div className="font-mono text-[10px] text-ink-faint mt-0.5 truncate max-w-[180px]">
                       /challenge/{challenge.code}
                     </div>
                   </div>
                   <button
                     onClick={() => handleDecline(challenge.code)}
-                    className="px-2 py-1 border border-white/[0.08] text-white/20 text-[10px] rounded-sm hover:border-white/[0.15] hover:text-white/40 transition-colors"
+                    className="px-2 py-1 border border-edge text-ink-faint text-[10px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
                   >
                     ✕
                   </button>
@@ -469,17 +469,17 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={challenge.id}
-                    className="flex items-center justify-between p-3 rounded-sm bg-white/[0.03] border border-white/[0.06]"
+                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge"
                   >
                     <div>
-                      <div className="text-[12px] text-white/50">
+                      <div className="text-[12px] text-ink-secondary">
                         {opponentName ? `${opponentName} accepted` : 'Challenge accepted'}
                       </div>
-                      <div className="text-[10px] text-white/20 mt-0.5">Ready to play</div>
+                      <div className="text-[10px] text-ink-faint mt-0.5">Ready to play</div>
                     </div>
                     <Link
                       href={`/challenge/${challenge.code}/lobby`}
-                      className="px-3 py-1 bg-white/90 text-[#050505] text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-white transition-colors"
+                      className="px-3 py-1 bg-btn text-btn-text text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
                     >
                       PLAY
                     </Link>
@@ -493,24 +493,24 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={challenge.id}
-                    className="flex items-center justify-between p-3 rounded-sm bg-white/[0.02] border border-white/[0.04]"
+                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
                   >
                     <div>
-                      <div className="text-[12px] text-white/50">
+                      <div className="text-[12px] text-ink-secondary">
                         {opponentName ? `${opponentName} challenged you` : 'You received a challenge'}
                       </div>
-                      <div className="text-[10px] text-white/20 mt-0.5">Accept to start</div>
+                      <div className="text-[10px] text-ink-faint mt-0.5">Accept to start</div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleAccept(challenge.code)}
-                        className="px-3 py-1 bg-white/90 text-[#050505] text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-white transition-colors"
+                        className="px-3 py-1 bg-btn text-btn-text text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
                       >
                         ACCEPT
                       </button>
                       <button
                         onClick={() => handleDecline(challenge.code)}
-                        className="px-2 py-1 border border-white/[0.08] text-white/25 text-[9px] rounded-sm hover:border-white/[0.15] hover:text-white/40 transition-colors"
+                        className="px-2 py-1 border border-edge text-ink-muted text-[9px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
                       >
                         ✕
                       </button>
@@ -525,17 +525,17 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={challenge.id}
-                    className="flex items-center justify-between p-3 rounded-sm bg-white/[0.02] border border-white/[0.04]"
+                    className="flex items-center justify-between p-3 rounded-sm bg-card border border-edge-faint"
                   >
                     <div>
-                      <div className="text-[12px] text-white/40">
+                      <div className="text-[12px] text-ink-tertiary">
                         {opponentName ? `Match vs ${opponentName}` : 'Challenge accepted'}
                       </div>
-                      <div className="text-[10px] text-white/20 mt-0.5">Ready to play</div>
+                      <div className="text-[10px] text-ink-faint mt-0.5">Ready to play</div>
                     </div>
                     <Link
                       href={`/challenge/${challenge.code}/lobby`}
-                      className="px-3 py-1 bg-white/90 text-[#050505] text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-white transition-colors"
+                      className="px-3 py-1 bg-btn text-btn-text text-[9px] tracking-[1px] font-semibold rounded-sm hover:bg-btn-hover transition-colors"
                     >
                       PLAY
                     </Link>
@@ -544,7 +544,7 @@ export default function DashboardPage() {
               })}
             </div>
           ) : (
-            <div className="text-[12px] text-white/20 py-2">
+            <div className="text-[12px] text-ink-faint py-2">
               No active challenges
             </div>
           )}
@@ -552,7 +552,7 @@ export default function DashboardPage() {
           {/* Challenge a Friend button */}
           <button
             onClick={() => setChallengeModalOpen(true)}
-            className="mt-4 w-full px-4 py-2 border border-white/[0.08] text-white/40 text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:border-white/[0.15] hover:text-white/60 transition-colors"
+            className="mt-4 w-full px-4 py-2 border border-edge text-ink-tertiary text-[10px] tracking-[1.5px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
           >
             CHALLENGE A FRIEND
           </button>

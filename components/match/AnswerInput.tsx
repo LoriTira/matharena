@@ -64,10 +64,10 @@ export function AnswerInput({ onSubmit, disabled = false }: AnswerInputProps) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={locked || disabled}
-          className={`w-full px-6 py-4 text-2xl font-mono text-center rounded-sm border bg-white/[0.03] text-white/80 focus:outline-none transition-colors
+          className={`w-full px-6 py-4 text-2xl font-mono text-center rounded-sm border bg-card text-ink focus:outline-none transition-colors
             ${feedback === 'correct' ? 'border-green-400/50 bg-green-400/5' : ''}
             ${feedback === 'wrong' || locked ? 'border-red-400/50 bg-red-400/5' : ''}
-            ${!feedback && !locked ? 'border-white/[0.08] focus:border-white/20 focus:ring-1 focus:ring-white/10' : ''}
+            ${!feedback && !locked ? 'border-edge focus:border-edge-strong focus:ring-1 focus:ring-edge' : ''}
           `}
           placeholder={locked ? `Wait ${Math.ceil(GAME_CONFIG.WRONG_ANSWER_PENALTY_MS / 1000)}s...` : 'Your answer'}
           autoComplete="off"
@@ -81,7 +81,7 @@ export function AnswerInput({ onSubmit, disabled = false }: AnswerInputProps) {
       <button
         type="submit"
         disabled={locked || disabled || !value}
-        className="px-8 py-4 bg-white/90 text-[#050505] font-semibold text-xl rounded-sm transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+        className="px-8 py-4 bg-btn text-btn-text font-semibold text-xl rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-30 disabled:cursor-not-allowed"
       >
         &rarr;
       </button>

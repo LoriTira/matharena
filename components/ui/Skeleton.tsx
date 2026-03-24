@@ -9,10 +9,10 @@ interface SkeletonProps {
 export function Skeleton({ width, height, className = '' }: SkeletonProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-sm bg-white/[0.06] ${className}`}
+      className={`relative overflow-hidden rounded-sm bg-shade ${className}`}
       style={{ width, height }}
     >
-      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-shade to-transparent" />
     </div>
   );
 }

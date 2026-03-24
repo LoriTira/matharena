@@ -35,7 +35,7 @@ export default function RootLayout({
       lang="en"
       className={`${playfair.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#050505] text-white/50">{children}</body>
+      <body className="min-h-full flex flex-col bg-page text-ink-secondary">{children}</body>
     </html>
   );
 }

@@ -10,9 +10,9 @@ interface ScoreDotsProps {
 }
 
 const colorMap = {
-  gold: { filled: 'bg-[#F59E0B]', empty: 'bg-white/[0.08]' },
-  white: { filled: 'bg-white/70', empty: 'bg-white/[0.08]' },
-  muted: { filled: 'bg-white/30', empty: 'bg-white/[0.06]' },
+  gold: { filled: 'bg-accent', empty: 'bg-shade' },
+  white: { filled: 'bg-ink-secondary', empty: 'bg-shade' },
+  muted: { filled: 'bg-ink-muted', empty: 'bg-shade' },
 };
 
 const sizeMap = {
