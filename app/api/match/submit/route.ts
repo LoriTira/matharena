@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { calculateElo } from '@/lib/match/elo';
-import { checkAchievements } from '@/lib/achievements/checker';
 import { z } from 'zod';
 
 const submitSchema = z.object({
@@ -147,43 +146,12 @@ export async function POST(request: Request) {
     }
 
     // If match completed, mark any associated challenge as completed
-    // and check for new achievements
-    let newAchievements: { id: string; name: string; description: string; icon: string; rarity: string }[] = [];
     if (updates.status === 'completed') {
       await supabase
         .from('challenges')
         .update({ status: 'completed' })
         .eq('match_id', matchId)
         .eq('status', 'accepted');
-
-      // Check achievements for the current user
-      try {
-        const achievementMatchData = {
-          winner_id: (updates.winner_id as string) ?? null,
-          player1_id: match.player1_id,
-          player2_id: match.player2_id,
-          player1_score: (updates.player1_score as number) ?? match.player1_score,
-          player2_score: (updates.player2_score as number) ?? match.player2_score,
-          player1_penalties: (updates.player1_penalties as number) ?? match.player1_penalties,
-          player2_penalties: (updates.player2_penalties as number) ?? match.player2_penalties,
-          player1_elo_before: match.player1_elo_before,
-          player2_elo_before: match.player2_elo_before,
-          started_at: match.started_at,
-          completed_at: (updates.completed_at as string) ?? match.completed_at,
-        };
-
-        const unlocked = await checkAchievements(user.id, matchId, achievementMatchData, supabase);
-        newAchievements = unlocked.map(a => ({
-          id: a.id,
-          name: a.name,
-          description: a.description,
-          icon: a.icon,
-          rarity: a.rarity,
-        }));
-      } catch (err) {
-        // Don't fail the response if achievement check fails
-        console.error('Achievement check error:', err);
-      }
     }
 
     return NextResponse.json({
@@ -193,7 +161,6 @@ export async function POST(request: Request) {
         player1: updates.player1_score ?? match.player1_score,
         player2: updates.player2_score ?? match.player2_score,
       },
-      newAchievements,
     });
   } catch (error) {
     console.error('Match submit error:', error);

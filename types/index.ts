@@ -99,29 +99,3 @@ export interface Challenge {
   accepted_at: string | null;
   expires_at: string;
 }
-
-export interface AchievementDef {
-  id: string;
-  name: string;
-  description: string;
-  category: 'milestone' | 'performance' | 'streak' | 'social';
-  icon: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-}
-
-export interface UserAchievement {
-  id: string;
-  user_id: string;
-  achievement_id: string;
-  unlocked_at: string;
-  match_id: string | null;
-}
-
-export interface DailyPuzzleResult {
-  id: string;
-  user_id: string;
-  puzzle_date: string;
-  total_time_ms: number;
-  problem_times: number[];
-  completed_at: string;
-}
