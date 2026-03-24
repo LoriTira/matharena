@@ -339,22 +339,22 @@ export function MatchResult({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5 }}
       >
-        <Link
-          href="/play"
-          className="px-10 py-3.5 font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors bg-accent text-on-accent hover:bg-accent/90"
-        >
-          PLAY AGAIN
-        </Link>
-
         {opponentId && (
           <button
             onClick={handleRematch}
             disabled={rematchLoading}
-            className="px-6 py-3 border border-edge-strong text-ink-secondary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary disabled:opacity-40"
+            className="px-10 py-3.5 font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors bg-accent text-on-accent hover:bg-accent/90 disabled:opacity-40"
           >
             {rematchLoading ? 'CREATING...' : 'REMATCH'}
           </button>
         )}
+
+        <Link
+          href="/play"
+          className="px-6 py-3 border border-edge-strong text-ink-secondary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+        >
+          PLAY AGAIN
+        </Link>
 
         <button
           onClick={handleShare}

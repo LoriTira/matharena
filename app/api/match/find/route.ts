@@ -27,20 +27,47 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const eloRange = body.eloRange ?? GAME_CONFIG.MATCHMAKING_ELO_RANGE_INITIAL;
 
-    // Check if player is already in an active/waiting match
-    const { data: existingMatch } = await supabase
+    // Check if player is already in an active match
+    const { data: existingActive } = await supabase
       .from('matches')
       .select('id, status')
       .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-      .in('status', ['waiting', 'active'])
+      .eq('status', 'active')
       .limit(1)
       .single();
 
-    if (existingMatch) {
+    if (existingActive) {
       return NextResponse.json({
-        matchId: existingMatch.id,
-        status: existingMatch.status,
+        matchId: existingActive.id,
+        status: existingActive.status,
       });
+    }
+
+    // Check for own waiting matches — abandon stale ones (>30s old)
+    const { data: existingWaiting } = await supabase
+      .from('matches')
+      .select('id, status, created_at')
+      .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+      .eq('status', 'waiting')
+      .limit(1)
+      .single();
+
+    if (existingWaiting) {
+      const ageMs = Date.now() - new Date(existingWaiting.created_at).getTime();
+      if (ageMs > 30000) {
+        // Stale waiting match — abandon it silently so we can create a fresh one
+        await supabase
+          .from('matches')
+          .update({ status: 'abandoned' })
+          .eq('id', existingWaiting.id)
+          .eq('status', 'waiting');
+      } else {
+        // Recent waiting match — return it (client is probably still on this page)
+        return NextResponse.json({
+          matchId: existingWaiting.id,
+          status: existingWaiting.status,
+        });
+      }
     }
 
     // Check for accepted challenges — prioritize challenge matches
@@ -97,7 +124,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Try to find a waiting match within Elo range
+    // Try to find a waiting match within Elo range (only recent ones — max 2 minutes old)
+    const freshnessThreshold = new Date(Date.now() - 120_000).toISOString();
     const { data: waitingMatches } = await supabase
       .from('matches')
       .select('id, player1_id, avg_difficulty')
@@ -105,6 +133,7 @@ export async function POST(request: Request) {
       .neq('player1_id', user.id)
       .gte('avg_difficulty', playerElo - eloRange)
       .lte('avg_difficulty', playerElo + eloRange)
+      .gte('created_at', freshnessThreshold)
       .order('created_at', { ascending: true })
       .limit(1);
 

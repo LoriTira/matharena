@@ -15,12 +15,16 @@ export function useMatchmaking() {
   const widenRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
+
   const cleanup = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (widenRef.current) clearTimeout(widenRef.current);
+    if (pollRef.current) clearInterval(pollRef.current);
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     timeoutRef.current = null;
     widenRef.current = null;
+    pollRef.current = null;
     channelRef.current = null;
   }, []);
 
@@ -73,6 +77,25 @@ export function useMatchmaking() {
         .subscribe();
 
       channelRef.current = channel;
+
+      // Polling fallback: check match status every 2s in case realtime misses the update
+      pollRef.current = setInterval(async () => {
+        try {
+          const { data: m } = await supabase
+            .from('matches')
+            .select('id, status')
+            .eq('id', data.matchId)
+            .single();
+
+          if (m?.status === 'active') {
+            cleanup();
+            setIsSearching(false);
+            router.push(`/play/${data.matchId}`);
+          }
+        } catch {
+          // Will retry on next poll
+        }
+      }, 2000);
 
       // Timeout after 2 minutes
       timeoutRef.current = setTimeout(() => {
