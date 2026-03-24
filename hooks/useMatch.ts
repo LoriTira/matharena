@@ -1,13 +1,19 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Match } from '@/types';
 
 export function useMatch(matchId: string) {
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const statusRef = useRef<string | undefined>(undefined);
+
+  // Keep ref in sync so the polling interval always sees current status
+  useEffect(() => {
+    statusRef.current = match?.status;
+  }, [match?.status]);
 
   const refetchMatch = useCallback(async () => {
     const { data, error } = await supabase
@@ -46,7 +52,24 @@ export function useMatch(matchId: string) {
       )
       .subscribe();
 
+    // Polling fallback: re-fetch every 1.5s while match is active.
+    // Realtime can be unreliable; this guarantees the loser's UI updates.
+    const pollInterval = setInterval(async () => {
+      if (statusRef.current === 'active' || statusRef.current === 'waiting') {
+        const { data } = await supabase
+          .from('matches')
+          .select('*')
+          .eq('id', matchId)
+          .single();
+
+        if (data) {
+          setMatch(data as Match);
+        }
+      }
+    }, 1500);
+
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [matchId, refetchMatch, supabase]);

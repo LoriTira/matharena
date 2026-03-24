@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMatch } from '@/hooks/useMatch';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,7 +35,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   const [streak, setStreak] = useState(0);
   const [matchStats, setMatchStats] = useState<MatchStats | null>(null);
   const [newAchievements, setNewAchievements] = useState<{ id: string; name: string; description: string; icon: string; rarity: string }[]>([]);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Fetch player profiles
   useEffect(() => {
