@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [sparklineData, setSparklineData] = useState<number[]>([]);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [dailyStreak, setDailyStreak] = useState<number>(0);
+  const [dailyCompleted, setDailyCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
@@ -118,6 +119,7 @@ export default function DashboardPage() {
       if (res.ok) {
         const data = await res.json();
         setDailyStreak(data.streak ?? 0);
+        setDailyCompleted(data.completedToday ?? false);
       }
     } catch {
       // API doesn't exist yet
@@ -454,12 +456,19 @@ export default function DashboardPage() {
               <span className="font-mono tabular-nums">{dailyStreak} day streak</span>
             </div>
           </div>
-          <Link
-            href="/daily"
-            className="inline-block px-5 py-2 border border-accent/40 text-accent text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-glow transition-colors"
-          >
-            SOLVE TODAY&apos;S PUZZLE
-          </Link>
+          {dailyCompleted ? (
+            <Link href="/daily" className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-accent-glow border border-accent/20">
+              <span className="text-accent text-base">&#10003;</span>
+              <span className="text-[12px] text-accent font-semibold tracking-[1px]">COMPLETED TODAY</span>
+            </Link>
+          ) : (
+            <Link
+              href="/daily"
+              className="inline-block px-5 py-2 border border-accent/40 text-accent text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-glow transition-colors"
+            >
+              SOLVE TODAY&apos;S PUZZLE
+            </Link>
+          )}
         </Card>
 
         {/* 4. Recent Matches Card */}
