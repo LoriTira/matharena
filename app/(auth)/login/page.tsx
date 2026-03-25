@@ -86,6 +86,12 @@ function LoginForm() {
             </div>
           </div>
 
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-[12px] text-ink-muted hover:text-ink-tertiary transition-colors">
+              Forgot password?
+            </Link>
+          </div>
+
           {error && (
             <p className="text-red-400/70 text-sm">{error}</p>
           )}
