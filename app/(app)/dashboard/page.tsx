@@ -310,12 +310,20 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-[12px] text-accent/70 mt-0.5">Ready to play</div>
                     </div>
-                    <Link
-                      href={`/challenge/${challenge.code}/lobby`}
-                      className="px-4 py-1.5 bg-accent text-on-accent text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-accent/90 transition-colors"
-                    >
-                      PLAY
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/challenge/${challenge.code}/lobby`}
+                        className="px-4 py-1.5 bg-accent text-on-accent text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-accent/90 transition-colors"
+                      >
+                        PLAY
+                      </Link>
+                      <button
+                        onClick={() => handleDecline(challenge.code)}
+                        className="px-2 py-1 border border-edge text-ink-muted text-[11px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -334,12 +342,20 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-[12px] text-accent/70 mt-0.5">Ready to play</div>
                     </div>
-                    <Link
-                      href={`/challenge/${challenge.code}/lobby`}
-                      className="px-4 py-1.5 bg-accent text-on-accent text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-accent/90 transition-colors"
-                    >
-                      PLAY
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/challenge/${challenge.code}/lobby`}
+                        className="px-4 py-1.5 bg-accent text-on-accent text-[11px] tracking-[1px] font-semibold rounded-sm hover:bg-accent/90 transition-colors"
+                      >
+                        PLAY
+                      </Link>
+                      <button
+                        onClick={() => handleDecline(challenge.code)}
+                        className="px-2 py-1 border border-edge text-ink-muted text-[11px] rounded-sm hover:border-edge-strong hover:text-ink-tertiary transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                 );
               })}

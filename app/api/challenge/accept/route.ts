@@ -35,6 +35,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Challenge not found' }, { status: 404 });
     }
 
+    // Dismiss/decline: works on both pending and accepted challenges
+    if (decline) {
+      if (challenge.status !== 'pending' && challenge.status !== 'accepted') {
+        return NextResponse.json({ error: 'Challenge is no longer available' }, { status: 400 });
+      }
+      // Only participants can dismiss
+      if (challenge.sender_id !== user.id && challenge.recipient_id !== user.id) {
+        return NextResponse.json({ error: 'Not a participant' }, { status: 403 });
+      }
+      await supabase
+        .from('challenges')
+        .update({ status: 'expired' })
+        .eq('id', challenge.id);
+      return NextResponse.json({ success: true });
+    }
+
     if (challenge.status !== 'pending') {
       return NextResponse.json({ error: 'Challenge is no longer available' }, { status: 400 });
     }
@@ -46,15 +62,6 @@ export async function POST(request: Request) {
         .update({ status: 'expired' })
         .eq('id', challenge.id);
       return NextResponse.json({ error: 'Challenge has expired' }, { status: 400 });
-    }
-
-    // Decline the challenge
-    if (decline) {
-      await supabase
-        .from('challenges')
-        .update({ status: 'expired' })
-        .eq('id', challenge.id);
-      return NextResponse.json({ success: true });
     }
 
     if (challenge.sender_id === user.id) {
