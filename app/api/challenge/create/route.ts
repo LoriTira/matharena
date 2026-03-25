@@ -103,10 +103,10 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 });
         }
 
-        // Send email notification for direct challenges (fire-and-forget)
-        if (recipientId) {
+        // Send email notification for direct (non-rematch) challenges — must await in serverless
+        if (recipientId && !isRematch) {
           const origin = request.headers.get('origin') || '';
-          sendEmailNotification(supabase, user.id, recipientId, retry.code, origin);
+          await sendEmailNotification(supabase, user.id, recipientId, retry.code, origin);
         }
 
         return NextResponse.json({
@@ -118,10 +118,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 });
     }
 
-    // Send email notification for direct challenges (fire-and-forget)
-    if (recipientId) {
+    // Send email notification for direct (non-rematch) challenges — must await in serverless
+    if (recipientId && !isRematch) {
       const origin = request.headers.get('origin') || '';
-      sendEmailNotification(supabase, user.id, recipientId, challenge.code, origin);
+      await sendEmailNotification(supabase, user.id, recipientId, challenge.code, origin);
     }
 
     return NextResponse.json({

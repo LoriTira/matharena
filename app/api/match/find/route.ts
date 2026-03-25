@@ -25,31 +25,80 @@ export async function POST(request: Request) {
     const playerElo = profile.elo_rating;
     const body = await request.json().catch(() => ({}));
     const eloRange = body.eloRange ?? GAME_CONFIG.MATCHMAKING_ELO_RANGE_INITIAL;
+    const staleMs = GAME_CONFIG.MATCH_STALE_TIMEOUT_MINUTES * 60 * 1000;
 
     // ── Step 1: Check if player is already in an active match ──
-    const { data: existingActive } = await supabase
+    // Use maybeSingle() instead of single() to avoid errors when 0 or 2+ matches exist.
+    // If multiple active matches exist (race condition), pick the newest and abandon the rest.
+    const { data: activeMatches } = await supabase
       .from('matches')
       .select('id, status, started_at')
       .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
       .eq('status', 'active')
-      .limit(1)
-      .single();
+      .order('started_at', { ascending: false })
+      .limit(5);
 
-    if (existingActive) {
-      // If the active match is stale (>10 min), abandon it so the player can search again
-      const staleMs = GAME_CONFIG.MATCH_STALE_TIMEOUT_MINUTES * 60 * 1000;
-      const age = Date.now() - new Date(existingActive.started_at).getTime();
+    if (activeMatches && activeMatches.length > 0) {
+      const [newest, ...extras] = activeMatches;
+
+      // Abandon any duplicate active matches (race condition cleanup)
+      for (const extra of extras) {
+        await supabase
+          .from('matches')
+          .update({ status: 'abandoned', completed_at: new Date().toISOString() })
+          .eq('id', extra.id)
+          .eq('status', 'active');
+      }
+
+      // Check if the newest active match is stale
+      const age = Date.now() - new Date(newest.started_at).getTime();
       if (age > staleMs) {
         await supabase
           .from('matches')
           .update({ status: 'abandoned', completed_at: new Date().toISOString() })
-          .eq('id', existingActive.id)
+          .eq('id', newest.id)
           .eq('status', 'active');
       } else {
         return NextResponse.json({
-          matchId: existingActive.id,
-          status: existingActive.status,
+          matchId: newest.id,
+          status: newest.status,
         });
+      }
+    }
+
+    // ── Step 1b: Clean up any orphan waiting matches by this player first ──
+    // This prevents accumulating multiple waiting matches
+    const { data: ownWaitingAll } = await supabase
+      .from('matches')
+      .select('id, created_at')
+      .eq('player1_id', user.id)
+      .eq('status', 'waiting')
+      .order('created_at', { ascending: false });
+
+    let freshWaiting: { id: string; created_at: string } | null = null;
+
+    if (ownWaitingAll && ownWaitingAll.length > 0) {
+      // Keep only the newest if it's still fresh; abandon all others
+      const [newest, ...staleOnes] = ownWaitingAll;
+      const newestAge = Date.now() - new Date(newest.created_at).getTime();
+
+      if (newestAge <= 120_000) {
+        freshWaiting = newest;
+      } else {
+        // Abandon it too
+        await supabase
+          .from('matches')
+          .update({ status: 'abandoned' })
+          .eq('id', newest.id)
+          .eq('status', 'waiting');
+      }
+
+      for (const s of staleOnes) {
+        await supabase
+          .from('matches')
+          .update({ status: 'abandoned' })
+          .eq('id', s.id)
+          .eq('status', 'waiting');
       }
     }
 
@@ -72,7 +121,7 @@ export async function POST(request: Request) {
       const problems = generateProblems(avgElo, GAME_CONFIG.TARGET_SCORE + GAME_CONFIG.PROBLEMS_BUFFER);
 
       // Join the match (optimistic lock on status=waiting prevents double-join)
-      const { error: joinError } = await supabase
+      const { data: joined, error: joinError } = await supabase
         .from('matches')
         .update({
           player2_id: user.id,
@@ -84,10 +133,12 @@ export async function POST(request: Request) {
           started_at: new Date().toISOString(),
         })
         .eq('id', match.id)
-        .eq('status', 'waiting');
+        .eq('status', 'waiting')
+        .select('id')
+        .maybeSingle();
 
-      if (!joinError) {
-        // Clean up own stale waiting match (if any)
+      if (!joinError && joined) {
+        // Successfully joined — clean up own waiting matches
         await supabase
           .from('matches')
           .update({ status: 'abandoned' })
@@ -96,35 +147,15 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ matchId: match.id, status: 'active' });
       }
-      // Race condition: another player joined first. Fall through to create/return own match.
+      // Race condition: another player joined first. Fall through.
     }
 
-    // ── Step 3: Check for own waiting match ──
-    const { data: ownWaiting } = await supabase
-      .from('matches')
-      .select('id, status, created_at')
-      .eq('player1_id', user.id)
-      .eq('status', 'waiting')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (ownWaiting) {
-      const ageMs = Date.now() - new Date(ownWaiting.created_at).getTime();
-      if (ageMs > 120_000) {
-        // Too old — abandon and create fresh below
-        await supabase
-          .from('matches')
-          .update({ status: 'abandoned' })
-          .eq('id', ownWaiting.id)
-          .eq('status', 'waiting');
-      } else {
-        // Fresh — keep waiting, opponent will join this match
-        return NextResponse.json({
-          matchId: ownWaiting.id,
-          status: ownWaiting.status,
-        });
-      }
+    // ── Step 3: Return own fresh waiting match if it exists ──
+    if (freshWaiting) {
+      return NextResponse.json({
+        matchId: freshWaiting.id,
+        status: 'waiting',
+      });
     }
 
     // ── Step 4: Create new waiting match ──
