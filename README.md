@@ -7,19 +7,21 @@ A competitive mental math platform with a chess.com-style Elo ranking system. Ch
 ## Features
 
 - **Ranked Matches** — Compete head-to-head in addition, subtraction, multiplication, and division. First to 5 correct answers wins. Elo rating updates based on opponent strength. Includes 3-2-1 countdown, match point drama, streak indicator, and ScoreDots visualization.
-- **Daily Puzzle** — 5 deterministic problems each day (seeded from the date). Race the clock, compete on the daily leaderboard, and build a streak.
-- **Challenge a Friend** — Generate a shareable invite link. Both players enter a lobby page, and the match starts simultaneously once both are confirmed online (heartbeat-based presence detection).
+- **Daily Puzzle** — 5 deterministic problems each day (seeded from the UTC date). Race the clock, compete on the daily leaderboard, and build a streak. A shared countdown timer shows time until the next puzzle on both the daily page and the dashboard card.
+- **Challenge a Friend** — Generate a shareable invite link. Both players enter a lobby page, and the match starts simultaneously once both are confirmed online (heartbeat-based presence detection). Rematch detection ensures both players join the same lobby instead of creating duplicate challenges.
+- **Google OAuth** — Sign in with Google in addition to email/password. Powered by Supabase Auth.
 - **Achievement System** — 12 achievements across milestone, performance, streak, and social categories. Automatically checked on match completion. Trophy case on profile page.
 - **Practice Mode** — Train solo with adjustable difficulty and operation selection. No rating impact.
 - **Lessons** — Learn mental math tricks and techniques (multiply by 11, squaring numbers ending in 5, complement subtraction, and more).
 - **Leaderboard** — Public Elo rankings with filtering by school/company affiliation.
 - **Player Profiles** — Track your stats, rating history, win rate, country, affiliation, and earned achievements.
+- **Theme System** — Light, dark, and system modes with four accent color options (violet, blue, teal, gold). Persisted in localStorage. Gear icon in the navbar.
 
 ## Tech Stack
 
 - **Frontend:** Next.js 16, React 19, Tailwind CSS 4, Framer Motion 12
 - **Backend:** Next.js API routes, Zod validation
-- **Database & Auth:** Supabase (PostgreSQL + Auth + Realtime + RLS)
+- **Database & Auth:** Supabase (PostgreSQL + Auth + Realtime + RLS + Google OAuth)
 - **Deployment:** Vercel (auto-deploy on push to `main`)
 
 ## Project Structure
@@ -36,13 +38,16 @@ app/
     profile/          #   Update profile
   challenge/[code]/   # Public challenge accept page
 components/
-  layout/             # Navbar (dropdown nav + mobile hamburger), MathTexture
-  match/              # MatchBoard, MatchResult, ProblemDisplay, AnswerInput, ScoreDots, etc.
+  auth/               # GoogleOAuthButton
+  daily/              # NextPuzzleCountdown (shared countdown component)
+  layout/             # Navbar (dropdown nav + mobile hamburger), ThemeSettings, MathTexture
+  match/              # MatchBoard, MatchResult (with rematch detection), ProblemDisplay, AnswerInput, ScoreDots, etc.
   challenge/          # ChallengeModal
   ui/                 # Reusable primitives: Card, Skeleton, Toast, Dropdown, Sparkline, RankBadge, AchievementBadge
+  ThemeProvider.tsx    # Theme context (light/dark/system + accent color) with FOUC prevention
 hooks/                # useAuth, useMatch, useToast, useDailyPuzzle, etc.
 lib/
-  supabase/           # Supabase client (browser), server client, middleware session handler
+  supabase/           # Supabase client (browser), server client, admin client, middleware session handler
   achievements/       # Achievement checker (evaluates conditions on match completion)
   match/              # Elo calculation
   problems/           # Problem generator, daily puzzle generator (deterministic PRNG), date utils
@@ -80,7 +85,9 @@ supabase/migrations/  # Database migration files (run in order)
    | 7 | `007_daily_puzzle.sql` | Daily puzzle results table with unique constraint per user/day |
    | 8 | `008_achievements.sql` | User achievements table for the achievement system |
 
-4. Start the dev server:
+4. (Optional) Enable Google OAuth in the Supabase dashboard under **Auth > Providers > Google**. Add your Google Client ID and Client Secret from the [Google Cloud Console](https://console.cloud.google.com).
+
+5. Start the dev server:
    ```bash
    npm run dev
    ```
@@ -98,8 +105,10 @@ Database migrations must be applied manually via the Supabase SQL Editor.
 
 ### Design System
 
-- **Dark theme:** `#050505` background, white text at various opacities (`/90`, `/50`, `/25`, `/15`)
-- **Accent color:** Amber `#F59E0B` for CTAs and highlights
+- **Theme modes:** Light, dark, and system (class-based toggling with FOUC prevention via inline script)
+- **Default accent:** Violet `#7C3AED` (light) / `#A78BFA` (dark)
+- **Accent options:** Violet, blue, teal, gold — selectable from the navbar gear icon, persisted in localStorage
+- **Background:** `#050505` (dark), `#FAFAF9` (light)
 - **Fonts:** Playfair Display (serif headings), Inter (body), JetBrains Mono (numbers/stats)
 - **Component variants:** Cards have `default`, `interactive`, and `highlight` variants
 - **Animations:** Framer Motion for transitions and overlays; CSS keyframes in `globals.css` for shimmer, shake, gold-pulse, countdown-pulse, score-bounce
@@ -109,22 +118,24 @@ Database migrations must be applied manually via the Supabase SQL Editor.
 - **Supabase client in client components:** Use `useMemo(() => createClient(), [])` to stabilize the reference and prevent infinite re-render loops in `useEffect` dependencies.
 - **Toast system:** `ToastProvider` must wrap the entire `(app)` layout (including `Navbar`), since `ChallengeModal` inside `Navbar` uses `useToast()`. Placing it only around `{children}` will cause a crash.
 - **Middleware route protection:** New authenticated routes must be added to `protectedPaths` in `lib/supabase/middleware.ts`. Missing routes will render without auth and likely crash during SSR.
-- **Daily puzzle determinism:** `lib/problems/daily.ts` uses a mulberry32 PRNG seeded from the date string. Same date always produces the same 5 problems. Answers are verified server-side by regenerating from the seed.
+- **Daily puzzle determinism:** `lib/problems/daily.ts` uses a mulberry32 PRNG seeded from the date string. Same UTC date always produces the same 5 problems. Answers are verified server-side by regenerating from the seed.
 - **Achievement checking:** Runs in a try/catch inside `app/api/match/submit/route.ts` after Elo calculation. Failures don't block the match result response.
+- **Rematch detection:** When a player clicks REMATCH, the opponent's result screen polls for the incoming challenge and shows a "JOIN REMATCH" button. The create API also deduplicates — if the opponent already created a rematch, it returns the existing challenge instead of creating a new one.
+- **Theme persistence:** `ThemeProvider` reads `ma-theme` and `ma-accent` from localStorage and applies `class` + `data-accent` attributes to `<html>`. An inline script in `layout.tsx` applies the theme before React hydrates to prevent FOUC.
 - **React 19 context:** Uses `<ToastContext value={...}>` (not `<ToastContext.Provider value={...}>`).
 
 ### Elo Tiers
 
-| Tier | Elo Range | Color |
-|------|-----------|-------|
-| Bronze | 100–799 | `#CD7F32` |
-| Silver | 800–1199 | `#C0C0C0` |
-| Gold | 1200–1599 | `#F59E0B` |
-| Platinum | 1600–1999 | `#06B6D4` |
-| Diamond | 2000–2399 | `#8B5CF6` |
-| Grandmaster | 2400+ | `#EF4444` |
+| Tier | Elo Range |
+|------|-----------|
+| Bronze | 100–799 |
+| Silver | 800–1199 |
+| Gold | 1200–1599 |
+| Platinum | 1600–1999 |
+| Diamond | 2000–2399 |
+| Grandmaster | 2400+ |
 
-Each tier has 3 divisions (I, II, III). `lib/ranks.ts` provides `getRank(elo)` returning tier info, progress, and colors.
+Each tier has 3 divisions (I, II, III). `lib/ranks.ts` provides `getRank(elo)` returning tier info, progress, and accent-colored badges.
 
 ### Troubleshooting
 
@@ -132,3 +143,4 @@ Each tier has 3 divisions (I, II, III). `lib/ranks.ts` provides `getRank(elo)` r
 - **`useToast must be used within a ToastProvider`:** A component using `useToast()` is rendering outside `ToastProvider`. Check that the provider wraps the full `(app)` layout, not just `{children}`.
 - **New route returns 500 for unauthenticated users:** Add the route to `protectedPaths` in `lib/supabase/middleware.ts`.
 - **Infinite re-renders on dashboard or navbar:** Likely a `createClient()` call outside `useMemo` being used as a `useEffect` dependency. Wrap in `useMemo`.
+- **Theme flash on load:** Ensure the inline script in `app/layout.tsx` runs before React hydration. It reads localStorage and sets `class`/`data-accent` on `<html>` synchronously.
