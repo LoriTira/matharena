@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getRank, didRankChange, TIERS } from '@/lib/ranks';
 import { RankBadge } from '@/components/ui/RankBadge';
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/lib/supabase/client';
 
 interface MatchResultProps {
   won: boolean;
@@ -105,11 +107,44 @@ export function MatchResult({
   opponentId,
   matchId,
 }: MatchResultProps) {
+  const { user } = useAuth();
+  const supabase = createClient();
   const eloChange = eloAfter - eloBefore;
   const rankedUp = didRankChange(eloBefore, eloAfter) && eloAfter > eloBefore;
   const newRank = getRank(eloAfter);
   const winsToRecover = eloChange < 0 ? Math.max(1, Math.ceil(Math.abs(eloChange) / 20)) : 0;
   const [rematchLoading, setRematchLoading] = useState(false);
+  const [incomingRematchCode, setIncomingRematchCode] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Poll for incoming rematch from opponent
+  useEffect(() => {
+    if (!user || !opponentId) return;
+
+    const check = async () => {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('challenges')
+        .select('code')
+        .eq('sender_id', opponentId)
+        .eq('recipient_id', user.id)
+        .eq('status', 'accepted')
+        .is('match_id', null)
+        .gte('created_at', fiveMinAgo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data) {
+        setIncomingRematchCode(data.code);
+        if (pollRef.current) clearInterval(pollRef.current);
+      }
+    };
+
+    check();
+    pollRef.current = setInterval(check, 2000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [user, opponentId, supabase]);
 
   const nextTierName = getNextTierName(eloAfter);
   const ptsToNext = newRank.nextTierElo - eloAfter;
@@ -342,13 +377,22 @@ export function MatchResult({
         transition={{ delay: 1.5 }}
       >
         {opponentId && (
-          <button
-            onClick={handleRematch}
-            disabled={rematchLoading}
-            className="px-12 py-4 font-semibold text-sm tracking-[2px] rounded-sm transition-colors bg-btn text-btn-text hover:bg-btn-hover disabled:opacity-40"
-          >
-            {rematchLoading ? 'CREATING...' : 'REMATCH'}
-          </button>
+          incomingRematchCode ? (
+            <a
+              href={`/challenge/${incomingRematchCode}/lobby`}
+              className="px-12 py-4 font-semibold text-sm tracking-[2px] rounded-sm transition-colors bg-accent text-on-accent hover:bg-accent-muted animate-pulse"
+            >
+              JOIN REMATCH
+            </a>
+          ) : (
+            <button
+              onClick={handleRematch}
+              disabled={rematchLoading}
+              className="px-12 py-4 font-semibold text-sm tracking-[2px] rounded-sm transition-colors bg-btn text-btn-text hover:bg-btn-hover disabled:opacity-40"
+            >
+              {rematchLoading ? 'CREATING...' : 'REMATCH'}
+            </button>
+          )
         )}
 
         {matchId && (

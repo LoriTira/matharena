@@ -65,6 +65,29 @@ export async function POST(request: Request) {
     const recipientId: string | undefined = body.recipientId;
     const isRematch: boolean = body.rematch === true;
 
+    // If rematch, check if opponent already created one for us
+    if (isRematch && recipientId) {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: existing } = await supabase
+        .from('challenges')
+        .select('id, code')
+        .eq('sender_id', recipientId)
+        .eq('recipient_id', user.id)
+        .eq('status', 'accepted')
+        .is('match_id', null)
+        .gte('created_at', fiveMinAgo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (existing) {
+        return NextResponse.json({
+          challenge: existing,
+          url: `/challenge/${existing.code}`,
+        });
+      }
+    }
+
     const code = generateCode();
 
     const insertData: Record<string, unknown> = {
