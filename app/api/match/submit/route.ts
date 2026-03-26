@@ -71,12 +71,19 @@ export async function POST(request: Request) {
         .limit(1);
 
       if (existingCorrect && existingCorrect.length > 0) {
+        // Re-fetch current match state to return accurate status
+        const { data: freshMatch } = await supabase
+          .from('matches')
+          .select('status, player1_score, player2_score')
+          .eq('id', matchId)
+          .single();
+
         return NextResponse.json({
           correct: true,
-          matchStatus: match.status,
+          matchStatus: freshMatch?.status ?? match.status,
           scores: {
-            player1: match.player1_score,
-            player2: match.player2_score,
+            player1: freshMatch?.player1_score ?? match.player1_score,
+            player2: freshMatch?.player2_score ?? match.player2_score,
           },
           newAchievements: [],
         });
@@ -101,6 +108,7 @@ export async function POST(request: Request) {
     const penaltyField = isPlayer1 ? 'player1_penalties' : 'player2_penalties';
 
     const updates: Record<string, unknown> = {};
+    let matchCompleted = false;
 
     if (correct) {
       const newScore = (isPlayer1 ? match.player1_score : match.player2_score) + 1;
@@ -111,8 +119,26 @@ export async function POST(request: Request) {
         updates.status = 'completed';
         updates.winner_id = user.id;
         updates.completed_at = new Date().toISOString();
+        matchCompleted = true;
+      }
+    } else {
+      updates[penaltyField] = (isPlayer1 ? match.player1_penalties : match.player2_penalties) + 1;
+    }
 
-        // Calculate Elo
+    // Write match update FIRST — this must succeed for the match to progress
+    const { error: updateError } = await supabase
+      .from('matches')
+      .update(updates)
+      .eq('id', matchId)
+      .eq('status', 'active');
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Failed to update match' }, { status: 500 });
+    }
+
+    // Elo calculation and profile updates — non-blocking, must not prevent match completion
+    if (matchCompleted) {
+      try {
         const { data: player1Profile } = await supabase
           .from('profiles')
           .select('elo_rating, games_played, games_won')
@@ -135,12 +161,16 @@ export async function POST(request: Request) {
             player2Profile.games_played
           );
 
-          updates.player1_elo_after = newRatingA;
-          updates.player2_elo_after = newRatingB;
+          // Store Elo results on the match
+          await supabase
+            .from('matches')
+            .update({
+              player1_elo_after: newRatingA,
+              player2_elo_after: newRatingB,
+            })
+            .eq('id', matchId);
 
           // Update both profiles using admin client to bypass RLS
-          // (the authenticated user is the winner — RLS would block
-          //  updating the loser's profile with the anon-key client)
           const admin = createAdminClient();
 
           await (admin as unknown as typeof supabase)
@@ -161,25 +191,16 @@ export async function POST(request: Request) {
             })
             .eq('id', match.player2_id);
         }
+      } catch (eloErr) {
+        // Elo/profile update failed — match is already completed, log and continue
+        console.error('Elo update error (match still completed):', eloErr);
       }
-    } else {
-      updates[penaltyField] = (isPlayer1 ? match.player1_penalties : match.player2_penalties) + 1;
-    }
-
-    const { error: updateError } = await supabase
-      .from('matches')
-      .update(updates)
-      .eq('id', matchId)
-      .eq('status', 'active');
-
-    if (updateError) {
-      return NextResponse.json({ error: 'Failed to update match' }, { status: 500 });
     }
 
     // If match completed, mark any associated challenge as completed
     // and check for new achievements
     let newAchievements: { id: string; name: string; description: string; icon: string; rarity: string }[] = [];
-    if (updates.status === 'completed') {
+    if (matchCompleted) {
       await supabase
         .from('challenges')
         .update({ status: 'completed' })
@@ -218,7 +239,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       correct,
-      matchStatus: updates.status ?? 'active',
+      matchStatus: matchCompleted ? 'completed' : 'active',
       scores: {
         player1: updates.player1_score ?? match.player1_score,
         player2: updates.player2_score ?? match.player2_score,
