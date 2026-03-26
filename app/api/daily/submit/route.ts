@@ -27,6 +27,21 @@ export async function POST(request: Request) {
 
     const { answers, problemTimes, totalTimeMs } = parsed.data;
 
+    // Validate timing sanity to prevent cheating
+    const MIN_PROBLEM_TIME_MS = 200;
+    const MAX_TIME_DRIFT_MS = 500;
+
+    for (let i = 0; i < problemTimes.length; i++) {
+      if (problemTimes[i] < MIN_PROBLEM_TIME_MS) {
+        return NextResponse.json({ error: 'Suspicious timing detected' }, { status: 400 });
+      }
+    }
+
+    const sumOfTimes = problemTimes.reduce((a, b) => a + b, 0);
+    if (Math.abs(sumOfTimes - totalTimeMs) > MAX_TIME_DRIFT_MS) {
+      return NextResponse.json({ error: 'Timing inconsistency detected' }, { status: 400 });
+    }
+
     const today = getTodayPuzzleDate();
 
     // Regenerate problems server-side for verification

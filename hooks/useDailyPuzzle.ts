@@ -95,6 +95,13 @@ export function useDailyPuzzle() {
         if (data.result) {
           setTotalTimeMs(data.result.total_time_ms);
           setProblemTimes(data.result.problem_times ?? []);
+          if (data.result.rank != null) {
+            setResult({
+              rank: data.result.rank,
+              totalPlayers: data.result.totalPlayers,
+              totalTimeMs: data.result.total_time_ms,
+            });
+          }
         }
         setStatus('already_done');
         await Promise.all([fetchLeaderboard(), fetchStreak()]);

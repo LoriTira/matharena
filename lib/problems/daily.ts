@@ -84,10 +84,23 @@ export function generateDailyProblems(dateStr: string): Problem[] {
   const problems: Problem[] = [];
 
   for (let i = 0; i < 5; i++) {
-    // Pick operation using PRNG — distributes evenly across all 4 operations
-    const opIndex = seededRandomInt(rng, 0, OPERATIONS.length - 1);
-    const operation = OPERATIONS[opIndex];
-    problems.push(generateSeededProblem(rng, operation));
+    let attempts = 0;
+    let problem: Problem;
+    do {
+      const opIndex = seededRandomInt(rng, 0, OPERATIONS.length - 1);
+      const operation = OPERATIONS[opIndex];
+      problem = generateSeededProblem(rng, operation);
+      attempts++;
+    } while (
+      attempts < 20 &&
+      problems.some(
+        (p) =>
+          p.operand1 === problem.operand1 &&
+          p.operand2 === problem.operand2 &&
+          p.operation === problem.operation
+      )
+    );
+    problems.push(problem);
   }
 
   return problems;

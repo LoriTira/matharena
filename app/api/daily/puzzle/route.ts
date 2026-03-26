@@ -33,10 +33,37 @@ export async function GET() {
 
     const completed = !!existing;
 
+    let rankData: { rank: number; totalPlayers: number } | null = null;
+    if (existing) {
+      const { count: betterCount } = await supabase
+        .from('daily_puzzle_results')
+        .select('*', { count: 'exact', head: true })
+        .eq('puzzle_date', today)
+        .lt('total_time_ms', existing.total_time_ms);
+
+      const { count: totalCount } = await supabase
+        .from('daily_puzzle_results')
+        .select('*', { count: 'exact', head: true })
+        .eq('puzzle_date', today);
+
+      rankData = {
+        rank: (betterCount ?? 0) + 1,
+        totalPlayers: totalCount ?? 1,
+      };
+    }
+
     return NextResponse.json({
       problems: clientProblems,
       completed,
-      ...(existing ? { result: { total_time_ms: existing.total_time_ms, problem_times: existing.problem_times } } : {}),
+      ...(existing
+        ? {
+            result: {
+              total_time_ms: existing.total_time_ms,
+              problem_times: existing.problem_times,
+              ...rankData,
+            },
+          }
+        : {}),
     });
   } catch (error) {
     console.error('Daily puzzle error:', error);
