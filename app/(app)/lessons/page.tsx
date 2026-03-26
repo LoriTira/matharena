@@ -1,75 +1,72 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import Link from 'next/link';
-import type { Lesson } from '@/types';
+import { motion } from 'framer-motion';
+import { LESSONS } from '@/lib/lessons';
+import { useLessonProgress } from '@/hooks/useLessonProgress';
+import { JourneyPath } from '@/components/lessons/JourneyPath';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function LessonsPage() {
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const { progress, totalXp, loading, getState } = useLessonProgress();
 
-  useEffect(() => {
-    const fetchLessons = async () => {
-      const { data } = await supabase
-        .from('lessons')
-        .select('*')
-        .order('sort_order', { ascending: true });
-
-      if (data) setLessons(data as Lesson[]);
-      setLoading(false);
-    };
-
-    fetchLessons();
-  }, []);
+  const completedCount = progress.length;
+  const totalCount = LESSONS.length;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-ink-muted">Loading lessons...</div>
+      <div className="space-y-8">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-24 w-full max-w-xl mx-auto" />
+        <div className="space-y-6 max-w-xl mx-auto">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-20" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  // Group by category
-  const grouped = lessons.reduce<Record<string, Lesson[]>>((acc, lesson) => {
-    if (!acc[lesson.category]) acc[lesson.category] = [];
-    acc[lesson.category].push(lesson);
-    return acc;
-  }, {});
-
   return (
     <div className="space-y-10">
+      {/* Header */}
       <div>
         <h1 className="font-serif text-3xl font-normal text-ink">Lessons</h1>
-        <p className="text-ink-muted mt-2 text-[15px] font-normal">Learn mental math tricks and techniques to improve your speed.</p>
+        <p className="text-ink-muted mt-2 text-[15px]">Master mental math, one trick at a time.</p>
       </div>
 
-      {Object.entries(grouped).map(([category, categoryLessons]) => (
-        <div key={category}>
-          <h2 className="font-serif text-lg text-ink-secondary capitalize mb-4">{category}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {categoryLessons.map((lesson) => (
-              <Link
-                key={lesson.id}
-                href={`/lessons/${lesson.slug}`}
-                className="border border-edge rounded-sm p-6 bg-card hover:border-edge-strong transition-colors group"
-              >
-                <span className="inline-block px-2 py-0.5 text-[11px] tracking-[1.5px] text-ink-muted border border-edge rounded-sm uppercase">
-                  {lesson.category}
-                </span>
-                <h3 className="font-serif text-base text-ink mt-3 group-hover:text-ink transition-colors">
-                  {lesson.title}
-                </h3>
-                {lesson.description && (
-                  <p className="text-ink-muted text-sm mt-2 leading-relaxed">{lesson.description}</p>
-                )}
-              </Link>
-            ))}
+      {/* Progress summary */}
+      <motion.div
+        className="max-w-xl mx-auto border border-edge rounded-sm p-5 bg-card"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[11px] tracking-[2px] text-ink-faint uppercase">Progress</div>
+            <div className="font-mono text-2xl text-ink tabular-nums mt-1">
+              {completedCount}<span className="text-ink-faint">/{totalCount}</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[11px] tracking-[2px] text-ink-faint uppercase">Total XP</div>
+            <div className="font-mono text-2xl text-accent tabular-nums mt-1">
+              {totalXp}
+            </div>
           </div>
         </div>
-      ))}
+        {/* Mini progress bar */}
+        <div className="h-1.5 w-full rounded-full bg-shade overflow-hidden mt-4">
+          <motion.div
+            className="h-full rounded-full bg-accent"
+            initial={{ width: 0 }}
+            animate={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Journey path */}
+      <JourneyPath lessons={LESSONS} getState={getState} />
     </div>
   );
 }

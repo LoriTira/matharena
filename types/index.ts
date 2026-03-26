@@ -125,3 +125,60 @@ export interface DailyPuzzleResult {
   problem_times: number[];
   completed_at: string;
 }
+
+// ─── Interactive Lessons ─────────────────────────────
+
+export interface TeachStep {
+  type: 'teach';
+  title?: string;
+  content: string;
+  formula?: string;
+  emoji?: string;
+}
+
+export interface ExampleStep {
+  type: 'example';
+  problem: string;
+  revealSteps: string[];
+  finalAnswer: string;
+}
+
+export interface PracticeStep {
+  type: 'practice';
+  prompt: string;
+  operand1: number;
+  operand2: number;
+  operation: string;
+  answer: number;
+  hint?: string;
+}
+
+export interface QuizStep {
+  type: 'quiz';
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation?: string;
+}
+
+export type LessonStep = TeachStep | ExampleStep | PracticeStep | QuizStep;
+
+export interface InteractiveLesson {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  emoji: string;
+  difficulty: 1 | 2;
+  sortOrder: number;
+  steps: LessonStep[];
+  xpReward: number;
+  perfectBonus: number;
+}
+
+export interface LessonProgress {
+  lessonSlug: string;
+  completedAt: string;
+  heartsRemaining: number;
+  xpEarned: number;
+}
