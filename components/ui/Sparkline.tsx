@@ -26,7 +26,7 @@ export default function Sparkline({
         viewBox={`0 0 ${width} ${height}`}
         className={className}
       >
-        <circle cx={width / 2} cy={height / 2} r={2} fill="#F59E0B" />
+        <circle cx={width / 2} cy={height / 2} r={2} fill="var(--accent)" />
       </svg>
     );
   }
@@ -51,7 +51,7 @@ export default function Sparkline({
   const last = data[data.length - 1];
   let lineColor: string;
   if (last > first) {
-    lineColor = '#F59E0B';
+    lineColor = 'var(--accent)';
   } else if (last < first) {
     lineColor = 'rgba(248, 113, 113, 0.6)';
   } else {

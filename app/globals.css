@@ -2,7 +2,7 @@
 
 /* ─── Light mode (default) ──────────────────────────── */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --bg-base: #f5f5f7;
   --bg-raised: #ffffff;
@@ -23,45 +23,113 @@
   --cta-bg: rgba(0, 0, 0, 0.87);
   --cta-text: #ffffff;
   --cta-hover: rgba(0, 0, 0, 0.95);
+  --on-accent: #ffffff;
+  --feedback-correct: rgba(22, 163, 74, 0.8);
+  --feedback-wrong: rgba(220, 38, 38, 0.8);
+
+  /* Default accent: violet */
+  --accent: #7C3AED;
+  --accent-muted: rgba(124, 58, 237, 0.7);
+  --accent-subtle: rgba(124, 58, 237, 0.12);
+  --accent-glow: rgba(124, 58, 237, 0.06);
+}
+
+/* ─── Dark mode ─────────────────────────────────────── */
+.dark {
+  color-scheme: dark;
+
+  --bg-base: #111113;
+  --bg-raised: #1a1a1e;
+  --bg-inset: #0c0c0e;
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-subtle: rgba(255, 255, 255, 0.06);
+  --border-hairline: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.52);
+  --text-muted: rgba(255, 255, 255, 0.38);
+  --text-faint: rgba(255, 255, 255, 0.25);
+  --nav-bg: rgba(17, 17, 19, 0.8);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --cta-bg: rgba(255, 255, 255, 0.9);
+  --cta-text: #111113;
+  --cta-hover: #ffffff;
+  --on-accent: #111113;
+  --feedback-correct: rgba(74, 222, 128, 0.7);
+  --feedback-wrong: rgba(248, 113, 113, 0.7);
+
+  /* Dark accent defaults (violet) */
+  --accent: #A78BFA;
+  --accent-muted: rgba(167, 139, 250, 0.6);
+  --accent-subtle: rgba(167, 139, 250, 0.15);
+  --accent-glow: rgba(167, 139, 250, 0.08);
+}
+
+/* ─── Accent: Violet (default) ─────────────────────── */
+[data-accent="violet"] {
   --accent: #7C3AED;
   --accent-muted: rgba(124, 58, 237, 0.7);
   --accent-subtle: rgba(124, 58, 237, 0.12);
   --accent-glow: rgba(124, 58, 237, 0.06);
   --on-accent: #ffffff;
-  --feedback-correct: rgba(22, 163, 74, 0.8);
-  --feedback-wrong: rgba(220, 38, 38, 0.8);
+}
+[data-accent="violet"].dark {
+  --accent: #A78BFA;
+  --accent-muted: rgba(167, 139, 250, 0.6);
+  --accent-subtle: rgba(167, 139, 250, 0.15);
+  --accent-glow: rgba(167, 139, 250, 0.08);
+  --on-accent: #111113;
 }
 
-/* ─── Dark mode ─────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-base: #111113;
-    --bg-raised: #1a1a1e;
-    --bg-inset: #0c0c0e;
-    --bg-surface: rgba(255, 255, 255, 0.03);
-    --bg-hover: rgba(255, 255, 255, 0.05);
-    --bg-subtle: rgba(255, 255, 255, 0.06);
-    --border-hairline: rgba(255, 255, 255, 0.05);
-    --border-default: rgba(255, 255, 255, 0.08);
-    --border-strong: rgba(255, 255, 255, 0.15);
-    --text-primary: rgba(255, 255, 255, 0.95);
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-tertiary: rgba(255, 255, 255, 0.52);
-    --text-muted: rgba(255, 255, 255, 0.38);
-    --text-faint: rgba(255, 255, 255, 0.25);
-    --nav-bg: rgba(17, 17, 19, 0.8);
-    --overlay: rgba(0, 0, 0, 0.6);
-    --cta-bg: rgba(255, 255, 255, 0.9);
-    --cta-text: #111113;
-    --cta-hover: #ffffff;
-    --accent: #A78BFA;
-    --accent-muted: rgba(167, 139, 250, 0.6);
-    --accent-subtle: rgba(167, 139, 250, 0.15);
-    --accent-glow: rgba(167, 139, 250, 0.08);
-    --on-accent: #111113;
-    --feedback-correct: rgba(74, 222, 128, 0.7);
-    --feedback-wrong: rgba(248, 113, 113, 0.7);
-  }
+/* ─── Accent: Teal ─────────────────────────────────── */
+[data-accent="teal"] {
+  --accent: #0D9488;
+  --accent-muted: rgba(13, 148, 136, 0.7);
+  --accent-subtle: rgba(13, 148, 136, 0.12);
+  --accent-glow: rgba(13, 148, 136, 0.06);
+  --on-accent: #ffffff;
+}
+[data-accent="teal"].dark {
+  --accent: #2DD4BF;
+  --accent-muted: rgba(45, 212, 191, 0.6);
+  --accent-subtle: rgba(45, 212, 191, 0.15);
+  --accent-glow: rgba(45, 212, 191, 0.08);
+  --on-accent: #111113;
+}
+
+/* ─── Accent: Gold ─────────────────────────────────── */
+[data-accent="gold"] {
+  --accent: #B45309;
+  --accent-muted: rgba(180, 83, 9, 0.7);
+  --accent-subtle: rgba(180, 83, 9, 0.12);
+  --accent-glow: rgba(180, 83, 9, 0.06);
+  --on-accent: #ffffff;
+}
+[data-accent="gold"].dark {
+  --accent: #F59E0B;
+  --accent-muted: rgba(245, 158, 11, 0.6);
+  --accent-subtle: rgba(245, 158, 11, 0.15);
+  --accent-glow: rgba(245, 158, 11, 0.08);
+  --on-accent: #111113;
+}
+
+/* ─── Accent: Blue ─────────────────────────────────── */
+[data-accent="blue"] {
+  --accent: #2563EB;
+  --accent-muted: rgba(37, 99, 235, 0.7);
+  --accent-subtle: rgba(37, 99, 235, 0.12);
+  --accent-glow: rgba(37, 99, 235, 0.06);
+  --on-accent: #ffffff;
+}
+[data-accent="blue"].dark {
+  --accent: #60A5FA;
+  --accent-muted: rgba(96, 165, 250, 0.6);
+  --accent-subtle: rgba(96, 165, 250, 0.15);
+  --accent-glow: rgba(96, 165, 250, 0.08);
+  --on-accent: #111113;
 }
 
 /* ─── Tailwind theme tokens ─────────────────────────── */
@@ -124,8 +192,8 @@
 }
 
 @keyframes gold-pulse {
-  0%, 100% { border-color: rgba(245, 158, 11, 0.2); }
-  50% { border-color: rgba(245, 158, 11, 0.5); }
+  0%, 100% { border-color: var(--accent-subtle); }
+  50% { border-color: var(--accent-muted); }
 }
 
 .animate-gold-pulse {

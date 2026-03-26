@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
 import { Dropdown } from '@/components/ui/Dropdown';
+import { ThemeSettings } from '@/components/layout/ThemeSettings';
 
 // ─── Nav structure ────────────────────────────────────────
 const NAV_GROUPS = [
@@ -141,6 +142,9 @@ export function Navbar() {
                         CHALLENGE
                       </button>
 
+                      {/* Theme settings */}
+                      <ThemeSettings />
+
                       {/* Profile dropdown */}
                       <Dropdown
                         align="right"
@@ -178,6 +182,7 @@ export function Navbar() {
                       >
                         RANKINGS
                       </Link>
+                      <ThemeSettings />
                       <Link
                         href="/login"
                         className="px-4 py-1.5 border border-edge-strong rounded-sm text-[12px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"

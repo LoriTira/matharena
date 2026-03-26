@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -34,8 +35,18 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${playfair.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-page text-ink-secondary">{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ma-theme');var a=localStorage.getItem('ma-accent');var d=document.documentElement;if(a)d.setAttribute('data-accent',a);var dark=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches);if(dark)d.classList.add('dark')}catch(e){}})()`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-page text-ink-secondary">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
