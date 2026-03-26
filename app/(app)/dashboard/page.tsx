@@ -437,10 +437,9 @@ export default function DashboardPage() {
           <div className="mt-3">
             <div className="h-1 w-full rounded-full bg-shade overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-500"
+                className="h-full rounded-full bg-accent transition-all duration-500"
                 style={{
                   width: `${Math.min(rank.progress * 100, 100)}%`,
-                  backgroundColor: rank.color,
                 }}
               />
             </div>
@@ -450,7 +449,7 @@ export default function DashboardPage() {
               </div>
             )}
             {rank.tier === 'Grandmaster' && (
-              <div className="text-[12px] mt-1.5 font-mono tabular-nums" style={{ color: rank.color }}>
+              <div className="text-[12px] text-accent mt-1.5 font-mono tabular-nums">
                 Grandmaster
               </div>
             )}

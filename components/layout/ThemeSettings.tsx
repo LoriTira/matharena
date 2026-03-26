@@ -61,7 +61,7 @@ export function ThemeSettings() {
         </button>
       }
     >
-      <div className="p-3 w-48">
+      <div className="p-3 w-56">
         {/* Theme section */}
         <div className="text-[10px] tracking-[2px] text-ink-faint mb-2">THEME</div>
         <div className="flex gap-1 mb-4">
@@ -69,7 +69,7 @@ export function ThemeSettings() {
             <button
               key={opt.value}
               onClick={() => setTheme(opt.value)}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-sm text-[11px] transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-sm text-[11px] transition-colors ${
                 theme === opt.value
                   ? 'bg-accent-subtle text-accent'
                   : 'text-ink-muted hover:text-ink-secondary hover:bg-tint'
@@ -83,7 +83,7 @@ export function ThemeSettings() {
 
         {/* Accent section */}
         <div className="text-[10px] tracking-[2px] text-ink-faint mb-2">ACCENT</div>
-        <div className="flex gap-2">
+        <div className="flex justify-between px-2">
           {ACCENT_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -93,9 +93,7 @@ export function ThemeSettings() {
             >
               <div
                 className={`w-6 h-6 rounded-full transition-all ${
-                  accent === opt.value
-                    ? 'ring-2 ring-offset-2 ring-offset-panel'
-                    : 'group-hover:scale-110'
+                  accent === opt.value ? '' : 'group-hover:scale-110'
                 }`}
                 style={{
                   backgroundColor: opt.swatch,

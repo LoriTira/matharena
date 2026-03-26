@@ -78,9 +78,9 @@ export function RankBadge({ elo, size = 'md', showLabel = false }: RankBadgeProp
 
   return (
     <span className="inline-flex items-center gap-1.5">
-      <TierIcon tier={rank.tier} color={rank.color} size={iconSize} />
+      <TierIcon tier={rank.tier} color="var(--accent)" size={iconSize} />
       {showLabel && (
-        <span className={`${textSize} font-medium tracking-wide`} style={{ color: rank.color }}>
+        <span className={`${textSize} font-medium tracking-wide text-accent`}>
           {rank.name}
         </span>
       )}
