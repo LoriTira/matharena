@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { GoogleOAuthButton } from '@/components/auth/GoogleOAuthButton';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -40,6 +41,14 @@ function LoginForm() {
       <div className="w-full max-w-md p-8 border border-edge rounded-sm">
         <h1 className="font-serif text-3xl font-normal text-ink text-center mb-1">Welcome Back</h1>
         <p className="text-ink-muted text-center text-sm mb-8">Sign in to MathArena</p>
+
+        <GoogleOAuthButton redirect={redirect} label="Sign in with Google" />
+
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-edge" />
+          <span className="text-[11px] tracking-[2px] text-ink-faint">OR</span>
+          <div className="flex-1 h-px bg-edge" />
+        </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
