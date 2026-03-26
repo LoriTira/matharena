@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMatch } from '@/hooks/useMatch';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,6 +36,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   const [matchStats, setMatchStats] = useState<MatchStats | null>(null);
   const [newAchievements, setNewAchievements] = useState<{ id: string; name: string; description: string; icon: string; rarity: string }[]>([]);
   const supabase = useMemo(() => createClient(), []);
+  const isSubmittingRef = useRef(false);
 
   // Fetch player profiles
   useEffect(() => {
@@ -133,44 +134,57 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     fetchStats();
   }, [match?.status, matchId, user?.id]);
 
+  // Sync currentProblemIndex with server score (handles page refresh and desync)
+  useEffect(() => {
+    if (match && user && match.status === 'active') {
+      const myScore = match.player1_id === user.id ? match.player1_score : match.player2_score;
+      setCurrentProblemIndex(prev => Math.max(prev, myScore));
+    }
+  }, [match?.player1_score, match?.player2_score, match?.player1_id, match?.status, user?.id]);
+
   const handleSubmit = useCallback(
     async (answer: number) => {
-      if (!match || match.status !== 'active') return;
+      if (!match || match.status !== 'active' || isSubmittingRef.current) return;
+      isSubmittingRef.current = true;
 
-      const result = await submitAnswer(currentProblemIndex, answer);
+      try {
+        const result = await submitAnswer(currentProblemIndex, answer);
 
-      const feedbackFn = (window as unknown as Record<string, unknown>).__answerInputFeedback as
-        | ((correct: boolean) => void)
-        | undefined;
+        const feedbackFn = (window as unknown as Record<string, unknown>).__answerInputFeedback as
+          | ((correct: boolean) => void)
+          | undefined;
 
-      // Server error (e.g. match already completed by opponent)
-      if (result.error) {
-        refetchMatch();
-        return;
-      }
-
-      // Correct answer that completed the match (we won)
-      if (result.correct && result.matchStatus === 'completed') {
-        feedbackFn?.(true);
-        setStreak((prev) => prev + 1);
-        if (result.newAchievements && result.newAchievements.length > 0) {
-          setNewAchievements(result.newAchievements);
+        // Server error (e.g. match already completed by opponent)
+        if (result.error) {
+          refetchMatch();
+          return;
         }
-        refetchMatch();
-        return;
-      }
 
-      // Normal correct answer
-      if (result.correct) {
-        feedbackFn?.(true);
-        setStreak((prev) => prev + 1);
-        setCurrentProblemIndex((prev) => prev + 1);
-        return;
-      }
+        // Correct answer that completed the match (we won)
+        if (result.correct && result.matchStatus === 'completed') {
+          feedbackFn?.(true);
+          setStreak((prev) => prev + 1);
+          if (result.newAchievements && result.newAchievements.length > 0) {
+            setNewAchievements(result.newAchievements);
+          }
+          refetchMatch();
+          return;
+        }
 
-      // Wrong answer
-      feedbackFn?.(false);
-      setStreak(0);
+        // Normal correct answer
+        if (result.correct) {
+          feedbackFn?.(true);
+          setStreak((prev) => prev + 1);
+          setCurrentProblemIndex((prev) => prev + 1);
+          return;
+        }
+
+        // Wrong answer
+        feedbackFn?.(false);
+        setStreak(0);
+      } finally {
+        isSubmittingRef.current = false;
+      }
     },
     [match, currentProblemIndex, submitAnswer, refetchMatch]
   );
@@ -259,9 +273,18 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   const currentProblem = problems[currentProblemIndex];
 
   if (!currentProblem) {
+    // Out of problems but match still active — recover by syncing with server score
+    if (match.status === 'active') {
+      const myScore = isPlayer1 ? match.player1_score : match.player2_score;
+      if (myScore < problems.length) {
+        setCurrentProblemIndex(myScore);
+      }
+      refetchMatch();
+    }
+
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-ink-muted">Waiting for results...</div>
+        <div className="text-ink-muted">Finalizing results...</div>
       </div>
     );
   }

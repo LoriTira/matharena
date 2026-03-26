@@ -59,6 +59,30 @@ export async function POST(request: Request) {
     const problem = problems[problemIndex];
     const correct = answer === problem.answer;
 
+    // Deduplication: if player already answered this problem correctly, return early
+    if (correct) {
+      const { data: existingCorrect } = await supabase
+        .from('match_events')
+        .select('id')
+        .eq('match_id', matchId)
+        .eq('player_id', user.id)
+        .eq('problem_index', problemIndex)
+        .eq('event', 'answer_correct')
+        .limit(1);
+
+      if (existingCorrect && existingCorrect.length > 0) {
+        return NextResponse.json({
+          correct: true,
+          matchStatus: match.status,
+          scores: {
+            player1: match.player1_score,
+            player2: match.player2_score,
+          },
+          newAchievements: [],
+        });
+      }
+    }
+
     // Record the event
     const startTime = new Date(match.started_at).getTime();
     const elapsedMs = Date.now() - startTime;
@@ -145,7 +169,8 @@ export async function POST(request: Request) {
     const { error: updateError } = await supabase
       .from('matches')
       .update(updates)
-      .eq('id', matchId);
+      .eq('id', matchId)
+      .eq('status', 'active');
 
     if (updateError) {
       return NextResponse.json({ error: 'Failed to update match' }, { status: 500 });
