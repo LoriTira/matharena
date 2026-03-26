@@ -10,6 +10,7 @@ import Sparkline from '@/components/ui/Sparkline';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { RankBadge } from '@/components/ui/RankBadge';
 import { getRank } from '@/lib/ranks';
+import { NextPuzzleCountdown } from '@/components/daily/NextPuzzleCountdown';
 import type { Profile, Match, Challenge } from '@/types';
 
 export default function DashboardPage() {
@@ -473,10 +474,13 @@ export default function DashboardPage() {
             </div>
           </div>
           {dailyCompleted ? (
-            <Link href="/daily" className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-accent-glow border border-accent/20">
-              <span className="text-accent text-base">&#10003;</span>
-              <span className="text-[12px] text-accent font-semibold tracking-[1px]">COMPLETED TODAY</span>
-            </Link>
+            <div className="space-y-3">
+              <Link href="/daily" className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-accent-glow border border-accent/20">
+                <span className="text-accent text-base">&#10003;</span>
+                <span className="text-[12px] text-accent font-semibold tracking-[1px]">COMPLETED TODAY</span>
+              </Link>
+              <NextPuzzleCountdown className="text-left" />
+            </div>
           ) : (
             <Link
               href="/daily"

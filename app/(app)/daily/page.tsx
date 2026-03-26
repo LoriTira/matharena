@@ -9,6 +9,7 @@ import { ProblemDisplay } from '@/components/match/ProblemDisplay';
 import { AnswerInput } from '@/components/match/AnswerInput';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { NextPuzzleCountdown } from '@/components/daily/NextPuzzleCountdown';
 
 function formatProblemTime(ms: number): string {
   return (ms / 1000).toFixed(1) + 's';
@@ -132,43 +133,6 @@ function LeaderboardTable({
           </span>
         </div>
       ))}
-    </div>
-  );
-}
-
-// --- Next Puzzle Countdown ---
-
-function NextPuzzleCountdown() {
-  const [timeLeft, setTimeLeft] = useState('');
-
-  useEffect(() => {
-    function update() {
-      const now = new Date();
-      const tomorrow = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() + 1,
-        0, 0, 0, 0
-      ));
-      const diff = tomorrow.getTime() - now.getTime();
-      const hours = Math.floor(diff / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-      setTimeLeft(
-        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-      );
-    }
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!timeLeft) return null;
-
-  return (
-    <div className="text-center">
-      <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">NEXT PUZZLE IN</div>
-      <div className="font-mono text-lg text-ink-muted tabular-nums">{timeLeft}</div>
     </div>
   );
 }
