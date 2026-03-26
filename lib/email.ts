@@ -17,7 +17,10 @@ export async function sendChallengeEmail({
   challengerName: string;
   challengeUrl: string;
 }) {
-  if (!resend) return;
+  if (!resend) {
+    console.warn('Resend not configured (RESEND_API_KEY missing) — skipping email');
+    return;
+  }
 
   try {
     const result = await resend.emails.send({

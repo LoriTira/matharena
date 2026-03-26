@@ -31,12 +31,15 @@ async function sendEmailNotification(
       const admin = createAdminClient();
       const { data } = await admin.auth.admin.getUserById(recipientId);
       recipientEmail = data?.user?.email ?? null;
-    } catch {
-      // Service role key not configured — skip email
+    } catch (err) {
+      console.error('Admin client error (skipping email):', err);
       return;
     }
 
-    if (!recipientEmail) return;
+    if (!recipientEmail) {
+      console.warn('No email found for recipient:', recipientId);
+      return;
+    }
 
     const challengeUrl = `${origin}/challenge/${challengeCode}`;
     await sendChallengeEmail({
@@ -120,8 +123,11 @@ export async function POST(request: Request) {
 
     // Send email notification for direct (non-rematch) challenges — must await in serverless
     if (recipientId && !isRematch) {
+      console.log('Sending challenge email to recipient:', recipientId);
       const origin = request.headers.get('origin') || '';
       await sendEmailNotification(supabase, user.id, recipientId, challenge.code, origin);
+    } else {
+      console.log('Skipping email:', { recipientId: !!recipientId, isRematch });
     }
 
     return NextResponse.json({
