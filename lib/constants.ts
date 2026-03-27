@@ -50,3 +50,43 @@ export const TIER_RANGES = {
 } as const;
 
 export const OPERATIONS: ('+' | '-' | '*' | '/')[] = ['+', '-', '*', '/'];
+
+// ─── Practice Mode ──────────────────────────────────
+
+import type { PracticeDifficulty, OperationRange, Operation } from '@/types';
+
+export const PRACTICE_DURATIONS = [60, 120, 300] as const;
+
+export const PRACTICE_DIFFICULTY_RANGES: Record<PracticeDifficulty, Record<Operation, OperationRange>> = {
+  beginner: {
+    '+': { min1: 2, max1: 50, min2: 2, max2: 50 },
+    '-': { min1: 2, max1: 50, min2: 2, max2: 50 },
+    '*': { min1: 2, max1: 12, min2: 2, max2: 12 },
+    '/': { min1: 2, max1: 12, min2: 2, max2: 12 },
+  },
+  standard: {
+    '+': { min1: 2, max1: 100, min2: 2, max2: 100 },
+    '-': { min1: 2, max1: 100, min2: 2, max2: 100 },
+    '*': { min1: 2, max1: 12, min2: 2, max2: 100 },
+    '/': { min1: 2, max1: 12, min2: 2, max2: 100 },
+  },
+  hard: {
+    '+': { min1: 100, max1: 999, min2: 100, max2: 999 },
+    '-': { min1: 100, max1: 999, min2: 100, max2: 999 },
+    '*': { min1: 2, max1: 100, min2: 2, max2: 999 },
+    '/': { min1: 2, max1: 100, min2: 2, max2: 500 },
+  },
+  expert: {
+    '+': { min1: 100, max1: 9999, min2: 100, max2: 9999 },
+    '-': { min1: 100, max1: 9999, min2: 100, max2: 9999 },
+    '*': { min1: 10, max1: 999, min2: 10, max2: 99 },
+    '/': { min1: 2, max1: 999, min2: 2, max2: 500 },
+  },
+};
+
+export const PRACTICE_DIFFICULTY_LABELS: Record<PracticeDifficulty, string> = {
+  beginner: 'Beginner',
+  standard: 'Standard',
+  hard: 'Hard',
+  expert: 'Expert',
+};

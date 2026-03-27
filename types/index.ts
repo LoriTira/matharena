@@ -182,3 +182,44 @@ export interface LessonProgress {
   heartsRemaining: number;
   xpEarned: number;
 }
+
+// ─── Practice Mode ──────────────────────────────────
+
+export type PracticeDifficulty = 'beginner' | 'standard' | 'hard' | 'expert';
+
+export interface OperationRange {
+  min1: number;
+  max1: number;
+  min2: number;
+  max2: number;
+}
+
+export interface PracticeConfig {
+  operations: Operation[];
+  duration: 60 | 120 | 300;
+  difficulty: PracticeDifficulty;
+  customRanges?: Partial<Record<Operation, OperationRange>>;
+}
+
+export interface PracticeSessionResult {
+  config: PracticeConfig;
+  score: number;
+  correctCount: number;
+  wrongCount: number;
+  bestStreak: number;
+  operationBreakdown: Partial<Record<Operation, { correct: number; wrong: number }>>;
+}
+
+export interface PracticeSessionRecord {
+  id: string;
+  user_id: string;
+  duration: number;
+  operations: Operation[];
+  config: PracticeConfig;
+  score: number;
+  correct_count: number;
+  wrong_count: number;
+  best_streak: number;
+  operation_breakdown: Record<string, { correct: number; wrong: number }>;
+  created_at: string;
+}
