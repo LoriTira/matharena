@@ -130,7 +130,7 @@ export function Navbar() {
                       ))}
 
                       {/* Leaderboard */}
-                      <Link href="/leaderboard" className={`${triggerClass} leading-6`}>
+                      <Link href="/leaderboard" className={triggerClass}>
                         RANKINGS
                       </Link>
 
