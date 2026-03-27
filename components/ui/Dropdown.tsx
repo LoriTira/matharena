@@ -41,7 +41,7 @@ export function Dropdown({ trigger, children, align = 'right' }: DropdownProps) 
 
   return (
     <div ref={containerRef} className="relative inline-block">
-      <div onClick={() => setOpen((prev) => !prev)} className="cursor-pointer">
+      <div onClick={() => setOpen((prev) => !prev)} className="cursor-pointer flex items-center">
         {trigger}
       </div>
 
