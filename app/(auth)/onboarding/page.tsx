@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
 import { CountrySelector } from '@/components/onboarding/CountrySelector';
 
 function MiniCelebration() {
@@ -38,13 +39,38 @@ function MiniCelebration() {
 }
 
 export default function OnboardingPage() {
+  const [username, setUsername] = useState('');
   const [country, setCountry] = useState('');
   const [affiliationType, setAffiliationType] = useState<'school' | 'company' | null>(null);
   const [affiliation, setAffiliation] = useState('');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
   const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const supabase = createClient();
+
+  // Fetch current profile to pre-fill username
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+        if (data) {
+          // Only pre-fill if it's not a generated default
+          const isGenerated = /^user_[a-f0-9]{8}$/.test(data.username);
+          setUsername(isGenerated ? '' : data.username);
+        }
+      }
+      setLoading(false);
+    };
+    fetchProfile();
+  }, []);
 
   const handleCountryChange = (name: string) => {
     setCountry(name);
@@ -55,11 +81,22 @@ export default function OnboardingPage() {
   };
 
   const handleSubmit = async () => {
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setError('Username can only contain letters, numbers, and underscores');
+      return;
+    }
+
+    setError('');
     setSaving(true);
     const res = await fetch('/api/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        username,
         country: country || null,
         affiliation: affiliation || null,
         affiliation_type: affiliationType,
@@ -74,6 +111,8 @@ export default function OnboardingPage() {
         router.refresh();
       }, 600);
     } else {
+      const data = await res.json();
+      setError(data.error || 'Something went wrong. Please try again.');
       setSaving(false);
     }
   };
@@ -88,6 +127,14 @@ export default function OnboardingPage() {
     router.push('/dashboard');
     router.refresh();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-page">
+        <div className="text-ink-muted text-sm">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-page px-4">
@@ -139,12 +186,33 @@ export default function OnboardingPage() {
           <div className="w-8 h-px bg-edge mx-auto mt-4" />
         </motion.div>
 
+        {/* Username */}
+        <motion.div
+          className="mb-6"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.4 }}
+        >
+          <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
+            Choose a username
+          </label>
+          <input
+            type="text"
+            value={username}
+            onChange={e => { setUsername(e.target.value); setError(''); }}
+            className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+            placeholder="mathwizard42"
+            minLength={3}
+            maxLength={30}
+          />
+        </motion.div>
+
         {/* Country */}
         <motion.div
           className="mb-6 relative"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
+          transition={{ delay: 0.35, duration: 0.4 }}
         >
           <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
             Where are you from?
@@ -161,7 +229,7 @@ export default function OnboardingPage() {
 
         {/* Affiliation */}
         <motion.div
-          className="mb-8"
+          className="mb-6"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.4 }}
@@ -222,6 +290,11 @@ export default function OnboardingPage() {
           </AnimatePresence>
         </motion.div>
 
+        {/* Error */}
+        {error && (
+          <p className="text-red-400/70 text-sm mb-4">{error}</p>
+        )}
+
         {/* Actions */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -231,9 +304,9 @@ export default function OnboardingPage() {
           <motion.button
             type="button"
             onClick={handleSubmit}
-            disabled={!country || saving}
+            disabled={!username || !country || saving}
             className="w-full py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
-            animate={country && !saving ? { scale: [1, 1.015, 1] } : {}}
+            animate={username && country && !saving ? { scale: [1, 1.015, 1] } : {}}
             transition={{ duration: 0.35, ease: 'easeInOut' }}
           >
             {saving ? 'SETTING UP...' : "LET'S GO"}

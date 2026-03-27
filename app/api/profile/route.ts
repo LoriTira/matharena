@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const updateSchema = z.object({
+  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores').optional(),
   display_name: z.string().min(1).max(50).optional(),
   affiliation: z.string().max(100).optional().nullable(),
   affiliation_type: z.enum(['school', 'company']).optional().nullable(),
@@ -33,6 +34,9 @@ export async function PATCH(request: Request) {
       .single();
 
     if (updateError) {
+      if (updateError.code === '23505') {
+        return NextResponse.json({ error: 'Username is already taken' }, { status: 409 });
+      }
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
     }
 
