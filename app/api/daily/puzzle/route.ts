@@ -64,6 +64,8 @@ export async function GET() {
             },
           }
         : {}),
+    }, {
+      headers: { 'Cache-Control': 'no-store' },
     });
   } catch (error) {
     console.error('Daily puzzle error:', error);

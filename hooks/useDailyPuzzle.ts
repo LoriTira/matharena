@@ -68,7 +68,7 @@ export function useDailyPuzzle() {
 
   const fetchStreak = useCallback(async () => {
     try {
-      const res = await fetch('/api/daily/streak');
+      const res = await fetch('/api/daily/streak', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setStreak(data.streak ?? 0);
@@ -82,7 +82,7 @@ export function useDailyPuzzle() {
   const initialize = useCallback(async () => {
     setStatus('loading');
     try {
-      const res = await fetch('/api/daily/puzzle');
+      const res = await fetch('/api/daily/puzzle', { cache: 'no-store' });
       if (!res.ok) {
         throw new Error('Failed to fetch puzzle');
       }

@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
     // Daily streak (graceful — API may not exist yet)
     try {
-      const res = await fetch('/api/daily/streak');
+      const res = await fetch('/api/daily/streak', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setDailyStreak(data.streak ?? 0);

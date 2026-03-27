@@ -48,7 +48,9 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ streak, completedToday });
+    return NextResponse.json({ streak, completedToday }, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (error) {
     console.error('Daily streak error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
