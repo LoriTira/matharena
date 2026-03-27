@@ -6,9 +6,10 @@ import { GAME_CONFIG } from '@/lib/constants';
 interface AnswerInputProps {
   onSubmit: (answer: number) => void;
   disabled?: boolean;
+  feedbackRef?: React.MutableRefObject<((correct: boolean) => void) | null>;
 }
 
-export function AnswerInput({ onSubmit, disabled = false }: AnswerInputProps) {
+export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerInputProps) {
   const [value, setValue] = useState('');
   const [locked, setLocked] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
@@ -47,13 +48,17 @@ export function AnswerInput({ onSubmit, disabled = false }: AnswerInputProps) {
     }
   };
 
-  // Attach showFeedback to the component instance via a global ref pattern
+  // Attach showFeedback via ref if provided, otherwise use global pattern
   useEffect(() => {
+    if (feedbackRef) {
+      feedbackRef.current = showFeedback;
+      return () => { feedbackRef.current = null; };
+    }
     (window as unknown as Record<string, unknown>).__answerInputFeedback = showFeedback;
     return () => {
       delete (window as unknown as Record<string, unknown>).__answerInputFeedback;
     };
-  }, []);
+  }, [feedbackRef]);
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-3 max-w-md mx-auto">

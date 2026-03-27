@@ -109,3 +109,42 @@ export function generatePracticeProblems(
   const tier = difficultyToTier(difficulty);
   return Array.from({ length: count }, () => generateProblem(operation, tier));
 }
+
+// ─── Range-based generation for practice mode ───────
+
+import type { OperationRange } from '@/types';
+
+export function generateProblemFromRanges(
+  operation: Operation,
+  range: OperationRange
+): Problem {
+  if (operation === '/') {
+    const divisor = randomInt(range.min1, range.max1);
+    const quotient = randomInt(range.min2, range.max2);
+    const dividend = divisor * quotient;
+    return { operand1: dividend, operand2: divisor, operation: '/', answer: quotient };
+  }
+
+  const a = randomInt(range.min1, range.max1);
+  const b = randomInt(range.min2, range.max2);
+
+  if (operation === '-') {
+    const op1 = Math.max(a, b);
+    const op2 = Math.min(a, b);
+    return { operand1: op1, operand2: op2, operation: '-', answer: op1 - op2 };
+  }
+
+  if (operation === '+') {
+    return { operand1: a, operand2: b, operation: '+', answer: a + b };
+  }
+
+  return { operand1: a, operand2: b, operation: '*', answer: a * b };
+}
+
+export function generateMixedPracticeProblem(
+  operations: Operation[],
+  ranges: Record<Operation, OperationRange>
+): Problem {
+  const op = operations[Math.floor(Math.random() * operations.length)];
+  return generateProblemFromRanges(op, ranges[op]);
+}
