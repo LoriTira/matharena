@@ -32,6 +32,7 @@ export interface Profile {
   affiliation: string | null;
   affiliation_type: AffiliationType | null;
   country: string | null;
+  onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
 }

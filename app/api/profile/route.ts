@@ -7,6 +7,7 @@ const updateSchema = z.object({
   affiliation: z.string().max(100).optional().nullable(),
   affiliation_type: z.enum(['school', 'company']).optional().nullable(),
   country: z.string().max(100).optional().nullable(),
+  onboarding_completed: z.literal(true).optional(),
 });
 
 export async function PATCH(request: Request) {

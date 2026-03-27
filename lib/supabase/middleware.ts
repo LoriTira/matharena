@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Redirect unauthenticated users to login for protected routes
-  const protectedPaths = ['/dashboard', '/play', '/practice', '/lessons', '/profile', '/leaderboard', '/daily'];
+  const protectedPaths = ['/dashboard', '/play', '/practice', '/lessons', '/profile', '/leaderboard', '/daily', '/onboarding'];
   const isProtected = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   if (!user && isProtected) {
@@ -51,6 +51,30 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
+  }
+
+  // Onboarding guard: redirect users who haven't completed onboarding
+  const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding');
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
+
+  if (user && !isAuthPage && !isApiRoute) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single();
+
+    if (profile && !profile.onboarding_completed && !isOnboardingPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
+
+    if (profile && profile.onboarding_completed && isOnboardingPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

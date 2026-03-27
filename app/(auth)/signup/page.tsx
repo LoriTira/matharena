@@ -45,7 +45,7 @@ function SignupForm() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push(redirect || '/dashboard');
+      router.push('/onboarding');
       router.refresh();
     }
   };
