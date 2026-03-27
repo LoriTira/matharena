@@ -3,10 +3,10 @@
 -- ============================================
 
 -- Add onboarding_completed column (existing users default to true)
-ALTER TABLE profiles ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT true;
 
 -- Index for middleware queries on incomplete onboarding
-CREATE INDEX idx_profiles_onboarding ON profiles (onboarding_completed) WHERE onboarding_completed = false;
+CREATE INDEX IF NOT EXISTS idx_profiles_onboarding ON profiles (onboarding_completed) WHERE onboarding_completed = false;
 
 -- Update trigger to set onboarding_completed = false for new signups
 CREATE OR REPLACE FUNCTION handle_new_user()
