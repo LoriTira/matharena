@@ -8,6 +8,7 @@ import type { Profile } from '@/types';
 
 export default function LeaderboardPage() {
   const [players, setPlayers] = useState<Profile[]>([]);
+  const [sprintPBs, setSprintPBs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const supabase = createClient();
@@ -25,7 +26,31 @@ export default function LeaderboardPage() {
       }
 
       const { data } = await query;
-      if (data) setPlayers(data as Profile[]);
+      if (data) {
+        const profiles = data as Profile[];
+        setPlayers(profiles);
+
+        // Batch-fetch sprint PBs for all players
+        const playerIds = profiles.map((p) => p.id);
+        if (playerIds.length > 0) {
+          const { data: sprintData } = await supabase
+            .from('practice_sessions')
+            .select('user_id, score')
+            .in('user_id', playerIds)
+            .eq('duration', 120)
+            .order('score', { ascending: false });
+
+          if (sprintData) {
+            const pbs: Record<string, number> = {};
+            for (const s of sprintData as { user_id: string; score: number }[]) {
+              if (!(s.user_id in pbs)) {
+                pbs[s.user_id] = s.score;
+              }
+            }
+            setSprintPBs(pbs);
+          }
+        }
+      }
       setLoading(false);
     };
 
@@ -57,6 +82,7 @@ export default function LeaderboardPage() {
                 <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
                 <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
                 <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">SPRINT PB</th>
               </tr>
             </thead>
             <tbody>
@@ -69,6 +95,7 @@ export default function LeaderboardPage() {
                   <td className="px-4 py-3 flex justify-end"><Skeleton className="h-4 w-12" /></td>
                   <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-14" /></div></td>
                   <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-10" /></div></td>
+                  <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-10" /></div></td>
                 </tr>
               ))}
             </tbody>
@@ -76,7 +103,7 @@ export default function LeaderboardPage() {
         </div>
       ) : (
         <div className="border border-edge-faint rounded-sm overflow-x-auto">
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b border-edge">
                 <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint w-16">#</th>
@@ -86,6 +113,7 @@ export default function LeaderboardPage() {
                 <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
                 <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
                 <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
+                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">SPRINT PB</th>
               </tr>
             </thead>
             <tbody>
@@ -115,6 +143,7 @@ export default function LeaderboardPage() {
                       <span className="text-ink-muted">{losses}</span>
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-ink-tertiary text-sm tabular-nums">{winRate}%</td>
+                    <td className="px-4 py-3 text-right font-mono text-ink-tertiary text-sm tabular-nums">{sprintPBs[player.id] ?? '—'}</td>
                   </tr>
                 );
               })}

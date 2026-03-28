@@ -1,14 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
 import { PracticeSetup } from '@/components/practice/PracticeSetup';
 import { PracticeGame } from '@/components/practice/PracticeGame';
 import { PracticeResults } from '@/components/practice/PracticeResults';
+import type { PracticeConfig } from '@/types';
 
 export default function PracticePage() {
-  const session = usePracticeSession();
+  const searchParams = useSearchParams();
+  const initialConfig = useMemo((): Partial<PracticeConfig> | undefined => {
+    const sprint = searchParams.get('sprint');
+    if (sprint === '120') {
+      return { duration: 120, difficulty: 'standard', operations: ['+', '-', '*', '/'] };
+    }
+    return undefined;
+  }, [searchParams]);
+
+  const session = usePracticeSession(initialConfig);
 
   return (
     <AnimatePresence mode="wait">

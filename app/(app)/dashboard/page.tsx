@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [dailyStreak, setDailyStreak] = useState<number>(0);
   const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [sprintPB, setSprintPB] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
@@ -124,6 +125,21 @@ export default function DashboardPage() {
       }
     } catch {
       // API doesn't exist yet
+    }
+
+    // Sprint personal best (120s)
+    try {
+      const { data: sprintData } = await supabase
+        .from('practice_sessions')
+        .select('score')
+        .eq('user_id', user.id)
+        .eq('duration', 120)
+        .order('score', { ascending: false })
+        .limit(1)
+        .single();
+      if (sprintData) setSprintPB(sprintData.score);
+    } catch {
+      // No sprint sessions yet
     }
 
     setLoading(false);
@@ -249,10 +265,10 @@ export default function DashboardPage() {
 
       {/* 2-column responsive grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* ──────── Challenges (top) ──────── */}
+        {/* ──────── Row 0: Challenges + Rating ──────── */}
 
         {/* 1. Challenges Card */}
-        <Card variant="default" className="p-6 md:col-span-2">
+        <Card variant="default" className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="text-[11px] tracking-[2px] text-ink-faint">CHALLENGES</div>
             <button
@@ -264,7 +280,7 @@ export default function DashboardPage() {
           </div>
 
           {activeChallenges.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <div className="space-y-2.5">
               {/* Received, pending */}
               {receivedPending.map((challenge) => {
                 const opponentName = getChallengeOpponentName(challenge);
@@ -389,31 +405,6 @@ export default function DashboardPage() {
           )}
         </Card>
 
-        {/* ──────── Row 1 ──────── */}
-
-        {/* 2. Quick Match Card */}
-        <Card variant="interactive" className="p-6">
-          <Link href="/play" className="block">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="font-serif text-lg text-ink mb-1">Ranked Match</div>
-                <div className="text-[11px] text-ink-muted leading-relaxed">
-                  First to 5 wins, Elo on the line
-                </div>
-              </div>
-              {onlineCount !== null && (
-                <div className="flex items-center gap-1.5 text-[11px] text-ink-muted">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  ~{onlineCount} online
-                </div>
-              )}
-            </div>
-            <div className="inline-block px-6 py-2.5 bg-accent text-on-accent text-[11px] tracking-[2px] font-bold rounded-sm hover:bg-accent/90 transition-colors">
-              PLAY NOW
-            </div>
-          </Link>
-        </Card>
-
         {/* 2. Your Rating Card */}
         <Card variant="default" className="p-6">
           <div className="flex items-start justify-between mb-3">
@@ -454,6 +445,66 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        </Card>
+
+        {/* ──────── Row 1: Sprint + Ranked Match ──────── */}
+
+        {/* 3. 120s Sprint Card */}
+        <Card variant="interactive" className="p-6">
+          <Link href="/practice?sprint=120" className="block">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="font-serif text-lg text-ink mb-1">120s Sprint</div>
+                <div className="text-[11px] text-ink-muted leading-relaxed">
+                  All operations, race the clock
+                </div>
+              </div>
+              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-accent/30 bg-accent-glow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+            </div>
+            {sprintPB !== null ? (
+              <div className="mb-4">
+                <div className="text-[11px] tracking-[1.5px] text-ink-faint mb-1">PERSONAL BEST</div>
+                <div className="font-mono text-[28px] font-normal text-accent tabular-nums leading-none">
+                  {sprintPB}
+                </div>
+              </div>
+            ) : (
+              <div className="text-[12px] text-ink-muted mb-4">
+                Set your first record
+              </div>
+            )}
+            <div className="inline-block px-6 py-2.5 border border-accent/40 text-accent text-[11px] tracking-[2px] font-bold rounded-sm hover:bg-accent-glow transition-colors">
+              START SPRINT
+            </div>
+          </Link>
+        </Card>
+
+        {/* 4. Ranked Match Card */}
+        <Card variant="interactive" className="p-6">
+          <Link href="/play" className="block">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="font-serif text-lg text-ink mb-1">Ranked Match</div>
+                <div className="text-[11px] text-ink-muted leading-relaxed">
+                  First to 5 wins, Elo on the line
+                </div>
+              </div>
+              {onlineCount !== null && (
+                <div className="flex items-center gap-1.5 text-[11px] text-ink-muted">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  ~{onlineCount} online
+                </div>
+              )}
+            </div>
+            <div className="inline-block px-6 py-2.5 bg-accent text-on-accent text-[11px] tracking-[2px] font-bold rounded-sm hover:bg-accent/90 transition-colors">
+              PLAY NOW
+            </div>
+          </Link>
         </Card>
 
         {/* ──────── Row 2 ──────── */}

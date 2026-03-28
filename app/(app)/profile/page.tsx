@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const [friends, setFriends] = useState<{ id: string; username: string; display_name: string | null; elo_rating: number }[]>([]);
   const [rechallengingId, setRechallengingId] = useState<string | null>(null);
   const [earnedAchievementIds, setEarnedAchievementIds] = useState<Set<string>>(new Set());
+  const [sprintPB, setSprintPB] = useState<number | null>(null);
   const supabase = createClient();
 
   const fetchFriends = useCallback(async () => {
@@ -89,6 +90,23 @@ export default function ProfilePage() {
       }
     };
     fetchAchievements();
+
+    const fetchSprintPB = async () => {
+      try {
+        const { data } = await supabase
+          .from('practice_sessions')
+          .select('score')
+          .eq('user_id', user.id)
+          .eq('duration', 120)
+          .order('score', { ascending: false })
+          .limit(1)
+          .single();
+        if (data) setSprintPB(data.score);
+      } catch {
+        // No sprint sessions yet
+      }
+    };
+    fetchSprintPB();
   }, [user, fetchFriends]);
 
   const handleSave = async () => {
@@ -134,8 +152,8 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats grid skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-shade rounded-sm overflow-hidden">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-shade rounded-sm overflow-hidden">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-page p-5 flex flex-col items-center gap-2">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-8 w-16" />
@@ -245,7 +263,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-shade rounded-sm overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-shade rounded-sm overflow-hidden">
         <div className="bg-page p-5 text-center">
           <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">RATING</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{profile.elo_rating}</div>
@@ -261,6 +279,10 @@ export default function ProfilePage() {
         <div className="bg-page p-5 text-center">
           <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
           <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
+        </div>
+        <div className="bg-page p-5 text-center">
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">SPRINT PB</div>
+          <div className="font-mono text-2xl text-ink tabular-nums">{sprintPB ?? '—'}</div>
         </div>
       </div>
 

@@ -41,9 +41,9 @@ const DEFAULT_CONFIG: PracticeConfig = {
   difficulty: 'standard',
 };
 
-export function usePracticeSession(): PracticeSession {
+export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): PracticeSession {
   const [phase, setPhase] = useState<PracticePhase>('idle');
-  const [config, setConfigState] = useState<PracticeConfig>(DEFAULT_CONFIG);
+  const [config, setConfigState] = useState<PracticeConfig>({ ...DEFAULT_CONFIG, ...initialConfig });
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
   const [problemCount, setProblemCount] = useState(0);
   const [stats, setStats] = useState<PracticeStats>({
