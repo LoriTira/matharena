@@ -48,7 +48,31 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ streak, completedToday }, {
+    // If completed today, include user's rank and time for today
+    let userRank: number | undefined;
+    let userTimeMs: number | undefined;
+    if (completedToday) {
+      const { data: myResult } = await supabase
+        .from('daily_puzzle_results')
+        .select('total_time_ms')
+        .eq('user_id', user.id)
+        .eq('puzzle_date', today)
+        .single();
+
+      if (myResult) {
+        userTimeMs = myResult.total_time_ms;
+
+        const { count: fasterCount } = await supabase
+          .from('daily_puzzle_results')
+          .select('user_id', { count: 'exact', head: true })
+          .eq('puzzle_date', today)
+          .lt('total_time_ms', myResult.total_time_ms);
+
+        userRank = (fasterCount ?? 0) + 1;
+      }
+    }
+
+    return NextResponse.json({ streak, completedToday, userRank, userTimeMs }, {
       headers: { 'Cache-Control': 'no-store' },
     });
   } catch (error) {

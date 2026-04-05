@@ -11,7 +11,10 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { RankBadge } from '@/components/ui/RankBadge';
 import { getRank } from '@/lib/ranks';
 import { NextPuzzleCountdown } from '@/components/daily/NextPuzzleCountdown';
+import { formatLeaderboardTime } from '@/lib/daily/formatTime';
 import type { Profile, Match, Challenge } from '@/types';
+
+type DailyLeaderboardEntry = { username: string; total_time_ms: number; rank: number };
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -27,6 +30,9 @@ export default function DashboardPage() {
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [dailyStreak, setDailyStreak] = useState<number>(0);
   const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [dailyUserRank, setDailyUserRank] = useState<number | null>(null);
+  const [dailyUserTimeMs, setDailyUserTimeMs] = useState<number | null>(null);
+  const [dailyTopEntries, setDailyTopEntries] = useState<DailyLeaderboardEntry[]>([]);
   const [sprintPB, setSprintPB] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
@@ -115,13 +121,27 @@ export default function DashboardPage() {
       setOnlineCount(null);
     }
 
-    // Daily streak (graceful — API may not exist yet)
+    // Daily streak + leaderboard (graceful — API may not exist yet)
     try {
       const res = await fetch('/api/daily/streak', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setDailyStreak(data.streak ?? 0);
         setDailyCompleted(data.completedToday ?? false);
+        setDailyUserRank(data.userRank ?? null);
+        setDailyUserTimeMs(data.userTimeMs ?? null);
+
+        if (data.completedToday) {
+          try {
+            const lbRes = await fetch('/api/daily/leaderboard');
+            if (lbRes.ok) {
+              const lbData = await lbRes.json();
+              setDailyTopEntries(lbData.leaderboard ?? []);
+            }
+          } catch {
+            // Leaderboard fetch failed — card still renders rank + countdown
+          }
+        }
       }
     } catch {
       // API doesn't exist yet
@@ -524,13 +544,12 @@ export default function DashboardPage() {
             </div>
           </div>
           {dailyCompleted ? (
-            <div className="space-y-3">
-              <Link href="/daily" className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-accent-glow border border-accent/20">
-                <span className="text-accent text-base">&#10003;</span>
-                <span className="text-[12px] text-accent font-semibold tracking-[1px]">COMPLETED TODAY</span>
-              </Link>
-              <NextPuzzleCountdown className="text-left" />
-            </div>
+            <DailyCompletedBlock
+              userRank={dailyUserRank}
+              userTimeMs={dailyUserTimeMs}
+              topEntries={dailyTopEntries}
+              currentUsername={profile?.username ?? null}
+            />
           ) : (
             <Link
               href="/daily"
@@ -608,6 +627,116 @@ export default function DashboardPage() {
           fetchChallenges();
         }}
       />
+    </div>
+  );
+}
+
+// --- Daily puzzle completed state ---
+
+function DailyCompletedBlock({
+  userRank,
+  userTimeMs,
+  topEntries,
+  currentUsername,
+}: {
+  userRank: number | null;
+  userTimeMs: number | null;
+  topEntries: DailyLeaderboardEntry[];
+  currentUsername: string | null;
+}) {
+  const top3 = topEntries.slice(0, 3);
+  const userInTop3 =
+    userRank !== null && userRank <= 3 && top3.some((e) => e.username === currentUsername);
+  const userEntry =
+    userRank !== null && userTimeMs !== null && currentUsername
+      ? { rank: userRank, username: currentUsername, total_time_ms: userTimeMs }
+      : null;
+
+  return (
+    <div className="space-y-4">
+      {/* Your result */}
+      {userRank !== null && userTimeMs !== null && (
+        <div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">YOUR RESULT</div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[24px] text-accent tabular-nums leading-none">
+              #{userRank}
+            </span>
+            <span className="font-mono text-[14px] text-ink-muted tabular-nums">
+              · {formatLeaderboardTime(userTimeMs)}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Top times */}
+      {top3.length > 0 && (
+        <div>
+          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">TOP TIMES</div>
+          <div className="space-y-0">
+            {top3.map((entry) => {
+              const isMe = entry.username === currentUsername;
+              return (
+                <div
+                  key={`${entry.rank}-${entry.username}`}
+                  className={`flex items-center justify-between px-2 py-1.5 border-b border-edge-faint last:border-b-0 ${
+                    isMe ? 'bg-accent-glow -mx-2 rounded-sm' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`font-mono text-[11px] w-5 text-center tabular-nums ${
+                        isMe ? 'text-accent' : 'text-ink-muted'
+                      }`}
+                    >
+                      {entry.rank}
+                    </span>
+                    <span
+                      className={`text-[12px] ${isMe ? 'text-accent font-semibold' : 'text-ink-secondary'}`}
+                    >
+                      {isMe ? 'YOU' : entry.username}
+                    </span>
+                  </div>
+                  <span
+                    className={`font-mono text-[11px] tabular-nums ${
+                      isMe ? 'text-accent' : 'text-ink-tertiary'
+                    }`}
+                  >
+                    {formatLeaderboardTime(entry.total_time_ms)}
+                  </span>
+                </div>
+              );
+            })}
+            {!userInTop3 && userEntry && (
+              <>
+                <div className="text-center text-ink-faint text-[11px] py-1">···</div>
+                <div className="flex items-center justify-between px-2 py-1.5 bg-accent-glow -mx-2 rounded-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[11px] text-accent w-5 text-center tabular-nums">
+                      {userEntry.rank}
+                    </span>
+                    <span className="text-[12px] text-accent font-semibold">YOU</span>
+                  </div>
+                  <span className="font-mono text-[11px] text-accent tabular-nums">
+                    {formatLeaderboardTime(userEntry.total_time_ms)}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Countdown + view full results */}
+      <div className="flex items-end justify-between gap-4 pt-1">
+        <NextPuzzleCountdown className="text-left" />
+        <Link
+          href="/daily"
+          className="text-[10px] tracking-[1.5px] text-ink-faint hover:text-accent transition-colors font-semibold"
+        >
+          VIEW FULL RESULTS →
+        </Link>
+      </div>
     </div>
   );
 }

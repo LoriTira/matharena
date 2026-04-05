@@ -10,22 +10,13 @@ import { AnswerInput } from '@/components/match/AnswerInput';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { NextPuzzleCountdown } from '@/components/daily/NextPuzzleCountdown';
+import { formatLeaderboardTime } from '@/lib/daily/formatTime';
 
 function formatProblemTime(ms: number): string {
   return (ms / 1000).toFixed(1) + 's';
 }
 
 function formatTotalTime(ms: number): string {
-  const totalSeconds = ms / 1000;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes > 0) {
-    return `${minutes}:${seconds.toFixed(1).padStart(4, '0')}`;
-  }
-  return seconds.toFixed(1) + 's';
-}
-
-function formatLeaderboardTime(ms: number): string {
   const totalSeconds = ms / 1000;
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
