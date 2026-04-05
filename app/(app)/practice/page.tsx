@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
@@ -20,6 +20,15 @@ export default function PracticePage() {
   }, [searchParams]);
 
   const session = usePracticeSession(initialConfig);
+
+  const autoStarted = useRef(false);
+
+  useEffect(() => {
+    if (initialConfig && session.phase === 'idle' && !autoStarted.current) {
+      autoStarted.current = true;
+      session.startSession();
+    }
+  }, [initialConfig, session.phase, session.startSession]);
 
   return (
     <AnimatePresence mode="wait">
