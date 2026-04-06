@@ -2,7 +2,7 @@
 
 A competitive mental math platform with a chess.com-style Elo ranking system. Challenge other players in real-time arithmetic duels, practice solo, and climb the leaderboard.
 
-**Live:** [matharena-ecru.vercel.app](https://matharena-ecru.vercel.app)
+**Live:** [mathsarena.com](https://mathsarena.com)
 
 ## Features
 
@@ -11,9 +11,9 @@ A competitive mental math platform with a chess.com-style Elo ranking system. Ch
 - **Challenge a Friend** — Generate a shareable invite link. Both players enter a lobby page, and the match starts simultaneously once both are confirmed online (heartbeat-based presence detection). Rematch detection ensures both players join the same lobby instead of creating duplicate challenges.
 - **Google OAuth** — Sign in with Google in addition to email/password. Powered by Supabase Auth.
 - **Achievement System** — 12 achievements across milestone, performance, streak, and social categories. Automatically checked on match completion. Trophy case on profile page.
-- **Practice Mode** — Train solo with adjustable difficulty and operation selection. No rating impact.
+- **Practice Mode** — Train solo with adjustable difficulty, operation selection, and duration (60s/120s/300s). Includes a 120s Sprint card on the dashboard for quick access. Personal bests tracked per duration.
 - **Lessons** — Learn mental math tricks and techniques (multiply by 11, squaring numbers ending in 5, complement subtraction, and more).
-- **Leaderboard** — Public Elo rankings with filtering by school/company affiliation.
+- **Leaderboard** — Public Elo rankings with filtering by school/company affiliation. Shows 120s sprint personal bests alongside Elo.
 - **Player Profiles** — Track your stats, rating history, win rate, country, affiliation, and earned achievements.
 - **Theme System** — Light, dark, and system modes with four accent color options (violet, blue, teal, gold). Persisted in localStorage. Gear icon in the navbar.
 
@@ -84,6 +84,9 @@ supabase/migrations/  # Database migration files (run in order)
    | 6 | `006_challenge_readiness.sql` | Adds heartbeat columns for lobby presence detection |
    | 7 | `007_daily_puzzle.sql` | Daily puzzle results table with unique constraint per user/day |
    | 8 | `008_achievements.sql` | User achievements table for the achievement system |
+   | 9 | `009_lesson_progress.sql` | Tracks lesson completion per user |
+   | 10 | `010_practice_sessions.sql` | Practice session history and personal bests |
+   | 11 | `011_onboarding.sql` | Onboarding flow flag on profiles |
 
 4. (Optional) Enable Google OAuth in the Supabase dashboard under **Auth > Providers > Google**. Add your Google Client ID and Client Secret from the [Google Cloud Console](https://console.cloud.google.com).
 
