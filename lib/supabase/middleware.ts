@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getValidRedirect } from '@/lib/auth/redirect';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -42,7 +43,10 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
+    const originalPath = request.nextUrl.pathname + request.nextUrl.search;
     url.pathname = '/login';
+    url.search = '';
+    url.searchParams.set('redirect', originalPath);
     return NextResponse.redirect(url);
   }
 
@@ -51,8 +55,10 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = authPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   if (user && isAuthPage) {
+    const destination = getValidRedirect(request.nextUrl.searchParams.get('redirect'));
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    url.pathname = destination;
+    url.search = '';
     return NextResponse.redirect(url);
   }
 
@@ -67,8 +73,10 @@ export async function updateSession(request: NextRequest) {
     if (onboardedCookie === '1') {
       // Already onboarded — redirect away from onboarding page if needed
       if (isOnboardingPage) {
+        const destination = getValidRedirect(request.nextUrl.searchParams.get('redirect'));
         const url = request.nextUrl.clone();
-        url.pathname = '/dashboard';
+        url.pathname = destination;
+        url.search = '';
         return NextResponse.redirect(url);
       }
     } else {
@@ -90,8 +98,10 @@ export async function updateSession(request: NextRequest) {
         });
 
         if (isOnboardingPage) {
+          const destination = getValidRedirect(request.nextUrl.searchParams.get('redirect'));
           const url = request.nextUrl.clone();
-          url.pathname = '/dashboard';
+          url.pathname = destination;
+          url.search = '';
           const redirect = NextResponse.redirect(url);
           redirect.cookies.set('ma-onboarded', '1', {
             path: '/',
@@ -103,8 +113,11 @@ export async function updateSession(request: NextRequest) {
           return redirect;
         }
       } else if (profile && !profile.onboarding_completed && !isOnboardingPage) {
+        const originalPath = request.nextUrl.pathname + request.nextUrl.search;
         const url = request.nextUrl.clone();
         url.pathname = '/onboarding';
+        url.search = '';
+        url.searchParams.set('redirect', originalPath);
         return NextResponse.redirect(url);
       }
     }

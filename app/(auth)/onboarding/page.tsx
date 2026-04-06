@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { CountrySelector } from '@/components/onboarding/CountrySelector';
@@ -38,7 +38,7 @@ function MiniCelebration() {
   );
 }
 
-export default function OnboardingPage() {
+function OnboardingForm() {
   const [username, setUsername] = useState('');
   const [country, setCountry] = useState('');
   const [affiliationType, setAffiliationType] = useState<'school' | 'company' | null>(null);
@@ -49,6 +49,9 @@ export default function OnboardingPage() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
+  const destination = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard';
   const supabase = createClient();
 
   // Fetch current profile to pre-fill username
@@ -107,7 +110,7 @@ export default function OnboardingPage() {
     if (res.ok) {
       setDone(true);
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push(destination);
         router.refresh();
       }, 600);
     } else {
@@ -124,7 +127,7 @@ export default function OnboardingPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ onboarding_completed: true }),
     });
-    router.push('/dashboard');
+    router.push(destination);
     router.refresh();
   };
 
@@ -323,5 +326,17 @@ export default function OnboardingPage() {
         </motion.div>
       </motion.div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-page">
+        <div className="text-ink-muted text-sm">Loading...</div>
+      </div>
+    }>
+      <OnboardingForm />
+    </Suspense>
   );
 }

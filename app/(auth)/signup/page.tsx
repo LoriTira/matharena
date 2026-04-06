@@ -45,7 +45,7 @@ function SignupForm() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/onboarding');
+      router.push(redirect ? `/onboarding?redirect=${encodeURIComponent(redirect)}` : '/onboarding');
       router.refresh();
     }
   };
