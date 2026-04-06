@@ -67,14 +67,10 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
   configRef.current = config;
   statsRef.current = stats;
 
-  // Load session history on mount
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
+  // Load session history when config changes
+  const fetchHistory = useCallback(async () => {
     try {
-      const res = await fetch('/api/practice/session?limit=10');
+      const res = await fetch(`/api/practice/session?limit=10&duration=${configRef.current.duration}`);
       if (res.ok) {
         const data = await res.json();
         setSessionHistory(data.sessions || []);
@@ -83,7 +79,11 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
     } catch {
       // silently fail — history is non-critical
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [config.duration, fetchHistory]);
 
   const getRangesForConfig = useCallback((): Record<Operation, OperationRange> => {
     const baseRanges = PRACTICE_DIFFICULTY_RANGES[config.difficulty];

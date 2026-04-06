@@ -55,10 +55,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
     }
 
-    // Compute personal best for the most recent config
-    const personalBest = sessions && sessions.length > 0
-      ? Math.max(...sessions.map((s: { score: number }) => s.score))
-      : null;
+    // Query actual personal best (not limited to returned sessions)
+    let bestQuery = supabase
+      .from('practice_sessions')
+      .select('score')
+      .eq('user_id', user.id);
+
+    if (durationFilter) {
+      bestQuery = bestQuery.eq('duration', parseInt(durationFilter));
+    }
+
+    const { data: bestData } = await bestQuery
+      .order('score', { ascending: false })
+      .limit(1)
+      .single();
+
+    const personalBest = bestData?.score ?? null;
 
     return NextResponse.json({ sessions: sessions || [], personalBest });
   } catch (error) {
