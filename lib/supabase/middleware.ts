@@ -29,9 +29,12 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // Use getSession() (local JWT decode, ~2ms) instead of getUser() (network call, ~140ms)
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user ?? null;
 
   // Redirect unauthenticated users to login for protected routes
   const protectedPaths = ['/dashboard', '/play', '/practice', '/lessons', '/profile', '/leaderboard', '/daily', '/onboarding'];
@@ -58,22 +61,52 @@ export async function updateSession(request: NextRequest) {
   const isApiRoute = request.nextUrl.pathname.startsWith('/api');
 
   if (user && !isAuthPage && !isApiRoute) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_completed')
-      .eq('id', user.id)
-      .single();
+    // Check cached onboarding cookie first to avoid DB query on every navigation
+    const onboardedCookie = request.cookies.get('ma-onboarded')?.value;
 
-    if (profile && !profile.onboarding_completed && !isOnboardingPage) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/onboarding';
-      return NextResponse.redirect(url);
-    }
+    if (onboardedCookie === '1') {
+      // Already onboarded — redirect away from onboarding page if needed
+      if (isOnboardingPage) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/dashboard';
+        return NextResponse.redirect(url);
+      }
+    } else {
+      // No cookie — query DB and cache result
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .single();
 
-    if (profile && profile.onboarding_completed && isOnboardingPage) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
+      if (profile?.onboarding_completed) {
+        // Set cookie so we skip this query on future navigations
+        supabaseResponse.cookies.set('ma-onboarded', '1', {
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+        });
+
+        if (isOnboardingPage) {
+          const url = request.nextUrl.clone();
+          url.pathname = '/dashboard';
+          const redirect = NextResponse.redirect(url);
+          redirect.cookies.set('ma-onboarded', '1', {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 30,
+          });
+          return redirect;
+        }
+      } else if (profile && !profile.onboarding_completed && !isOnboardingPage) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/onboarding';
+        return NextResponse.redirect(url);
+      }
     }
   }
 

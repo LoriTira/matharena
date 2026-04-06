@@ -12,6 +12,7 @@ import { RankBadge } from '@/components/ui/RankBadge';
 import { getRank } from '@/lib/ranks';
 import { NextPuzzleCountdown } from '@/components/daily/NextPuzzleCountdown';
 import { formatLeaderboardTime } from '@/lib/daily/formatTime';
+import { getTodayPuzzleDate } from '@/lib/problems/dateUtils';
 import type { Profile, Match, Challenge } from '@/types';
 
 type DailyLeaderboardEntry = { username: string; total_time_ms: number; rank: number };
@@ -38,129 +39,188 @@ export default function DashboardPage() {
   const supabase = useMemo(() => createClient(), []);
 
   const fetchChallenges = useCallback(async () => {
+    if (!user) return;
     try {
-      const res = await fetch('/api/challenge/list');
-      if (!res.ok) return;
-      const data = await res.json();
-      setChallenges(data.challenges ?? []);
-      setChallengeProfiles(data.profiles ?? {});
+      const { data: challengeData } = await supabase
+        .from('challenges')
+        .select('*')
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .in('status', ['pending', 'accepted'])
+        .is('match_id', null)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false });
+
+      const items = challengeData ?? [];
+      setChallenges(items);
+
+      const userIds = new Set<string>();
+      for (const c of items) {
+        userIds.add(c.sender_id);
+        if (c.recipient_id) userIds.add(c.recipient_id);
+      }
+      userIds.delete(user.id);
+
+      if (userIds.size > 0) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, elo_rating, games_won, games_played')
+          .in('id', Array.from(userIds));
+        if (profileData) {
+          setChallengeProfiles(Object.fromEntries(profileData.map((p) => [p.id, p])));
+        }
+      } else {
+        setChallengeProfiles({});
+      }
     } catch {
       // Silently fail
     }
-  }, []);
+  }, [user, supabase]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
 
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    const today = getTodayPuzzleDate();
 
-    if (profileData) setProfile(profileData as Profile);
+    // ── Group 1: all independent queries in parallel ──
+    const [profileRes, matchRes, sparklineRes, onlineRes, sprintRes, dailyRes] =
+      await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase
+          .from('matches')
+          .select('*')
+          .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+          .eq('status', 'completed')
+          .order('completed_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('matches')
+          .select('player1_id, player2_id, player1_elo_after, player2_elo_after, completed_at')
+          .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+          .eq('status', 'completed')
+          .order('completed_at', { ascending: true })
+          .limit(20),
+        supabase
+          .from('matches')
+          .select('id', { count: 'exact', head: true })
+          .in('status', ['waiting', 'active']),
+        supabase
+          .from('practice_sessions')
+          .select('score')
+          .eq('user_id', user.id)
+          .eq('duration', 120)
+          .order('score', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('daily_puzzle_results')
+          .select('puzzle_date, total_time_ms')
+          .eq('user_id', user.id)
+          .order('puzzle_date', { ascending: false })
+          .limit(365),
+      ]);
 
-    // Recent matches (5 for display)
-    const { data: matchData } = await supabase
-      .from('matches')
-      .select('*')
-      .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-      .eq('status', 'completed')
-      .order('completed_at', { ascending: false })
-      .limit(5);
+    // Process profile
+    if (profileRes.data) setProfile(profileRes.data as Profile);
 
-    if (matchData) {
-      const matches = matchData as Match[];
-      setRecentMatches(matches);
+    // Process matches
+    const matches = (matchRes.data ?? []) as Match[];
+    setRecentMatches(matches);
 
-      const opponentIds = matches
-        .map((m) => (m.player1_id === user.id ? m.player2_id : m.player1_id))
-        .filter((id): id is string => id !== null);
-
-      if (opponentIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, username, display_name')
-          .in('id', opponentIds);
-
-        if (profiles) {
-          const names: Record<string, string> = {};
-          for (const p of profiles) {
-            names[p.id] = p.display_name || p.username;
-          }
-          setOpponentNames(names);
-        }
-      }
+    // Process sparkline
+    if (sparklineRes.data && sparklineRes.data.length > 0) {
+      setSparklineData(
+        sparklineRes.data.map((m) => {
+          const isP1 = m.player1_id === user.id;
+          return (isP1 ? m.player1_elo_after : m.player2_elo_after) ?? 1000;
+        })
+      );
     }
 
-    // Sparkline data: last 20 completed matches, extract user's elo_after
-    const { data: sparklineMatches } = await supabase
-      .from('matches')
-      .select('player1_id, player2_id, player1_elo_after, player2_elo_after, completed_at')
-      .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-      .eq('status', 'completed')
-      .order('completed_at', { ascending: true })
-      .limit(20);
+    // Process online count
+    setOnlineCount(onlineRes.count ?? 0);
 
-    if (sparklineMatches && sparklineMatches.length > 0) {
-      const eloHistory = sparklineMatches.map((m) => {
-        const isP1 = m.player1_id === user.id;
-        return (isP1 ? m.player1_elo_after : m.player2_elo_after) ?? 1000;
-      });
-      setSparklineData(eloHistory);
+    // Process sprint PB
+    if (sprintRes.data) setSprintPB(sprintRes.data.score);
+
+    // Process daily streak (computed locally)
+    const dailyResults = dailyRes.data ?? [];
+    const completedDates = new Set(dailyResults.map((r) => r.puzzle_date));
+    const completedToday = completedDates.has(today);
+    setDailyCompleted(completedToday);
+
+    let streak = 0;
+    const startDate = new Date(today + 'T00:00:00Z');
+    if (!completedToday) startDate.setUTCDate(startDate.getUTCDate() - 1);
+    while (completedDates.has(startDate.toISOString().split('T')[0])) {
+      streak++;
+      startDate.setUTCDate(startDate.getUTCDate() - 1);
     }
+    setDailyStreak(streak);
 
-    // Online player count
-    try {
-      const { count } = await supabase
-        .from('matches')
-        .select('id', { count: 'exact', head: true })
-        .in('status', ['waiting', 'active']);
-      setOnlineCount(count ?? 0);
-    } catch {
-      setOnlineCount(null);
-    }
+    // ── Group 2: dependent queries in parallel ──
+    const opponentIds = matches
+      .map((m) => (m.player1_id === user.id ? m.player2_id : m.player1_id))
+      .filter((id): id is string => id !== null);
 
-    // Daily streak + leaderboard (graceful — API may not exist yet)
-    try {
-      const res = await fetch('/api/daily/streak', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        setDailyStreak(data.streak ?? 0);
-        setDailyCompleted(data.completedToday ?? false);
-        setDailyUserRank(data.userRank ?? null);
-        setDailyUserTimeMs(data.userTimeMs ?? null);
+    const group2: Promise<void>[] = [];
 
-        if (data.completedToday) {
-          try {
-            const lbRes = await fetch('/api/daily/leaderboard');
-            if (lbRes.ok) {
-              const lbData = await lbRes.json();
-              setDailyTopEntries(lbData.leaderboard ?? []);
+    // Opponent profiles (depends on matches)
+    if (opponentIds.length > 0) {
+      group2.push(
+        (async () => {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, username, display_name')
+            .in('id', opponentIds);
+          if (profiles) {
+            const names: Record<string, string> = {};
+            for (const p of profiles) {
+              names[p.id] = p.display_name || p.username;
             }
-          } catch {
-            // Leaderboard fetch failed — card still renders rank + countdown
+            setOpponentNames(names);
           }
-        }
-      }
-    } catch {
-      // API doesn't exist yet
+        })()
+      );
     }
 
-    // Sprint personal best (120s)
-    try {
-      const { data: sprintData } = await supabase
-        .from('practice_sessions')
-        .select('score')
-        .eq('user_id', user.id)
-        .eq('duration', 120)
-        .order('score', { ascending: false })
-        .limit(1)
-        .single();
-      if (sprintData) setSprintPB(sprintData.score);
-    } catch {
-      // No sprint sessions yet
+    // Daily rank + leaderboard (only if completed today)
+    if (completedToday) {
+      const todayResult = dailyResults.find((r) => r.puzzle_date === today);
+      if (todayResult) {
+        setDailyUserTimeMs(todayResult.total_time_ms);
+
+        group2.push(
+          (async () => {
+            const { count } = await supabase
+              .from('daily_puzzle_results')
+              .select('user_id', { count: 'exact', head: true })
+              .eq('puzzle_date', today)
+              .lt('total_time_ms', todayResult.total_time_ms);
+            setDailyUserRank((count ?? 0) + 1);
+          })()
+        );
+
+        group2.push(
+          (async () => {
+            const { data: results } = await supabase
+              .from('daily_puzzle_results')
+              .select('total_time_ms, user_id, profiles(username)')
+              .eq('puzzle_date', today)
+              .order('total_time_ms', { ascending: true })
+              .limit(50);
+            setDailyTopEntries(
+              (results ?? []).map((row, index) => ({
+                username: (row.profiles as unknown as { username: string })?.username ?? 'Unknown',
+                total_time_ms: row.total_time_ms,
+                rank: index + 1,
+              }))
+            );
+          })()
+        );
+      }
     }
+
+    if (group2.length > 0) await Promise.all(group2);
 
     setLoading(false);
   }, [user, supabase]);
