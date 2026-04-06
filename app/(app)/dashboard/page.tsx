@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [dailyUserTimeMs, setDailyUserTimeMs] = useState<number | null>(null);
   const [dailyTopEntries, setDailyTopEntries] = useState<DailyLeaderboardEntry[]>([]);
   const [sprintPB, setSprintPB] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [matchesLoaded, setMatchesLoaded] = useState(false);
   const supabase = useMemo(() => createClient(), []);
 
   const fetchChallenges = useCallback(async () => {
@@ -222,7 +222,7 @@ export default function DashboardPage() {
 
     if (group2.length > 0) await Promise.all(group2);
 
-    setLoading(false);
+    setMatchesLoaded(true);
   }, [user, supabase]);
 
   // Initial data fetch
@@ -298,8 +298,8 @@ export default function DashboardPage() {
     }
   };
 
-  // Loading state: skeleton grid
-  if (loading || !profile) {
+  // Wait only for profile before rendering the page structure
+  if (!profile) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-64" />
@@ -623,7 +623,13 @@ export default function DashboardPage() {
         {/* 4. Recent Matches Card */}
         <Card variant="default" className="p-6">
           <div className="text-[11px] tracking-[2px] text-ink-faint mb-4">RECENT MATCHES</div>
-          {recentMatches.length > 0 ? (
+          {!matchesLoaded ? (
+            <div className="space-y-3">
+              <Skeleton className="h-8" />
+              <Skeleton className="h-8" />
+              <Skeleton className="h-8" />
+            </div>
+          ) : recentMatches.length > 0 ? (
             <div className="space-y-0 -mx-1">
               {recentMatches.map((match) => {
                 const isPlayer1 = match.player1_id === user?.id;
