@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   // Step 2: profiles query for onboarding_completed — middleware's second call
   let profileStep;
   if (user) {
-    profileStep = await timeAsync('middleware_profile_query', () =>
+    profileStep = await timeAsync('middleware_profile_query', async () =>
       supabase
         .from('profiles')
         .select('onboarding_completed')

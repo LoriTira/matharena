@@ -26,13 +26,13 @@ export async function GET(request: NextRequest) {
   const sequential: TimingResult[] = [];
 
   // 1. Profile
-  const profile = await timeAsync('1_profile', () =>
+  const profile = await timeAsync('1_profile', async () =>
     supabase.from('profiles').select('*').eq('id', user.id).single()
   );
   sequential.push(profile);
 
   // 2. Recent 5 matches
-  const matches = await timeAsync('2_recent_matches', () =>
+  const matches = await timeAsync('2_recent_matches', async () =>
     supabase
       .from('matches')
       .select('*')
@@ -49,15 +49,15 @@ export async function GET(request: NextRequest) {
     .map((m) => (m.player1_id === user.id ? m.player2_id : m.player1_id))
     .filter((id): id is string => id !== null);
 
-  const opponents = await timeAsync('3_opponent_profiles', () =>
+  const opponents = await timeAsync('3_opponent_profiles', async () =>
     opponentIds.length > 0
       ? supabase.from('profiles').select('id, username, display_name').in('id', opponentIds)
-      : Promise.resolve({ data: [], error: null })
+      : { data: [], error: null }
   );
   sequential.push(opponents);
 
   // 4. Sparkline (last 20 matches)
-  const sparkline = await timeAsync('4_sparkline', () =>
+  const sparkline = await timeAsync('4_sparkline', async () =>
     supabase
       .from('matches')
       .select('player1_id, player2_id, player1_elo_after, player2_elo_after, completed_at')
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
   sequential.push(sparkline);
 
   // 5. Online count
-  const online = await timeAsync('5_online_count', () =>
+  const online = await timeAsync('5_online_count', async () =>
     supabase
       .from('matches')
       .select('id', { count: 'exact', head: true })
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
   sequential.push(dailyLb);
 
   // 8. Sprint PB
-  const sprintPB = await timeAsync('8_sprint_pb', () =>
+  const sprintPB = await timeAsync('8_sprint_pb', async () =>
     supabase
       .from('practice_sessions')
       .select('score')
@@ -127,10 +127,10 @@ export async function GET(request: NextRequest) {
   // Group 1: all independent queries in parallel
   const [parProfile, parSparkline, parOnline, parSprintPB, parDailyStreak, parChallenges] =
     await Promise.all([
-      timeAsync('par_1_profile', () =>
+      timeAsync('par_1_profile', async () =>
         supabase.from('profiles').select('*').eq('id', user.id).single()
       ),
-      timeAsync('par_4_sparkline', () =>
+      timeAsync('par_4_sparkline', async () =>
         supabase
           .from('matches')
           .select('player1_id, player2_id, player1_elo_after, player2_elo_after, completed_at')
@@ -139,13 +139,13 @@ export async function GET(request: NextRequest) {
           .order('completed_at', { ascending: true })
           .limit(20)
       ),
-      timeAsync('par_5_online_count', () =>
+      timeAsync('par_5_online_count', async () =>
         supabase
           .from('matches')
           .select('id', { count: 'exact', head: true })
           .in('status', ['waiting', 'active'])
       ),
-      timeAsync('par_8_sprint_pb', () =>
+      timeAsync('par_8_sprint_pb', async () =>
         supabase
           .from('practice_sessions')
           .select('score')
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
     ]);
 
   // Group 2: matches → opponents (sequential dependency)
-  const parMatches = await timeAsync('par_2_recent_matches', () =>
+  const parMatches = await timeAsync('par_2_recent_matches', async () =>
     supabase
       .from('matches')
       .select('*')
@@ -183,10 +183,10 @@ export async function GET(request: NextRequest) {
     .map((m) => (m.player1_id === user.id ? m.player2_id : m.player1_id))
     .filter((id): id is string => id !== null);
 
-  const parOpponents = await timeAsync('par_3_opponent_profiles', () =>
+  const parOpponents = await timeAsync('par_3_opponent_profiles', async () =>
     parOppIds.length > 0
       ? supabase.from('profiles').select('id, username, display_name').in('id', parOppIds)
-      : Promise.resolve({ data: [], error: null })
+      : { data: [], error: null }
   );
 
   // Daily leaderboard (depends on streak result)

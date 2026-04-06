@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   // 1. Simple query via Supabase JS client
-  const clientQuery = await timeAsync('supabase_client_query', () =>
+  const clientQuery = await timeAsync('supabase_client_query', async () =>
     supabase.from('profiles').select('id').limit(1)
   );
 
