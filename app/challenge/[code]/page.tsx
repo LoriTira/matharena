@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Challenge, Profile } from '@/types';
 
 export default function ChallengePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const supabase = createClient();
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -17,7 +19,6 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState('');
-  const [accepted, setAccepted] = useState(false);
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -36,8 +37,10 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
       const c = data as Challenge;
       setChallenge(c);
 
+      // If the current user already accepted, go straight to lobby
       if (user && c.recipient_id === user.id && c.status === 'accepted') {
-        setAccepted(true);
+        router.push(`/challenge/${code}/lobby`);
+        return;
       }
 
       const { data: senderData } = await supabase
@@ -73,8 +76,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
       return;
     }
 
-    setAccepted(true);
-    setAccepting(false);
+    router.push(`/challenge/${code}/lobby`);
   };
 
   if (loading || authLoading) {
@@ -132,23 +134,6 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     );
   }
 
-  // Accepted by current user
-  if (accepted) {
-    return (
-      <div className="min-h-screen bg-page flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Accepted</h1>
-          <p className="text-ink-muted text-sm mb-8">
-            Click below to start searching for your match.
-          </p>
-          <Link href={`/challenge/${code}/lobby`} className="px-8 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
-            PLAY NOW
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // Already taken by someone else
   if (challenge.status === 'accepted' && challenge.recipient_id && challenge.recipient_id !== user?.id) {
     return (
@@ -166,14 +151,27 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
 
   // Sender viewing own challenge
   if (user && challenge.sender_id === user.id) {
+    const isAccepted = challenge.status === 'accepted';
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Your Challenge</h1>
-          <p className="text-ink-muted text-sm mb-8">Share this link with a friend to challenge them.</p>
-          <Link href="/dashboard" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
-            DASHBOARD
-          </Link>
+          <h1 className="font-serif text-2xl font-normal text-ink mb-2">
+            {isAccepted ? 'Challenge Accepted!' : 'Your Challenge'}
+          </h1>
+          <p className="text-ink-muted text-sm mb-8">
+            {isAccepted
+              ? 'Your opponent is ready. Head to the lobby to start the match.'
+              : 'Share this link with a friend to challenge them.'}
+          </p>
+          {isAccepted ? (
+            <Link href={`/challenge/${code}/lobby`} className="px-8 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
+              GO TO LOBBY
+            </Link>
+          ) : (
+            <Link href="/dashboard" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
+              DASHBOARD
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -211,7 +209,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
           </button>
         ) : (
           <Link
-            href={`/signup?redirect=/challenge/${code}`}
+            href={`/signup?redirect=/challenge/${code}/accept`}
             className="inline-block px-12 py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
           >
             ACCEPT CHALLENGE

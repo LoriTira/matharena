@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleOAuthButton } from '@/components/auth/GoogleOAuthButton';
+import { getValidRedirect } from '@/lib/auth/redirect';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -31,7 +32,7 @@ function LoginForm() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push(redirect || '/dashboard');
+      router.push(getValidRedirect(redirect));
       router.refresh();
     }
   };

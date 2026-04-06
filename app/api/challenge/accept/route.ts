@@ -52,6 +52,10 @@ export async function POST(request: Request) {
     }
 
     if (challenge.status !== 'pending') {
+      // Idempotent: if this user already accepted, treat as success
+      if (challenge.status === 'accepted' && challenge.recipient_id === user.id) {
+        return NextResponse.json({ alreadyAccepted: true, code: challenge.code });
+      }
       return NextResponse.json({ error: 'Challenge is no longer available' }, { status: 400 });
     }
 

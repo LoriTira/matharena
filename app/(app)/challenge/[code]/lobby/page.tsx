@@ -7,6 +7,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import type { Challenge, Profile } from '@/types';
 
+const POLL_INTERVAL_MS = 2_000;
+const MAX_CONSECUTIVE_ERRORS = 3;
+const LOBBY_TIMEOUT_MS = 5 * 60 * 1_000; // 5 minutes
+
 function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready: boolean; isYou: boolean }) {
   if (!profile) return null;
   const winRate = profile.games_played > 0
@@ -54,8 +58,13 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isPollingRef = useRef(false);
+  const consecutiveErrorsRef = useRef(0);
 
   // Fetch challenge and profiles
   useEffect(() => {
@@ -135,6 +144,10 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   // First player: creates waiting match. Second player: activates it.
   // Same player calling again: returns current status without change.
   const callStart = useCallback(async () => {
+    // Prevent overlapping requests
+    if (isPollingRef.current) return;
+    isPollingRef.current = true;
+
     try {
       const res = await fetch('/api/challenge/start', {
         method: 'POST',
@@ -142,13 +155,25 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         body: JSON.stringify({ code }),
       });
 
+      // Session expired — redirect to login
+      if (res.status === 401) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        router.push(`/login?redirect=/challenge/${code}/lobby`);
+        return;
+      }
+
       const data = await res.json();
+
+      // Reset error tracking on any successful response
+      consecutiveErrorsRef.current = 0;
+      if (connectionError) setConnectionError(false);
 
       if (data.status === 'active') {
         setMyReady(true);
         setOpponentReady(true);
         setStarting(true);
         if (pollRef.current) clearInterval(pollRef.current);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         router.replace(`/play/${data.matchId}`);
         return;
       }
@@ -162,31 +187,51 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         // Already in an active match — redirect to it instead of dead-end error
         if (data.matchId) {
           if (pollRef.current) clearInterval(pollRef.current);
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
           router.replace(`/play/${data.matchId}`);
           return;
         }
         setError(data.error);
       }
     } catch {
-      // Will retry on next poll
+      consecutiveErrorsRef.current += 1;
+      if (consecutiveErrorsRef.current >= MAX_CONSECUTIVE_ERRORS) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        setConnectionError(true);
+      }
+    } finally {
+      isPollingRef.current = false;
     }
-  }, [code, router]);
+  }, [code, router, connectionError]);
+
+  const startPolling = useCallback(() => {
+    consecutiveErrorsRef.current = 0;
+    setConnectionError(false);
+    setTimedOut(false);
+
+    callStart();
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(callStart, POLL_INTERVAL_MS);
+
+    // Lobby timeout
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setTimedOut(true);
+      if (pollRef.current) clearInterval(pollRef.current);
+    }, LOBBY_TIMEOUT_MS);
+  }, [callStart]);
 
   // Register + poll: call start immediately, then every 2s
   useEffect(() => {
     if (!challenge || !user || starting) return;
 
-    // Initial call
-    callStart();
-
-    // Poll every 2 seconds
-    pollRef.current = setInterval(callStart, 2000);
+    startPolling();
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
       // Clear heartbeat so the server doesn't think we're still in the lobby.
-      // This prevents a match from being created after we've left.
       if (challenge && user) {
         const col = challenge.sender_id === user.id ? 'sender_ready_at' : 'recipient_ready_at';
         supabase
@@ -196,7 +241,35 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
           .then(() => {});
       }
     };
-  }, [challenge, user, starting, callStart, supabase]);
+  }, [challenge, user, starting, startPolling, supabase]);
+
+  // Send heartbeat clear via sendBeacon on page unload (more reliable than fetch in cleanup)
+  useEffect(() => {
+    if (!challenge || !user) return;
+
+    const handleBeforeUnload = () => {
+      const col = challenge.sender_id === user.id ? 'sender_ready_at' : 'recipient_ready_at';
+      const payload = JSON.stringify({ challengeId: challenge.id, column: col });
+      navigator.sendBeacon('/api/challenge/heartbeat-clear', payload);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [challenge, user]);
+
+  // Send an immediate heartbeat when tab regains focus (handles Safari/mobile throttling)
+  useEffect(() => {
+    if (!challenge || !user || starting) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isPollingRef.current) {
+        callStart();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [challenge, user, starting, callStart]);
 
   if (loading || authLoading) {
     return (
@@ -250,12 +323,46 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         />
       </div>
 
+      {/* Connection error banner */}
+      {connectionError && (
+        <div className="flex flex-col items-center gap-3 px-6 py-4 border border-red-400/30 rounded-sm bg-red-400/5">
+          <p className="text-red-400/70 text-[13px]">Connection lost. Check your internet and try again.</p>
+          <button
+            onClick={startPolling}
+            className="px-6 py-2 bg-btn text-btn-text font-semibold text-[12px] tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
+          >
+            RETRY
+          </button>
+        </div>
+      )}
+
+      {/* Lobby timeout */}
+      {timedOut && !connectionError && (
+        <div className="flex flex-col items-center gap-3 px-6 py-4 border border-edge rounded-sm">
+          <p className="text-ink-muted text-[13px]">Your opponent hasn&apos;t joined yet.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={startPolling}
+              className="px-6 py-2 bg-btn text-btn-text font-semibold text-[12px] tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
+            >
+              KEEP WAITING
+            </button>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-6 py-2 border border-edge text-ink-tertiary text-[12px] tracking-[1.5px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+            >
+              DASHBOARD
+            </button>
+          </div>
+        </div>
+      )}
+
       {starting ? (
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border border-edge-strong border-t-ink-secondary rounded-full animate-spin" />
           <p className="text-ink-tertiary text-[13px]">Creating match...</p>
         </div>
-      ) : (
+      ) : !connectionError && !timedOut ? (
         <div className="text-center">
           <p className="text-ink-muted text-[13px] mb-6">
             {opponentReady
@@ -267,7 +374,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
             <div className="w-10 h-10 mx-auto border border-edge border-t-ink-tertiary rounded-full animate-spin" />
           )}
         </div>
-      )}
+      ) : null}
 
       <button
         onClick={() => router.push('/dashboard')}

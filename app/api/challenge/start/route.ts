@@ -8,8 +8,8 @@ const startSchema = z.object({
   code: z.string().min(1),
 });
 
-// A player is considered "in the lobby" if their heartbeat is < 10s old
-const STALE_THRESHOLD_MS = 10_000;
+// A player is considered "in the lobby" if their heartbeat is < 15s old
+const STALE_THRESHOLD_MS = 15_000;
 
 export async function POST(request: Request) {
   try {
