@@ -9,7 +9,7 @@ A competitive mental math platform with a chess.com-style Elo ranking system. Ch
 - **Ranked Matches** — Compete head-to-head in addition, subtraction, multiplication, and division. First to 5 correct answers wins. Elo rating updates based on opponent strength. Includes 3-2-1 countdown, match point drama, streak indicator, and ScoreDots visualization.
 - **Daily Puzzle** — 5 deterministic problems each day (seeded from the UTC date). Race the clock, compete on the daily leaderboard, and build a streak. A shared countdown timer shows time until the next puzzle on both the daily page and the dashboard card.
 - **Challenge a Friend** — Generate a shareable invite link. Both players enter a lobby page, and the match starts simultaneously once both are confirmed online (heartbeat-based presence detection). Rematch detection ensures both players join the same lobby instead of creating duplicate challenges.
-- **Google OAuth** — Sign in with Google in addition to email/password. Powered by Supabase Auth.
+- **Google OAuth** — Sign in with Google in addition to email/password. Powered by Supabase Auth. Google users are auto-marked as email-verified.
 - **Achievement System** — 12 achievements across milestone, performance, streak, and social categories. Automatically checked on match completion. Trophy case on profile page.
 - **Practice Mode** — Train solo with adjustable difficulty, operation selection, and duration (60s/120s/300s). Includes a 120s Sprint card on the dashboard for quick access. Personal bests tracked per duration.
 - **Lessons** — Learn mental math tricks and techniques (multiply by 11, squaring numbers ending in 5, complement subtraction, and more).
@@ -31,6 +31,7 @@ app/
   (app)/              # Authenticated pages (dashboard, play, daily, challenge lobby, profile, etc.)
   (auth)/             # Login and signup pages
   api/                # API routes
+    auth/             #   Signup (admin-created), email verification, resend verification
     challenge/        #   Create, accept, list, start challenges
     daily/            #   Daily puzzle: puzzle, submit, leaderboard, streak
     match/            #   Find, submit, abandon matches
@@ -48,6 +49,7 @@ components/
 hooks/                # useAuth, useMatch, useToast, useDailyPuzzle, etc.
 lib/
   supabase/           # Supabase client (browser), server client, admin client, middleware session handler
+  auth/               # Email verification token creation/validation (HMAC-signed, 7-day expiry)
   achievements/       # Achievement checker (evaluates conditions on match completion)
   match/              # Elo calculation
   problems/           # Problem generator, daily puzzle generator (deterministic PRNG), date utils
@@ -66,10 +68,14 @@ supabase/migrations/  # Database migration files (run in order)
    npm install
    ```
 
-2. Create a `.env.local` file with your Supabase credentials:
+2. Create a `.env.local` file with your credentials:
    ```
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   PERF_SECRET=any_random_string
+   RESEND_API_KEY=your_resend_api_key          # optional — email verification won't send without it
+   EMAIL_FROM=MathArena <noreply@yourdomain.com> # optional — defaults to noreply@mathsarena.com
    ```
 
 3. Run the database migrations in order against your Supabase project (via the SQL Editor in the dashboard):
@@ -87,6 +93,7 @@ supabase/migrations/  # Database migration files (run in order)
    | 9 | `009_lesson_progress.sql` | Tracks lesson completion per user |
    | 10 | `010_practice_sessions.sql` | Practice session history and personal bests |
    | 11 | `011_onboarding.sql` | Onboarding flow flag on profiles |
+   | 12 | `012_email_verified.sql` | App-level email verification flag on profiles |
 
 4. (Optional) Enable Google OAuth in the Supabase dashboard under **Auth > Providers > Google**. Add your Google Client ID and Client Secret from the [Google Cloud Console](https://console.cloud.google.com).
 
@@ -101,6 +108,10 @@ Pushing to `main` auto-deploys to Vercel. Set the following environment variable
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` — required for server-side user creation and email verification
+- `PERF_SECRET` — used for HMAC-signed email verification tokens
+- `RESEND_API_KEY` — optional, enables verification email sending
+- `EMAIL_FROM` — optional, sender address for transactional emails
 
 Database migrations must be applied manually via the Supabase SQL Editor.
 
@@ -126,6 +137,9 @@ Database migrations must be applied manually via the Supabase SQL Editor.
 - **Rematch detection:** When a player clicks REMATCH, the opponent's result screen polls for the incoming challenge and shows a "JOIN REMATCH" button. The create API also deduplicates — if the opponent already created a rematch, it returns the existing challenge instead of creating a new one.
 - **Theme persistence:** `ThemeProvider` reads `ma-theme` and `ma-accent` from localStorage and applies `class` + `data-accent` attributes to `<html>`. An inline script in `layout.tsx` applies the theme before React hydrates to prevent FOUC.
 - **React 19 context:** Uses `<ToastContext value={...}>` (not `<ToastContext.Provider value={...}>`).
+- **Signup flow:** Email signup uses a server-side API route (`/api/auth/signup`) that creates users via the Supabase admin client with `email_confirm: true`, bypassing Supabase's email confirmation gate. The client then immediately calls `signInWithPassword` for auto-login. App-level email verification is tracked separately in `profiles.email_verified` and shown as a non-blocking dashboard banner.
+- **OAuth redirect preservation:** Supabase OAuth multi-hop (app -> Supabase -> Google -> app) can strip query params. A `ma-oauth-redirect` cookie is set before the OAuth redirect as a fallback, read in the callback route, then cleared.
+- **Admin client typing:** The Supabase admin client (`lib/supabase/admin.ts`) is untyped (no DB generics). Use `(admin as any).from('table')` for operations on columns not in the generated types (e.g., `email_verified`).
 
 ### Elo Tiers
 

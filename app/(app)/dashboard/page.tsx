@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { Suspense, useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
 import { Card } from '@/components/ui/Card';
 import Sparkline from '@/components/ui/Sparkline';
@@ -18,6 +19,24 @@ import type { Profile, Match, Challenge } from '@/types';
 type DailyLeaderboardEntry = { username: string; total_time_ms: number; rank: number };
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
@@ -36,6 +55,10 @@ export default function DashboardPage() {
   const [dailyTopEntries, setDailyTopEntries] = useState<DailyLeaderboardEntry[]>([]);
   const [sprintPB, setSprintPB] = useState<number | null>(null);
   const [matchesLoaded, setMatchesLoaded] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const searchParams = useSearchParams();
+  const verifyStatus = searchParams.get('verify');
   const supabase = useMemo(() => createClient(), []);
 
   const fetchChallenges = useCallback(async () => {
@@ -326,6 +349,19 @@ export default function DashboardPage() {
   const receivedAccepted = challenges.filter((c) => c.recipient_id === user?.id && c.status === 'accepted');
   const activeChallenges = [...sentPending, ...sentAccepted, ...receivedPending, ...receivedAccepted];
 
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    setResendSuccess(false);
+    try {
+      const res = await fetch('/api/auth/resend-verification', { method: 'POST' });
+      if (res.ok) setResendSuccess(true);
+    } catch {
+      // silent
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const getChallengeOpponentName = (challenge: Challenge) => {
     const opponentId = challenge.sender_id === user?.id ? challenge.recipient_id : challenge.sender_id;
     if (!opponentId) return null;
@@ -342,6 +378,34 @@ export default function DashboardPage() {
         </h1>
         <p className="text-[13px] text-ink-muted mt-1">Your mind is your weapon. Keep it sharp.</p>
       </div>
+
+      {/* Email verification banner */}
+      {verifyStatus === 'success' && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-sm border border-green-500/30 bg-green-500/5 text-green-400 text-[13px]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Email verified successfully!
+        </div>
+      )}
+      {verifyStatus === 'expired' && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-sm border border-amber-500/30 bg-amber-500/5 text-amber-400 text-[13px]">
+          Verification link expired. Please request a new one below.
+        </div>
+      )}
+      {!profile.email_verified && verifyStatus !== 'success' && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-sm border border-amber-500/20 bg-amber-500/5">
+          <div className="flex items-center gap-2 text-[13px] text-amber-300/90">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Please verify your email to secure your account.
+          </div>
+          <button
+            onClick={handleResendVerification}
+            disabled={resendingEmail || resendSuccess}
+            className="shrink-0 px-3 py-1 text-[11px] tracking-[1px] font-semibold border border-amber-500/30 text-amber-300/90 rounded-sm hover:bg-amber-500/10 transition-colors disabled:opacity-50"
+          >
+            {resendSuccess ? 'EMAIL SENT' : resendingEmail ? 'SENDING...' : 'RESEND EMAIL'}
+          </button>
+        </div>
+      )}
 
       {/* 2-column responsive grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

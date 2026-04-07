@@ -33,6 +33,7 @@ export interface Profile {
   affiliation_type: AffiliationType | null;
   country: string | null;
   onboarding_completed: boolean;
+  email_verified: boolean;
   created_at: string;
   updated_at: string;
 }

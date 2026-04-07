@@ -29,25 +29,40 @@ function SignupForm() {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-          display_name: username,
-        },
-        emailRedirectTo: `${window.location.origin}/callback${redirect ? `?next=${encodeURIComponent(redirect)}` : ''}`,
-      },
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setError('Username can only contain letters, numbers, and underscores');
+      setLoading(false);
+      return;
+    }
+
+    // Server-side signup: creates user with auto-confirmed email so we can sign in immediately
+    const signupRes = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, username }),
     });
 
-    if (error) {
-      setError(error.message);
+    if (!signupRes.ok) {
+      const data = await signupRes.json();
+      setError(data.error || 'Failed to create account');
       setLoading(false);
-    } else {
-      router.push(redirect ? `/onboarding?redirect=${encodeURIComponent(redirect)}` : '/onboarding');
-      router.refresh();
+      return;
     }
+
+    // Sign in immediately — the server already confirmed the email for session purposes
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError(signInError.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push(redirect ? `/onboarding?redirect=${encodeURIComponent(redirect)}` : '/onboarding');
+    router.refresh();
   };
 
   return (
