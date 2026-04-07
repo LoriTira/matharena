@@ -2,10 +2,25 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { getValidRedirect } from '@/lib/auth/redirect';
 
+function redirectAndClearCookie(url: string) {
+  const response = NextResponse.redirect(url);
+  response.cookies.set('ma-oauth-redirect', '', { path: '/', maxAge: 0 });
+  return response;
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = getValidRedirect(searchParams.get('next'));
+  let next = getValidRedirect(searchParams.get('next'));
+
+  // Cookie fallback: OAuth multi-hop can lose the ?next= query param
+  if (next === '/dashboard') {
+    const cookieHeader = request.headers.get('cookie') || '';
+    const match = cookieHeader.match(/ma-oauth-redirect=([^;]+)/);
+    if (match) {
+      next = getValidRedirect(decodeURIComponent(match[1]));
+    }
+  }
 
   if (code) {
     const supabase = await createClient();
@@ -14,14 +29,14 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get('x-forwarded-host');
       const isLocalEnv = process.env.NODE_ENV === 'development';
       if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
+        return redirectAndClearCookie(`${origin}${next}`);
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+        return redirectAndClearCookie(`https://${forwardedHost}${next}`);
       } else {
-        return NextResponse.redirect(`${origin}${next}`);
+        return redirectAndClearCookie(`${origin}${next}`);
       }
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth`);
+  return redirectAndClearCookie(`${origin}/login?error=auth`);
 }

@@ -17,7 +17,7 @@ export default function ChallengeAcceptPage({ params }: { params: Promise<{ code
     if (authLoading) return;
 
     if (!user) {
-      router.replace(`/login?redirect=/challenge/${code}/accept`);
+      router.replace(`/challenge/${code}`);
       return;
     }
 

@@ -226,10 +226,18 @@ export async function POST(request: Request) {
         .single();
 
       if (refreshed?.match_id) {
-        return NextResponse.json({ matchId: refreshed.match_id, status: 'active' });
+        const { data: raceMatch } = await supabase
+          .from('matches')
+          .select('id, status')
+          .eq('id', refreshed.match_id)
+          .single();
+
+        if (raceMatch) {
+          return NextResponse.json({ matchId: raceMatch.id, status: raceMatch.status });
+        }
       }
 
-      return NextResponse.json({ error: 'Failed to start challenge' }, { status: 500 });
+      return NextResponse.json({ error: 'Race condition during match creation. Please retry.' }, { status: 500 });
     }
 
     return NextResponse.json({ matchId: newMatch.id, status: 'active' });

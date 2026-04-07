@@ -65,6 +65,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isPollingRef = useRef(false);
   const consecutiveErrorsRef = useRef(0);
+  const navigatingToMatchRef = useRef(false);
 
   // Fetch challenge and profiles
   useEffect(() => {
@@ -172,6 +173,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
         setMyReady(true);
         setOpponentReady(true);
         setStarting(true);
+        navigatingToMatchRef.current = true;
         if (pollRef.current) clearInterval(pollRef.current);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         router.replace(`/play/${data.matchId}`);
@@ -232,7 +234,8 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
       // Clear heartbeat so the server doesn't think we're still in the lobby.
-      if (challenge && user) {
+      // Skip if we're navigating to the match — heartbeat is no longer needed.
+      if (challenge && user && !navigatingToMatchRef.current) {
         const col = challenge.sender_id === user.id ? 'sender_ready_at' : 'recipient_ready_at';
         supabase
           .from('challenges')
@@ -248,6 +251,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     if (!challenge || !user) return;
 
     const handleBeforeUnload = () => {
+      if (navigatingToMatchRef.current) return;
       const col = challenge.sender_id === user.id ? 'sender_ready_at' : 'recipient_ready_at';
       const payload = JSON.stringify({ challengeId: challenge.id, column: col });
       navigator.sendBeacon('/api/challenge/heartbeat-clear', payload);

@@ -9,6 +9,12 @@ export function GoogleOAuthButton({ redirect, label = 'Continue with Google' }: 
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+
+    // Store redirect as cookie fallback — OAuth multi-hop can lose query params
+    if (redirect) {
+      document.cookie = `ma-oauth-redirect=${encodeURIComponent(redirect)}; path=/; max-age=300; SameSite=Lax`;
+    }
+
     const redirectTo = `${window.location.origin}/callback${redirect ? `?next=${encodeURIComponent(redirect)}` : ''}`;
 
     const { error } = await supabase.auth.signInWithOAuth({

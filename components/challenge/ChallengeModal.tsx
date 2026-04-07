@@ -92,6 +92,13 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
     }
   }, [isOpen, tab, challengeUrl, linkLoading, error, createLink]);
 
+  // Auto-switch to link tab when user has no friends
+  useEffect(() => {
+    if (isOpen && !friendsLoading && friends.length === 0 && tab === 'friends') {
+      setTab('link');
+    }
+  }, [isOpen, friendsLoading, friends.length, tab]);
+
   const handleChallengeFriend = async (friend: Friend) => {
     setSendingTo(friend.id);
     try {
