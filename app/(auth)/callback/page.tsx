@@ -1,69 +1,94 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+function getRedirectDestination(): string {
+  // sessionStorage (most reliable across OAuth redirects)
+  try {
+    const pending = sessionStorage.getItem('ma-pending-redirect');
+    if (pending && pending.startsWith('/') && !pending.startsWith('//')) {
+      sessionStorage.removeItem('ma-pending-redirect');
+      return pending;
+    }
+  } catch {}
+
+  // Cookie fallback
+  const match = document.cookie.match(/ma-oauth-redirect=([^;]+)/);
+  if (match) {
+    try {
+      const decoded = decodeURIComponent(match[1]);
+      document.cookie = 'ma-oauth-redirect=; path=/; max-age=0';
+      if (decoded.startsWith('/') && !decoded.startsWith('//')) {
+        return decoded;
+      }
+    } catch {}
+  }
+
+  // URL param fallback
+  const urlNext = new URLSearchParams(window.location.search).get('next');
+  if (urlNext && urlNext.startsWith('/') && !urlNext.startsWith('//')) {
+    return urlNext;
+  }
+
+  return '/dashboard';
+}
+
 export default function CallbackPage() {
   const router = useRouter();
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+  const handled = useRef(false);
 
   useEffect(() => {
+    if (handled.current) return;
+    handled.current = true;
+
     const supabase = createClient();
 
     const handleCallback = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
+      // Wait for the Supabase client to initialize (reads cookies, etc.)
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
 
+      if (existingSession) {
+        // Already authenticated (auto-init handled it) — just redirect
+        router.replace(getRedirectDestination());
+        return;
+      }
+
+      // Try explicit PKCE code exchange
+      const code = new URLSearchParams(window.location.search).get('code');
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          console.error('Auth callback error:', error.message);
-          setError(true);
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (!exchangeError) {
+          // Mark OAuth users as email verified (best-effort)
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+              supabase.from('profiles').update({ email_verified: true }).eq('id', user.id);
+            }
+          });
+          router.replace(getRedirectDestination());
           return;
         }
+        console.error('OAuth exchange error:', exchangeError.message);
       }
 
-      // Determine redirect destination: sessionStorage > cookie > URL param > dashboard
-      let next = '/dashboard';
-
-      try {
-        const pending = sessionStorage.getItem('ma-pending-redirect');
-        if (pending && pending.startsWith('/') && !pending.startsWith('//')) {
-          sessionStorage.removeItem('ma-pending-redirect');
-          next = pending;
-        }
-      } catch {}
-
-      if (next === '/dashboard') {
-        const match = document.cookie.match(/ma-oauth-redirect=([^;]+)/);
-        if (match) {
-          try {
-            const decoded = decodeURIComponent(match[1]);
-            if (decoded.startsWith('/') && !decoded.startsWith('//')) {
-              next = decoded;
-            }
-          } catch {}
-          document.cookie = 'ma-oauth-redirect=; path=/; max-age=0';
-        }
+      // Final retry — session might have been established asynchronously
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { data: { session: retrySession } } = await supabase.auth.getSession();
+      if (retrySession) {
+        router.replace(getRedirectDestination());
+        return;
       }
 
-      if (next === '/dashboard') {
-        const urlNext = params.get('next');
-        if (urlNext && urlNext.startsWith('/') && !urlNext.startsWith('//')) {
-          next = urlNext;
-        }
+      // Redirect to login with the intended destination preserved
+      const next = getRedirectDestination();
+      if (next !== '/dashboard') {
+        router.replace(`/login?redirect=${encodeURIComponent(next)}`);
+      } else {
+        setError(code ? 'Code exchange failed' : 'No auth code received');
       }
-
-      // Mark OAuth users as email verified (best-effort, non-blocking)
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user) {
-          supabase.from('profiles').update({ email_verified: true }).eq('id', user.id);
-        }
-      });
-
-      router.replace(next);
     };
 
     handleCallback();
@@ -74,7 +99,8 @@ export default function CallbackPage() {
       <div className="min-h-screen flex items-center justify-center bg-page">
         <div className="text-center">
           <h1 className="font-serif text-2xl font-normal text-ink mb-2">Sign In Failed</h1>
-          <p className="text-ink-muted text-sm mb-8">Something went wrong. Please try again.</p>
+          <p className="text-ink-muted text-sm mb-2">Something went wrong. Please try again.</p>
+          <p className="text-ink-faint text-xs mb-8 font-mono">{error}</p>
           <Link
             href="/login"
             className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
