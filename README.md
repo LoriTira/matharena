@@ -76,6 +76,7 @@ supabase/migrations/  # Database migration files (run in order)
    PERF_SECRET=any_random_string
    RESEND_API_KEY=your_resend_api_key          # optional — email verification won't send without it
    EMAIL_FROM=MathArena <noreply@yourdomain.com> # optional — defaults to noreply@mathsarena.com
+   NEXT_PUBLIC_APP_URL=https://mathsarena.com  # optional — canonical URL for challenge links in emails; falls back to request host
    ```
 
 3. Run the database migrations in order against your Supabase project (via the SQL Editor in the dashboard):
@@ -97,7 +98,16 @@ supabase/migrations/  # Database migration files (run in order)
 
 4. (Optional) Enable Google OAuth in the Supabase dashboard under **Auth > Providers > Google**. Add your Google Client ID and Client Secret from the [Google Cloud Console](https://console.cloud.google.com).
 
-5. Start the dev server:
+5. **Critical for OAuth:** Configure URL settings in the Supabase dashboard under **Auth > URL Configuration**:
+   - **Site URL:** your canonical production domain (e.g. `https://mathsarena.com`)
+   - **Redirect URLs:** add every domain the app runs on followed by `/**`, e.g.
+     - `https://mathsarena.com/**`
+     - `https://<your-vercel-deployment>.vercel.app/**`
+     - `http://localhost:3000/**` (for local dev)
+
+   If a domain isn't in this list, Supabase rejects the OAuth `redirectTo` and falls back to the Site URL — causing a domain mismatch where the PKCE code verifier cookie (set on the original domain) can't be read on the callback domain, and OAuth sign-in fails.
+
+6. Start the dev server:
    ```bash
    npm run dev
    ```
@@ -112,6 +122,9 @@ Pushing to `main` auto-deploys to Vercel. Set the following environment variable
 - `PERF_SECRET` — used for HMAC-signed email verification tokens
 - `RESEND_API_KEY` — optional, enables verification email sending
 - `EMAIL_FROM` — optional, sender address for transactional emails
+- `NEXT_PUBLIC_APP_URL` — optional, canonical URL used when generating challenge links in emails (e.g. `https://mathsarena.com`). Falls back to the request `host` header if not set.
+
+**Supabase URL Configuration is required for OAuth to work across custom domains.** See step 5 in Getting Started.
 
 Database migrations must be applied manually via the Supabase SQL Editor.
 
@@ -138,7 +151,11 @@ Database migrations must be applied manually via the Supabase SQL Editor.
 - **Theme persistence:** `ThemeProvider` reads `ma-theme` and `ma-accent` from localStorage and applies `class` + `data-accent` attributes to `<html>`. An inline script in `layout.tsx` applies the theme before React hydrates to prevent FOUC.
 - **React 19 context:** Uses `<ToastContext value={...}>` (not `<ToastContext.Provider value={...}>`).
 - **Signup flow:** Email signup uses a server-side API route (`/api/auth/signup`) that creates users via the Supabase admin client with `email_confirm: true`, bypassing Supabase's email confirmation gate. The client then immediately calls `signInWithPassword` for auto-login. App-level email verification is tracked separately in `profiles.email_verified` and shown as a non-blocking dashboard banner.
-- **OAuth redirect preservation:** Supabase OAuth multi-hop (app -> Supabase -> Google -> app) can strip query params. A `ma-oauth-redirect` cookie is set before the OAuth redirect as a fallback, read in the callback route, then cleared.
+- **Unified auth form:** `components/auth/AuthForm.tsx` is a single component with inline `signin`/`signup` mode toggling — no page navigation between login and signup, so the `?redirect=` query param is preserved during mode switches. On sign-in failure, prompts to sign up with email pre-filled; on duplicate-email signup, prompts to sign in. Login and signup pages are thin wrappers that just pass `initialMode`. Challenge links route to `/login` (not `/signup`) since recipients usually already have accounts.
+- **OAuth callback — middleware exclusion:** The `/callback` route is explicitly excluded from the middleware matcher in `middleware.ts`. Without this, the middleware calls `getSession()` on the callback request, which triggers Supabase's `_recoverAndRefresh()` → `_removeSession()` chain, deleting all cookies with the session storage key prefix — **including the PKCE code verifier** — before the Route Handler can exchange it. This must stay excluded.
+- **OAuth callback — server-side Route Handler:** `app/(auth)/callback/route.ts` uses `createServerClient` directly (bound to the redirect response's cookie setter) to exchange the PKCE code for a session. A client-side callback page does NOT work because `createBrowserClient` auto-runs `_recoverAndRefresh()` during client creation, which deletes the code verifier before `exchangeCodeForSession` can read it.
+- **OAuth redirect preservation (three layers):** (1) `?next=` query param on the callback URL — fast path, can be stripped by Supabase during multi-hop. (2) `ma-oauth-redirect` cookie set before OAuth — server-side fallback. (3) `sessionStorage` written by `GoogleOAuthButton` and read by `OAuthRedirectGuard` in the `(app)` layout — bulletproof client-side fallback that catches cases where the server-side redirect fell back to `/dashboard`.
+- **OAuth and custom domains:** Supabase validates the OAuth `redirectTo` against its configured Redirect URLs. If the current domain isn't whitelisted, Supabase redirects to the Site URL instead, causing a domain mismatch where the PKCE code verifier cookie (set on the original domain) can't be read on the callback domain. **Every domain the app runs on must be added to Supabase's Redirect URLs.**
 - **Admin client typing:** The Supabase admin client (`lib/supabase/admin.ts`) is untyped (no DB generics). Use `(admin as any).from('table')` for operations on columns not in the generated types (e.g., `email_verified`).
 
 ### Elo Tiers
@@ -161,3 +178,6 @@ Each tier has 3 divisions (I, II, III). `lib/ranks.ts` provides `getRank(elo)` r
 - **New route returns 500 for unauthenticated users:** Add the route to `protectedPaths` in `lib/supabase/middleware.ts`.
 - **Infinite re-renders on dashboard or navbar:** Likely a `createClient()` call outside `useMemo` being used as a `useEffect` dependency. Wrap in `useMemo`.
 - **Theme flash on load:** Ensure the inline script in `app/layout.tsx` runs before React hydration. It reads localStorage and sets `class`/`data-accent` on `<html>` synchronously.
+- **`PKCE code verifier not found in storage` on OAuth callback:** Almost always a domain mismatch. The OAuth flow started on one domain (e.g. `mathsarena.com`) but Supabase redirected the callback to a different domain (e.g. `matharena-ecru.vercel.app`) because the first domain isn't in the Supabase Redirect URLs whitelist. Add every domain + `/**` to **Auth > URL Configuration > Redirect URLs** in the Supabase dashboard. Also verify `/callback` is excluded from the middleware matcher in `middleware.ts` — if not, the middleware's `getSession()` call will clear the verifier cookie.
+- **OAuth sign-in redirects to `/dashboard` instead of the challenge:** Either Supabase stripped the `?next=` param AND the cookie was lost. Check that (1) the domain is in Supabase Redirect URLs, (2) `/callback` is excluded from middleware, (3) `OAuthRedirectGuard` is mounted in the `(app)` layout. The guard reads `ma-pending-redirect` from `sessionStorage` as a last-resort fallback.
+- **Google sign-in makes the user sign in twice:** A symptom of the PKCE code verifier being deleted between `signInWithOAuth` and `exchangeCodeForSession`. First attempt fails silently → redirects to login. Second attempt succeeds because both OAuth start and callback happen on the same domain. Fix the domain mismatch (see above).
