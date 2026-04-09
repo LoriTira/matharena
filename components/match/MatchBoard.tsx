@@ -156,11 +156,18 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         | undefined;
 
       if (isCorrect) {
-        // Show next problem immediately — don't wait for API
         feedbackFn?.(true);
         setStreak((prev) => prev + 1);
-        setCurrentProblemIndex((prev) => prev + 1);
-        isSubmittingRef.current = false;
+
+        const isPlayer1 = match.player1_id === user?.id;
+        const myScore = isPlayer1 ? match.player1_score : match.player2_score;
+        const isWinningAnswer = myScore + 1 >= match.target_score;
+
+        if (!isWinningAnswer) {
+          // Show next problem immediately — don't wait for API
+          setCurrentProblemIndex((prev) => prev + 1);
+          isSubmittingRef.current = false;
+        }
 
         // Fire API in background
         submitAnswer(currentProblemIndex, answer).then((result) => {
@@ -172,6 +179,8 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
             }
             refetchMatch();
           }
+        }).finally(() => {
+          isSubmittingRef.current = false;
         });
         return;
       }
