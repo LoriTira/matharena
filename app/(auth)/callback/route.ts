@@ -1,14 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getValidRedirect } from '@/lib/auth/redirect';
 
-function redirectAndClearCookie(url: string) {
-  const response = NextResponse.redirect(url);
-  response.cookies.set('ma-oauth-redirect', '', { path: '/', maxAge: 0 });
-  return response;
-}
-
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   let next = getValidRedirect(searchParams.get('next'));
@@ -23,7 +17,36 @@ export async function GET(request: Request) {
   }
 
   if (code) {
-    const supabase = await createClient();
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const isLocalEnv = process.env.NODE_ENV === 'development';
+    const baseUrl = isLocalEnv
+      ? origin
+      : forwardedHost
+        ? `https://${forwardedHost}`
+        : origin;
+
+    // Create the redirect response FIRST, then create the Supabase client
+    // with this response's cookie setter so session cookies land on the redirect
+    const response = NextResponse.redirect(`${baseUrl}${next}`);
+    response.cookies.set('ma-oauth-redirect', '', { path: '/', maxAge: 0 });
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      }
+    );
+
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       // Google OAuth users have verified emails — mark them as such
@@ -35,17 +58,11 @@ export async function GET(request: Request) {
         await (admin as any).from('profiles').update({ email_verified: true }).eq('id', user.id);
       }
 
-      const forwardedHost = request.headers.get('x-forwarded-host');
-      const isLocalEnv = process.env.NODE_ENV === 'development';
-      if (isLocalEnv) {
-        return redirectAndClearCookie(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return redirectAndClearCookie(`https://${forwardedHost}${next}`);
-      } else {
-        return redirectAndClearCookie(`${origin}${next}`);
-      }
+      return response;
     }
   }
 
-  return redirectAndClearCookie(`${origin}/login?error=auth`);
+  const errorResponse = NextResponse.redirect(`${origin}/login?error=auth`);
+  errorResponse.cookies.set('ma-oauth-redirect', '', { path: '/', maxAge: 0 });
+  return errorResponse;
 }
