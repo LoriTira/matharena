@@ -209,7 +209,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
           </button>
         ) : (
           <Link
-            href={`/signup?redirect=/challenge/${code}/accept`}
+            href={`/login?redirect=/challenge/${code}/accept`}
             className="inline-block px-12 py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
           >
             ACCEPT CHALLENGE
