@@ -12,6 +12,7 @@ async function sendEmailNotification(
   senderId: string,
   recipientId: string,
   challengeCode: string,
+  appUrl: string,
 ) {
   try {
     // Get sender profile for their display name
@@ -40,7 +41,7 @@ async function sendEmailNotification(
       return;
     }
 
-    const challengeUrl = `https://mathsarena.com/challenge/${challengeCode}`;
+    const challengeUrl = `${appUrl}/challenge/${challengeCode}`;
     await sendChallengeEmail({
       to: recipientEmail,
       challengerName: senderName,
@@ -87,6 +88,7 @@ export async function POST(request: Request) {
       }
     }
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host') || 'mathsarena.com'}`;
     const code = generateCode();
 
     const insertData: Record<string, unknown> = {
@@ -130,7 +132,7 @@ export async function POST(request: Request) {
 
         // Send email notification for direct (non-rematch) challenges — must await in serverless
         if (recipientId && !isRematch) {
-          await sendEmailNotification(supabase, user.id, recipientId, retry.code);
+          await sendEmailNotification(supabase, user.id, recipientId, retry.code, appUrl);
         }
 
         return NextResponse.json({
@@ -145,7 +147,7 @@ export async function POST(request: Request) {
     // Send email notification for direct (non-rematch) challenges — must await in serverless
     if (recipientId && !isRematch) {
       console.log('Sending challenge email to recipient:', recipientId);
-      await sendEmailNotification(supabase, user.id, recipientId, challenge.code);
+      await sendEmailNotification(supabase, user.id, recipientId, challenge.code, appUrl);
     } else {
       console.log('Skipping email:', { recipientId: !!recipientId, isRematch });
     }

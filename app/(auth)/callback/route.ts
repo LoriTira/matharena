@@ -9,22 +9,21 @@ export async function GET(request: NextRequest) {
 
   // Cookie fallback: OAuth multi-hop can lose the ?next= query param
   if (next === '/dashboard') {
-    const cookieHeader = request.headers.get('cookie') || '';
-    const match = cookieHeader.match(/ma-oauth-redirect=([^;]+)/);
-    if (match) {
-      next = getValidRedirect(decodeURIComponent(match[1]));
+    const oauthCookie = request.cookies.get('ma-oauth-redirect')?.value;
+    if (oauthCookie) {
+      next = getValidRedirect(decodeURIComponent(oauthCookie));
     }
   }
 
-  if (code) {
-    const forwardedHost = request.headers.get('x-forwarded-host');
-    const isLocalEnv = process.env.NODE_ENV === 'development';
-    const baseUrl = isLocalEnv
-      ? origin
-      : forwardedHost
-        ? `https://${forwardedHost}`
-        : origin;
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const isLocalEnv = process.env.NODE_ENV === 'development';
+  const baseUrl = isLocalEnv
+    ? origin
+    : forwardedHost
+      ? `https://${forwardedHost}`
+      : origin;
 
+  if (code) {
     // Create the redirect response FIRST, then create the Supabase client
     // with this response's cookie setter so session cookies land on the redirect
     const response = NextResponse.redirect(`${baseUrl}${next}`);
@@ -62,7 +61,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const errorResponse = NextResponse.redirect(`${origin}/login?error=auth`);
-  errorResponse.cookies.set('ma-oauth-redirect', '', { path: '/', maxAge: 0 });
-  return errorResponse;
+  // Error: redirect to login WITH the intended destination so the user
+  // doesn't lose it on retry. Do NOT clear the oauth-redirect cookie —
+  // the next attempt needs it.
+  const loginUrl = new URL('/login', baseUrl);
+  if (next !== '/dashboard') {
+    loginUrl.searchParams.set('redirect', next);
+  }
+  return NextResponse.redirect(loginUrl.toString());
 }

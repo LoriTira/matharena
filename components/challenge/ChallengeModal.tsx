@@ -65,7 +65,8 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
         return;
       }
 
-      setChallengeUrl(`https://mathsarena.com${data.url}`);
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      setChallengeUrl(`${appUrl}${data.url}`);
     } catch {
       setError('Failed to create challenge');
     }
