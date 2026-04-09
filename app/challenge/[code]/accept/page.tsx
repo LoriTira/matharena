@@ -21,6 +21,9 @@ export default function ChallengeAcceptPage({ params }: { params: Promise<{ code
       return;
     }
 
+    // Clear OAuth redirect guard — we reached the intended destination
+    try { sessionStorage.removeItem('ma-pending-redirect'); } catch {}
+
     if (attemptedRef.current) return;
     attemptedRef.current = true;
 

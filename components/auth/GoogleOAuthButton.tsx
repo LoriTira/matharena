@@ -10,8 +10,10 @@ export function GoogleOAuthButton({ redirect, label = 'Continue with Google' }: 
   const handleGoogleLogin = async () => {
     setLoading(true);
 
-    // Store redirect as cookie fallback — OAuth multi-hop can lose query params
+    // Store redirect in sessionStorage (survives OAuth redirect chain reliably)
+    // and as cookie fallback for the server-side callback route
     if (redirect) {
+      try { sessionStorage.setItem('ma-pending-redirect', redirect); } catch {}
       document.cookie = `ma-oauth-redirect=${encodeURIComponent(redirect)}; path=/; max-age=300; SameSite=Lax`;
     }
 
