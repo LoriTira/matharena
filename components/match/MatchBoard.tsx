@@ -143,48 +143,45 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   }, [match?.player1_score, match?.player2_score, match?.player1_id, match?.status, user?.id]);
 
   const handleSubmit = useCallback(
-    async (answer: number) => {
+    (answer: number) => {
       if (!match || match.status !== 'active' || isSubmittingRef.current) return;
       isSubmittingRef.current = true;
 
-      try {
-        const result = await submitAnswer(currentProblemIndex, answer);
+      const problems = match.problems as { operand1: number; operand2: number; operation: string; answer: number }[];
+      const problem = problems[currentProblemIndex];
+      const isCorrect = answer === problem?.answer;
 
-        const feedbackFn = (window as unknown as Record<string, unknown>).__answerInputFeedback as
-          | ((correct: boolean) => void)
-          | undefined;
+      const feedbackFn = (window as unknown as Record<string, unknown>).__answerInputFeedback as
+        | ((correct: boolean) => void)
+        | undefined;
 
-        // Server error (e.g. match already completed by opponent)
-        if (result.error) {
-          refetchMatch();
-          return;
-        }
-
-        // Correct answer that completed the match (we won)
-        if (result.correct && result.matchStatus === 'completed') {
-          feedbackFn?.(true);
-          setStreak((prev) => prev + 1);
-          if (result.newAchievements && result.newAchievements.length > 0) {
-            setNewAchievements(result.newAchievements);
-          }
-          refetchMatch();
-          return;
-        }
-
-        // Normal correct answer
-        if (result.correct) {
-          feedbackFn?.(true);
-          setStreak((prev) => prev + 1);
-          setCurrentProblemIndex((prev) => prev + 1);
-          return;
-        }
-
-        // Wrong answer
-        feedbackFn?.(false);
-        setStreak(0);
-      } finally {
+      if (isCorrect) {
+        // Show next problem immediately — don't wait for API
+        feedbackFn?.(true);
+        setStreak((prev) => prev + 1);
+        setCurrentProblemIndex((prev) => prev + 1);
         isSubmittingRef.current = false;
+
+        // Fire API in background
+        submitAnswer(currentProblemIndex, answer).then((result) => {
+          if (result.error) {
+            refetchMatch();
+          } else if (result.matchStatus === 'completed') {
+            if (result.newAchievements && result.newAchievements.length > 0) {
+              setNewAchievements(result.newAchievements);
+            }
+            refetchMatch();
+          }
+        });
+        return;
       }
+
+      // Wrong answer — show feedback immediately, record in background
+      feedbackFn?.(false);
+      setStreak(0);
+      submitAnswer(currentProblemIndex, answer).finally(() => {
+        isSubmittingRef.current = false;
+      });
     },
     [match, currentProblemIndex, submitAnswer, refetchMatch]
   );
@@ -403,13 +400,13 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
         </div>
 
         {/* 5D: Problem slide transitions */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={currentProblemIndex}
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            transition={{ duration: 0.15, ease: 'easeInOut' }}
           >
             <ProblemDisplay
               operand1={currentProblem.operand1}

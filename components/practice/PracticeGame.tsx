@@ -82,7 +82,7 @@ export function PracticeGame({
 
       {/* Problem display with slide transition */}
       <div className={shaking ? 'animate-shake' : ''}>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           {currentProblem && (
             <motion.div
               key={problemCount}
@@ -90,7 +90,7 @@ export function PracticeGame({
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ type: 'spring', stiffness: 300, damping: 30, duration: 0.25 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 35, duration: 0.15 }}
             >
               <ProblemDisplay
                 operand1={currentProblem.operand1}
