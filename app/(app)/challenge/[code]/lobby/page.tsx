@@ -27,7 +27,7 @@ function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready:
           {ready ? 'READY' : 'WAITING'}
         </span>
       </div>
-      <div className="font-serif text-lg text-ink mb-1">
+      <div className="font-serif text-lg text-ink mb-1 truncate">
         {profile.display_name || profile.username}
       </div>
       <div className="font-mono text-sm text-ink-muted mb-3">
