@@ -196,10 +196,10 @@ export default function MatchAnalysisPage({ params }: { params: Promise<{ matchI
       {/* Header */}
       <div>
         <Link
-          href="/dashboard"
+          href={`/play/${matchId}`}
           className="text-[12px] text-ink-faint hover:text-ink-tertiary transition-colors"
         >
-          &larr; Dashboard
+          &larr; Back to results
         </Link>
         <h1 className="font-serif text-2xl text-ink mt-2">Game Analysis</h1>
       </div>
