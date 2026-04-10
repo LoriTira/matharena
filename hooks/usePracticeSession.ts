@@ -115,17 +115,15 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
 
     const currentStats = statsRef.current;
     const currentConfig = configRef.current;
-
-    const prevBest = personalBest;
-    setPreviousBest(prevBest);
     const score = currentStats.correct;
-    const isNewPB = prevBest === null || score > prevBest;
-    setIsNewPersonalBest(isNewPB);
-    if (isNewPB) setPersonalBest(score);
+
+    // Clear any stale PB flag from a previous session. The server is
+    // authoritative and will set it below once the session is saved.
+    setIsNewPersonalBest(false);
+    setPreviousBest(null);
 
     setPhase('finished');
 
-    // Save to DB
     try {
       const res = await fetch('/api/practice/session', {
         method: 'POST',
@@ -147,14 +145,20 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
         if (data.session) {
           setSessionHistory((prev) => [data.session, ...prev].slice(0, 10));
         }
+        if (data.previousBest !== undefined) {
+          setPreviousBest(data.previousBest);
+        }
+        if (typeof data.isNewPB === 'boolean') {
+          setIsNewPersonalBest(data.isNewPB);
+        }
         if (data.personalBest !== undefined) {
           setPersonalBest(data.personalBest);
         }
       }
     } catch {
-      // silently fail
+      // silently fail — if we can't save, we also can't award a PB.
     }
-  }, [personalBest]);
+  }, []);
 
   const startSession = useCallback(() => {
     setStats({ correct: 0, wrong: 0, streak: 0, bestStreak: 0, operationBreakdown: {} });

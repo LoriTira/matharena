@@ -95,6 +95,19 @@ export async function POST(request: Request) {
 
     const { duration, operations, config, score, correctCount, wrongCount, bestStreak, operationBreakdown } = parsed.data;
 
+    // Query the prior best BEFORE inserting. This is the authoritative
+    // snapshot used to decide whether this run is a new PB.
+    const { data: prevBestData } = await supabase
+      .from('practice_sessions')
+      .select('score')
+      .eq('user_id', user.id)
+      .eq('duration', duration)
+      .order('score', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const previousBest: number | null = prevBestData?.score ?? null;
+
     const { data: inserted, error: insertError } = await supabase
       .from('practice_sessions')
       .insert({
@@ -116,19 +129,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to save session' }, { status: 500 });
     }
 
-    // Get updated personal best
-    const { data: bestData } = await supabase
-      .from('practice_sessions')
-      .select('score')
-      .eq('user_id', user.id)
-      .eq('duration', duration)
-      .order('score', { ascending: false })
-      .limit(1)
-      .single();
+    const isNewPB = previousBest === null || score > previousBest;
+    const personalBest = isNewPB ? score : previousBest;
 
     return NextResponse.json({
       session: inserted,
-      personalBest: bestData?.score ?? score,
+      previousBest,
+      personalBest,
+      isNewPB,
     });
   } catch (error) {
     console.error('Practice session POST error:', error);
