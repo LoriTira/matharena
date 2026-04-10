@@ -86,7 +86,10 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     const tick = () => {
       const remainingMs = startMs - Date.now();
       if (remainingMs > 0) {
-        setCountdownValue(Math.ceil(remainingMs / 1000));
+        // Cap at 3 so the classic "3, 2, 1, GO!" is visible even to the fast
+        // client who arrives with 4+ seconds still on the clock. Both clients
+        // converge to the same value once remaining drops below 3000ms.
+        setCountdownValue(Math.min(3, Math.ceil(remainingMs / 1000)));
       } else if (remainingMs > -400) {
         // Brief GO! flash as we cross zero.
         setCountdownValue('GO!');

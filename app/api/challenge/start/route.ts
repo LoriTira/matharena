@@ -14,8 +14,10 @@ const STALE_THRESHOLD_MS = 15_000;
 // Schedule the match start this many ms in the future so both clients have time to
 // navigate and render the match board before the countdown hits zero. Both clients
 // read the same absolute started_at and drive their countdown off of it, so they
-// begin playing at the same wall-clock moment (±local clock skew).
-const START_DELAY_MS = 3_000;
+// begin playing at the same wall-clock moment (±local clock skew). Budget generously
+// — the slower client needs time for Realtime delivery + navigation + hydration +
+// useMatch roundtrip before the MatchBoard mounts and the countdown UI kicks in.
+const START_DELAY_MS = 5_000;
 
 export async function POST(request: Request) {
   try {
@@ -83,12 +85,16 @@ export async function POST(request: Request) {
     const bothReady = senderOnline && recipientOnline;
     const opponentReady = isSender ? recipientOnline : senderOnline;
 
-    // Step 4: If challenge already has a match, handle based on status
-    if (fresh.match_id) {
+    // Step 4: If challenge already has a match, handle based on status.
+    // matchIdLinked tracks whether the challenge still points at a usable match
+    // after this step — abandoned matches get unlinked so the code can fall
+    // through to Step 5 and create a fresh match.
+    let matchIdLinked: string | null = fresh.match_id;
+    if (matchIdLinked) {
       const { data: existingMatch } = await supabase
         .from('matches')
         .select('id, status')
-        .eq('id', fresh.match_id)
+        .eq('id', matchIdLinked)
         .single();
 
       if (existingMatch) {
@@ -96,8 +102,20 @@ export async function POST(request: Request) {
           return NextResponse.json({ matchId: existingMatch.id, status: existingMatch.status });
         }
 
+        // Abandoned match — unlink it from the challenge so a fresh match can
+        // be created below. This lets players rejoin a challenge they exited
+        // by mistake (e.g. accidental forfeit, closed tab + stale-timeout).
+        if (existingMatch.status === 'abandoned') {
+          await supabase
+            .from('challenges')
+            .update({ match_id: null })
+            .eq('id', challenge.id)
+            .eq('match_id', existingMatch.id);
+          matchIdLinked = null;
+        }
+
         // Stale waiting match (from old code path) — activate if both ready
-        if (existingMatch.status === 'waiting' && bothReady) {
+        else if (existingMatch.status === 'waiting' && bothReady) {
           const [{ data: sp }, { data: rp }] = await Promise.all([
             supabase.from('profiles').select('elo_rating').eq('id', challenge.sender_id).single(),
             supabase.from('profiles').select('elo_rating').eq('id', challenge.recipient_id).single(),
@@ -130,8 +148,12 @@ export async function POST(request: Request) {
         }
       }
 
-      // Match exists but not both ready, or activation failed
-      return NextResponse.json({ status: 'waiting', myReady: true, opponentReady });
+      // Match exists and is still linked but not playable yet — wait.
+      // (Skip this return if the abandoned-match branch cleared the link — in
+      // that case we fall through to Step 5 to create a fresh match.)
+      if (matchIdLinked) {
+        return NextResponse.json({ status: 'waiting', myReady: true, opponentReady });
+      }
     }
 
     // Step 5: No match yet — if not both ready, just wait
