@@ -39,7 +39,11 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect unauthenticated users to login for protected routes
   const protectedPaths = ['/dashboard', '/play', '/practice', '/lessons', '/profile', '/daily', '/onboarding'];
-  const isProtected = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
+  // Auth-required sub-routes under /challenge/[code] (landing page /challenge/[code] stays public)
+  const protectedChallengePattern = /^\/challenge\/[^/]+\/lobby(?:\/|$)/;
+  const isProtected =
+    protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path)) ||
+    protectedChallengePattern.test(request.nextUrl.pathname);
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();

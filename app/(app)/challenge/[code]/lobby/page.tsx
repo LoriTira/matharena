@@ -71,10 +71,9 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   useEffect(() => {
     if (authLoading) return;
 
-    if (!user) {
-      router.push(`/login?redirect=/challenge/${code}/lobby`);
-      return;
-    }
+    // Middleware guarantees an authenticated session reaches this page.
+    // If useAuth hasn't reconciled yet, stay in the loading state — don't self-redirect.
+    if (!user) return;
 
     const fetchChallenge = async () => {
       const { data, error: fetchError } = await supabase

@@ -10,22 +10,31 @@ export function useAuth() {
   const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    let mounted = true;
+    let initialResolved = false;
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!mounted) return;
+      initialResolved = true;
       setUser(user);
       setLoading(false);
-    };
-
-    getUser();
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        // INITIAL_SESSION fires synchronously on subscribe and can carry a stale/null
+        // session before cookie hydration is done — defer to getUser() for the baseline.
+        if (event === 'INITIAL_SESSION' && !initialResolved) return;
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { user, loading };
