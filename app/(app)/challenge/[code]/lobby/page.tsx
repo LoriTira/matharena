@@ -140,6 +140,19 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     fetchChallenge();
   }, [code, user, authLoading, router, supabase]);
 
+  // Navigate to the match — shared by polling and realtime discovery paths.
+  // Guarded by navigatingToMatchRef so we never double-redirect if both fire.
+  const navigateToMatch = useCallback((matchId: string) => {
+    if (navigatingToMatchRef.current) return;
+    navigatingToMatchRef.current = true;
+    setMyReady(true);
+    setOpponentReady(true);
+    setStarting(true);
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    router.replace(`/play/${matchId}`);
+  }, [router]);
+
   // Call /api/challenge/start — handles both stages:
   // First player: creates waiting match. Second player: activates it.
   // Same player calling again: returns current status without change.
@@ -169,13 +182,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       if (connectionError) setConnectionError(false);
 
       if (data.status === 'active') {
-        setMyReady(true);
-        setOpponentReady(true);
-        setStarting(true);
-        navigatingToMatchRef.current = true;
-        if (pollRef.current) clearInterval(pollRef.current);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        router.replace(`/play/${data.matchId}`);
+        navigateToMatch(data.matchId);
         return;
       }
 
@@ -187,9 +194,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
       if (data.error && res.status === 409) {
         // Already in an active match — redirect to it instead of dead-end error
         if (data.matchId) {
-          if (pollRef.current) clearInterval(pollRef.current);
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          router.replace(`/play/${data.matchId}`);
+          navigateToMatch(data.matchId);
           return;
         }
         setError(data.error);
@@ -203,7 +208,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     } finally {
       isPollingRef.current = false;
     }
-  }, [code, router, connectionError]);
+  }, [code, router, connectionError, navigateToMatch]);
 
   const startPolling = useCallback(() => {
     consecutiveErrorsRef.current = 0;
@@ -273,6 +278,47 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [challenge, user, starting, callStart]);
+
+  // Realtime: subscribe to this challenge's row so both clients learn about the
+  // match_id update within ~100-300ms (instead of waiting up to 2s for the next
+  // poll tick). The 2s polling loop above is kept as a fallback for clients
+  // where Realtime is flaky — both paths funnel through navigateToMatch, which
+  // is guarded by navigatingToMatchRef to prevent double-redirect.
+  useEffect(() => {
+    if (!challenge || !user || starting) return;
+
+    const channel = supabase
+      .channel(`challenge-lobby:${challenge.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'challenges',
+          filter: `id=eq.${challenge.id}`,
+        },
+        async (payload) => {
+          const next = payload.new as { match_id: string | null };
+          if (!next.match_id || navigatingToMatchRef.current) return;
+
+          // Guard against stale / abandoned matches — fetch current status.
+          const { data: match } = await supabase
+            .from('matches')
+            .select('id, status')
+            .eq('id', next.match_id)
+            .single();
+
+          if (match && (match.status === 'active' || match.status === 'completed')) {
+            navigateToMatch(match.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [challenge, user, starting, supabase, navigateToMatch]);
 
   if (loading || authLoading) {
     return (

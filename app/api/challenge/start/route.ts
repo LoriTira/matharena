@@ -11,6 +11,12 @@ const startSchema = z.object({
 // A player is considered "in the lobby" if their heartbeat is < 15s old
 const STALE_THRESHOLD_MS = 15_000;
 
+// Schedule the match start this many ms in the future so both clients have time to
+// navigate and render the match board before the countdown hits zero. Both clients
+// read the same absolute started_at and drive their countdown off of it, so they
+// begin playing at the same wall-clock moment (±local clock skew).
+const START_DELAY_MS = 3_000;
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -112,7 +118,7 @@ export async function POST(request: Request) {
                 player1_elo_before: sp.elo_rating,
                 player2_elo_before: rp.elo_rating,
                 target_score: GAME_CONFIG.TARGET_SCORE,
-                started_at: new Date().toISOString(),
+                started_at: new Date(Date.now() + START_DELAY_MS).toISOString(),
               })
               .eq('id', existingMatch.id)
               .eq('status', 'waiting');
@@ -197,7 +203,7 @@ export async function POST(request: Request) {
         target_score: GAME_CONFIG.TARGET_SCORE,
         player1_elo_before: senderProfile.elo_rating,
         player2_elo_before: recipientProfile.elo_rating,
-        started_at: new Date().toISOString(),
+        started_at: new Date(Date.now() + START_DELAY_MS).toISOString(),
       })
       .select('id')
       .single();

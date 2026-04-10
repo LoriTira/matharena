@@ -15,7 +15,9 @@ export function useTimer(startTime: string | null, isRunning: boolean) {
     const start = new Date(startTime).getTime();
 
     const tick = () => {
-      setElapsed(Math.floor((Date.now() - start) / 1000));
+      // Clamp to 0 — started_at may be scheduled slightly in the future while
+      // the pre-match countdown is still running; don't show negative time.
+      setElapsed(Math.max(0, Math.floor((Date.now() - start) / 1000)));
     };
 
     tick();

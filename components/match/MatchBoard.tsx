@@ -30,8 +30,8 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [player1Profile, setPlayer1Profile] = useState<Profile | null>(null);
   const [player2Profile, setPlayer2Profile] = useState<Profile | null>(null);
-  const [showCountdown, setShowCountdown] = useState(true);
-  const [countdownValue, setCountdownValue] = useState<number | string | null>(3);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [countdownValue, setCountdownValue] = useState<number | string | null>(null);
   const [streak, setStreak] = useState(0);
   const [matchStats, setMatchStats] = useState<MatchStats | null>(null);
   const [newAchievements, setNewAchievements] = useState<{ id: string; name: string; description: string; icon: string; rarity: string }[]>([]);
@@ -65,27 +65,41 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     fetchProfiles();
   }, [match?.player1_id, match?.player2_id]);
 
-  // 5A: Countdown timer effect
+  // Countdown driven by the server's scheduled started_at.
+  // Both clients compute the same absolute target from match.started_at, so they
+  // visually count down in lock-step (modulo local clock skew). Clients arriving
+  // after started_at skip the countdown entirely and drop straight into play.
   useEffect(() => {
-    if (!showCountdown || match?.status !== 'active') return;
+    if (!match || match.status !== 'active' || !match.started_at) return;
 
-    const sequence: (number | string)[] = [3, 2, 1, 'GO!'];
-    let step = 0;
-    setCountdownValue(sequence[step]);
+    const startMs = new Date(match.started_at).getTime();
 
-    const interval = setInterval(() => {
-      step += 1;
-      if (step < sequence.length) {
-        setCountdownValue(sequence[step]);
+    // Late arrival — match already started, skip the countdown UI.
+    if (Date.now() >= startMs) {
+      setShowCountdown(false);
+      setCountdownValue(null);
+      return;
+    }
+
+    setShowCountdown(true);
+
+    const tick = () => {
+      const remainingMs = startMs - Date.now();
+      if (remainingMs > 0) {
+        setCountdownValue(Math.ceil(remainingMs / 1000));
+      } else if (remainingMs > -400) {
+        // Brief GO! flash as we cross zero.
+        setCountdownValue('GO!');
       } else {
-        clearInterval(interval);
         setShowCountdown(false);
         setCountdownValue(null);
       }
-    }, 800);
+    };
 
+    tick();
+    const interval = setInterval(tick, 100);
     return () => clearInterval(interval);
-  }, [showCountdown, match?.status]);
+  }, [match?.status, match?.started_at]);
 
   // Fetch match events on completion to compute performance stats
   useEffect(() => {
@@ -425,7 +439,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
           </motion.div>
         </AnimatePresence>
 
-        <AnswerInput onSubmit={handleSubmit} disabled={match.status !== 'active'} />
+        <AnswerInput onSubmit={handleSubmit} disabled={match.status !== 'active' || showCountdown} />
       </div>
     </div>
   );
