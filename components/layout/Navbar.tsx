@@ -9,6 +9,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { ThemeSettings } from '@/components/layout/ThemeSettings';
+import { SearchButton } from '@/components/layout/SearchButton';
+import { FriendRequestBadge } from '@/components/layout/FriendRequestBadge';
+import { UserSearchModal } from '@/components/search/UserSearchModal';
+import { useFriendships } from '@/hooks/useFriendships';
 
 // ─── Nav structure ────────────────────────────────────────
 const NAV_GROUPS = [
@@ -40,8 +44,10 @@ export function Navbar() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const { unread_count } = useFriendships();
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
 
   // Fetch profile username
@@ -134,6 +140,9 @@ export function Navbar() {
                         RANKINGS
                       </Link>
 
+                      {/* Global user search (⌘K) */}
+                      <SearchButton onOpen={() => setSearchOpen(true)} />
+
                       {/* Challenge CTA */}
                       <button
                         onClick={() => setChallengeModalOpen(true)}
@@ -150,9 +159,11 @@ export function Navbar() {
                         align="right"
                         trigger={
                           <div className="flex items-center gap-2 cursor-pointer group">
-                            <div className="w-7 h-7 rounded-full border border-edge-strong flex items-center justify-center text-[11px] text-ink-secondary group-hover:border-edge-strong transition-colors">
-                              {avatarInitial}
-                            </div>
+                            <FriendRequestBadge count={unread_count}>
+                              <div className="w-7 h-7 rounded-full border border-edge-strong flex items-center justify-center text-[11px] text-ink-secondary group-hover:border-edge-strong transition-colors">
+                                {avatarInitial}
+                              </div>
+                            </FriendRequestBadge>
                             {username && (
                               <span className="text-[11px] text-ink-tertiary group-hover:text-ink-secondary transition-colors hidden lg:inline">
                                 {username}
@@ -199,6 +210,9 @@ export function Navbar() {
             <div className="flex md:hidden items-center gap-3">
               {!loading && user && (
                 <>
+                  {/* Global user search */}
+                  <SearchButton onOpen={() => setSearchOpen(true)} />
+
                   {/* Challenge CTA — always visible on mobile */}
                   <button
                     onClick={() => setChallengeModalOpen(true)}
@@ -207,23 +221,25 @@ export function Navbar() {
                     CHALLENGE
                   </button>
 
-                  {/* Hamburger */}
-                  <button
-                    onClick={() => setMobileMenuOpen(true)}
-                    className="p-1.5 text-ink-tertiary hover:text-ink-secondary transition-colors"
-                    aria-label="Open menu"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                  {/* Hamburger (with friend-request badge overlay) */}
+                  <FriendRequestBadge count={unread_count}>
+                    <button
+                      onClick={() => setMobileMenuOpen(true)}
+                      className="p-1.5 text-ink-tertiary hover:text-ink-secondary transition-colors"
+                      aria-label="Open menu"
                     >
-                      <path d="M3 5H17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                      <path d="M3 10H17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                      <path d="M3 15H17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    </svg>
-                  </button>
+                      <svg
+                        className="w-5 h-5"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M3 5H17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                        <path d="M3 10H17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                        <path d="M3 15H17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </FriendRequestBadge>
                 </>
               )}
 
@@ -354,6 +370,11 @@ export function Navbar() {
       <ChallengeModal
         isOpen={challengeModalOpen}
         onClose={() => setChallengeModalOpen(false)}
+      />
+
+      <UserSearchModal
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
       />
     </>
   );

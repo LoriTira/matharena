@@ -34,6 +34,19 @@ export const GAME_CONFIG = {
   MATCH_ACCEPT_START_BUFFER_MS: 3_000,
 } as const;
 
+// ─── Social layer ──────────────────────────────
+// Friends, match history, user search. Kept separate from GAME_CONFIG so
+// "gameplay" knobs stay focused on gameplay.
+export const SOCIAL_CONFIG = {
+  MATCH_HISTORY_PAGE_SIZE: 20,
+  USER_SEARCH_DEBOUNCE_MS: 250,
+  USER_SEARCH_MIN_CHARS: 2,
+  USER_SEARCH_MAX_CHARS: 64,
+  USER_SEARCH_RESULT_LIMIT: 10,
+  FRIEND_REQUEST_RATE_LIMIT: 20,          // sends allowed per rolling window
+  FRIEND_REQUEST_RATE_WINDOW_MS: 3_600_000, // 1 hour
+} as const;
+
 export const TIER_RANGES = {
   beginner: {
     '+': { min: 1, max: 20 },

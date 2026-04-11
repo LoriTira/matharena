@@ -1,22 +1,42 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useMemo, useState, use } from 'react';
 import Link from 'next/link';
-import type { Profile } from '@/types';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useFriendships } from '@/hooks/useFriendships';
+import { Avatar } from '@/components/ui/Avatar';
+import { RankBadge } from '@/components/ui/RankBadge';
+import { MatchHistoryList } from '@/components/profile/MatchHistoryList';
+import { FriendActionButton } from '@/components/profile/FriendActionButton';
+import type { Profile, UserFriendshipState } from '@/types';
 
 interface PublicProfileProps {
   params: Promise<{ userId: string }>;
 }
 
+/**
+ * Public view of another user's profile. Shows core stats, an adaptive
+ * friend/challenge CTA, and a paginated match history. When the viewer is
+ * looking at their own id, redirect-ish affordance points back to the
+ * editable /profile page.
+ */
 export default function PublicProfilePage({ params }: PublicProfileProps) {
   const { userId } = use(params);
+  const { user } = useAuth();
+  const { friends, pending_incoming, pending_outgoing } = useFriendships();
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+
+  // Local optimistic override for the friendship state — falls back to the
+  // context-derived state until the Realtime refetch converges.
+  const [overrideState, setOverrideState] = useState<UserFriendshipState | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
+      setLoading(true);
       const { data } = await supabase
         .from('profiles')
         .select('*')
@@ -28,7 +48,24 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [userId, supabase]);
+
+  // Reset the local override whenever shared state changes (a realtime
+  // refetch has landed) so we don't stay stuck on a stale optimistic value.
+  useEffect(() => {
+    setOverrideState(null);
+  }, [friends, pending_incoming, pending_outgoing]);
+
+  const derivedState: UserFriendshipState = useMemo(() => {
+    if (!user) return 'none';
+    if (user.id === userId) return 'self';
+    if (friends.some((f) => f.id === userId)) return 'accepted';
+    if (pending_incoming.some((r) => r.id === userId)) return 'pending_incoming';
+    if (pending_outgoing.some((r) => r.id === userId)) return 'pending_outgoing';
+    return 'none';
+  }, [user, userId, friends, pending_incoming, pending_outgoing]);
+
+  const friendshipState = overrideState ?? derivedState;
 
   if (loading) {
     return (
@@ -60,19 +97,45 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
       </Link>
 
       <div className="border border-edge rounded-sm p-8">
-        <h1 className="font-serif text-3xl font-normal text-ink">{profile.display_name || profile.username}</h1>
-        <p className="text-ink-muted text-sm mt-1">@{profile.username}</p>
-        {profile.country && (
-          <p className="text-ink-secondary text-sm mt-3">
-            <span className="text-ink-faint">Country: </span>
-            {profile.country}
-          </p>
-        )}
-        {profile.affiliation && (
-          <p className="text-ink-secondary text-sm mt-1">
-            <span className="text-ink-faint capitalize">{profile.affiliation_type}: </span>
-            {profile.affiliation}
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <Avatar user={profile} size="lg" />
+            <div className="min-w-0">
+              <h1 className="font-serif text-3xl font-normal text-ink truncate">
+                {profile.display_name || profile.username}
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-ink-muted text-sm">@{profile.username}</p>
+                <RankBadge elo={profile.elo_rating} size="sm" />
+              </div>
+            </div>
+          </div>
+          {user && (
+            <div className="shrink-0">
+              <FriendActionButton
+                targetUserId={userId}
+                friendship={friendshipState}
+                onStateChange={setOverrideState}
+              />
+            </div>
+          )}
+        </div>
+
+        {(profile.country || profile.affiliation) && (
+          <div className="mt-4 space-y-1">
+            {profile.country && (
+              <p className="text-ink-secondary text-sm">
+                <span className="text-ink-faint">Country: </span>
+                {profile.country}
+              </p>
+            )}
+            {profile.affiliation && (
+              <p className="text-ink-secondary text-sm">
+                <span className="text-ink-faint capitalize">{profile.affiliation_type}: </span>
+                {profile.affiliation}
+              </p>
+            )}
+          </div>
         )}
       </div>
 
@@ -94,6 +157,12 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
           <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
         </div>
       </div>
+
+      <MatchHistoryList
+        userId={userId}
+        viewerId={user?.id ?? userId}
+        ownerLabel={(profile.display_name || profile.username || 'PLAYER').toUpperCase()}
+      />
     </div>
   );
 }
