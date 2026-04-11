@@ -14,6 +14,21 @@ export const GAME_CONFIG = {
   K_FACTOR_HIGH: 10,
   K_FACTOR_GAMES_THRESHOLD: 30,
   K_FACTOR_RATING_THRESHOLD: 2400,
+
+  // ─── Flow Sprint (warmup while searching) ───
+  // Warmup problems are generated one tier easier than the player's current Elo
+  // for maximum flow state. Pure dopamine — nothing persists.
+  WARMUP_DIFFICULTY_OFFSET: -200,
+  WARMUP_TIER_MILESTONES: [5, 10, 15, 25] as const,
+
+  // ─── Match accept flow ───
+  // Chess.com-style tap-to-accept after pairing.
+  MATCH_ACCEPT_TIMEOUT_MS: 10_000,
+  MATCH_DECLINE_COOLDOWN_MS: 30_000,
+  MATCH_PENDING_STALE_MS: 30_000,
+  // Buffer between "both accepted" and scheduled started_at so both clients
+  // have time to render the 3-2-1 countdown even if one accepts last-second.
+  MATCH_ACCEPT_START_BUFFER_MS: 3_000,
 } as const;
 
 export const TIER_RANGES = {
