@@ -1,6 +1,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import type {
+  FriendSummary,
+  FriendRequestSummary,
+  FriendsResponse,
+  Friendship,
+} from '@/types';
 
+/**
+ * Returns the current user's friendships bucketed by status and direction.
+ * Replaces the previous "derived from past matches" helper. The `friends` key
+ * shape is kept backwards-compatible with ChallengeModal.tsx (id, username,
+ * display_name, elo_rating, games_played, games_won).
+ */
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -10,51 +22,109 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get recent completed matches to find opponents
-    const { data: matches } = await supabase
-      .from('matches')
-      .select('player1_id, player2_id, completed_at')
-      .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-      .eq('status', 'completed')
-      .order('completed_at', { ascending: false })
-      .limit(50);
+    const { data: rows, error: rowsError } = await supabase
+      .from('friendships')
+      .select('user_a, user_b, status, requested_by, created_at, accepted_at')
+      .or(`user_a.eq.${user.id},user_b.eq.${user.id}`);
 
-    if (!matches || matches.length === 0) {
-      return NextResponse.json({ friends: [] });
+    if (rowsError) {
+      console.error('Friendships query error:', rowsError);
+      return NextResponse.json({ error: 'Failed to load friends' }, { status: 500 });
     }
 
-    // Extract unique opponent IDs, preserving most-recent-first order
-    const seen = new Set<string>();
-    const opponentIds: string[] = [];
-    for (const m of matches) {
-      const opId = m.player1_id === user.id ? m.player2_id : m.player1_id;
-      if (opId && !seen.has(opId)) {
-        seen.add(opId);
-        opponentIds.push(opId);
+    const friendships = (rows ?? []) as Friendship[];
+
+    // Collect the "other" id for each row — everything else is batch-fetched
+    // against profiles in a single IN query to stay fast.
+    const otherIds = Array.from(new Set(
+      friendships.map(f => (f.user_a === user.id ? f.user_b : f.user_a))
+    ));
+
+    let profileById = new Map<string, {
+      id: string;
+      username: string;
+      display_name: string | null;
+      avatar_url: string | null;
+      elo_rating: number;
+      games_played: number;
+      games_won: number;
+    }>();
+
+    if (otherIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, elo_rating, games_played, games_won')
+        .in('id', otherIds);
+
+      if (profiles) {
+        profileById = new Map(
+          (profiles as Array<{
+            id: string;
+            username: string;
+            display_name: string | null;
+            avatar_url: string | null;
+            elo_rating: number;
+            games_played: number;
+            games_won: number;
+          }>).map(p => [p.id, p])
+        );
       }
     }
 
-    if (opponentIds.length === 0) {
-      return NextResponse.json({ friends: [] });
+    const friends: FriendSummary[] = [];
+    const pending_incoming: FriendRequestSummary[] = [];
+    const pending_outgoing: FriendRequestSummary[] = [];
+
+    for (const f of friendships) {
+      const otherId = f.user_a === user.id ? f.user_b : f.user_a;
+      const profile = profileById.get(otherId);
+      if (!profile) continue;
+
+      if (f.status === 'accepted') {
+        friends.push({
+          id: profile.id,
+          username: profile.username,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          elo_rating: profile.elo_rating,
+          games_played: profile.games_played,
+          games_won: profile.games_won,
+          since: f.accepted_at,
+        });
+      } else if (f.requested_by === user.id) {
+        pending_outgoing.push({
+          id: profile.id,
+          username: profile.username,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          elo_rating: profile.elo_rating,
+          requested_at: f.created_at,
+        });
+      } else {
+        pending_incoming.push({
+          id: profile.id,
+          username: profile.username,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          elo_rating: profile.elo_rating,
+          requested_at: f.created_at,
+        });
+      }
     }
 
-    // Fetch profiles for these opponents
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, elo_rating, games_played, games_won')
-      .in('id', opponentIds);
+    // Sort: accepted by most-recent first, pending by most-recent first.
+    friends.sort((a, b) => (b.since ?? '').localeCompare(a.since ?? ''));
+    pending_incoming.sort((a, b) => b.requested_at.localeCompare(a.requested_at));
+    pending_outgoing.sort((a, b) => b.requested_at.localeCompare(a.requested_at));
 
-    if (!profiles) {
-      return NextResponse.json({ friends: [] });
-    }
+    const response: FriendsResponse = {
+      friends,
+      pending_incoming,
+      pending_outgoing,
+      unread_count: pending_incoming.length,
+    };
 
-    // Sort profiles by the order they appeared in matches (most recent first)
-    const profileMap = new Map(profiles.map(p => [p.id, p]));
-    const friends = opponentIds
-      .map(id => profileMap.get(id))
-      .filter(Boolean);
-
-    return NextResponse.json({ friends });
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Friends list error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

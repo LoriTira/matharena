@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { Profile, Challenge, UserAchievement } from '@/types';
+import type { Profile, UserAchievement } from '@/types';
 import { ACHIEVEMENTS } from '@/lib/achievements';
 import { AchievementBadge } from '@/components/ui/AchievementBadge';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { MatchHistoryList } from '@/components/profile/MatchHistoryList';
+import { FriendsSection } from '@/components/profile/FriendsSection';
+import { UserSearchModal } from '@/components/search/UserSearchModal';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -17,40 +20,10 @@ export default function ProfilePage() {
   const [affiliationType, setAffiliationType] = useState<'school' | 'company' | ''>('');
   const [country, setCountry] = useState('');
   const [saving, setSaving] = useState(false);
-  const [friends, setFriends] = useState<{ id: string; username: string; display_name: string | null; elo_rating: number }[]>([]);
-  const [rechallengingId, setRechallengingId] = useState<string | null>(null);
   const [earnedAchievementIds, setEarnedAchievementIds] = useState<Set<string>>(new Set());
   const [sprintPB, setSprintPB] = useState<number | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const supabase = createClient();
-
-  const fetchFriends = useCallback(async () => {
-    if (!user) return;
-    // Friends = unique opponents from completed challenges
-    const { data: completedChallenges } = await supabase
-      .from('challenges')
-      .select('sender_id, recipient_id')
-      .eq('status', 'completed')
-      .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
-
-    if (!completedChallenges || completedChallenges.length === 0) return;
-
-    const opponentIds = [...new Set(
-      (completedChallenges as Pick<Challenge, 'sender_id' | 'recipient_id'>[])
-        .map(c => c.sender_id === user.id ? c.recipient_id : c.sender_id)
-        .filter((id): id is string => id !== null)
-    )];
-
-    if (opponentIds.length === 0) return;
-
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, elo_rating')
-      .in('id', opponentIds);
-
-    if (profiles) {
-      setFriends(profiles as { id: string; username: string; display_name: string | null; elo_rating: number }[]);
-    }
-  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -73,7 +46,6 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-    fetchFriends();
 
     const fetchAchievements = async () => {
       try {
@@ -107,7 +79,7 @@ export default function ProfilePage() {
       }
     };
     fetchSprintPB();
-  }, [user, fetchFriends]);
+  }, [user]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -286,52 +258,11 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Friends */}
-      {friends.length > 0 && (
-        <div>
-          <div className="text-[11px] tracking-[3px] text-ink-faint mb-4">FRIENDS</div>
-          <div className="border border-edge-faint rounded-sm overflow-hidden">
-            {friends.map((friend) => (
-              <div
-                key={friend.id}
-                className="flex items-center justify-between px-5 py-3.5 border-b border-edge-faint last:border-b-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full border border-edge-strong flex items-center justify-center text-[11px] text-ink-secondary">
-                    {(friend.display_name || friend.username)[0]?.toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="text-[13px] text-ink-secondary">{friend.display_name || friend.username}</div>
-                    <div className="font-mono text-[11px] text-ink-faint">Elo {friend.elo_rating}</div>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    setRechallengingId(friend.id);
-                    try {
-                      const res = await fetch('/api/challenge/create', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ recipientId: friend.id }),
-                      });
-                      if (res.ok) {
-                        fetchFriends();
-                      }
-                    } catch {
-                      // silently fail
-                    }
-                    setRechallengingId(null);
-                  }}
-                  disabled={rechallengingId === friend.id}
-                  className="px-3 py-1.5 border border-edge text-ink-muted text-[12px] tracking-[1px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors disabled:opacity-50"
-                >
-                  {rechallengingId === friend.id ? 'SENDING...' : 'RE-CHALLENGE'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Match history */}
+      <MatchHistoryList userId={user!.id} viewerId={user!.id} />
+
+      {/* Friends & incoming requests */}
+      <FriendsSection onOpenSearch={() => setSearchOpen(true)} />
 
       {/* Trophy Case */}
       <div>
@@ -360,6 +291,8 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      <UserSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

@@ -104,6 +104,84 @@ export interface Challenge {
   expires_at: string;
 }
 
+// ─── Social layer ────────────────────────────────────
+
+export type FriendshipStatus = 'pending' | 'accepted';
+
+/**
+ * State of the friendship between the *viewer* and a target user. Used by
+ * FriendActionButton to render the right label/handler without the component
+ * needing to know anything about canonical pairs.
+ */
+export type UserFriendshipState =
+  | 'none'              // no row exists
+  | 'self'              // target === viewer
+  | 'pending_outgoing'  // viewer sent it, waiting on target
+  | 'pending_incoming'  // target sent it, viewer needs to accept
+  | 'accepted';         // accepted friends
+
+export interface Friendship {
+  user_a: string;
+  user_b: string;
+  status: FriendshipStatus;
+  requested_by: string;
+  created_at: string;
+  accepted_at: string | null;
+}
+
+/** Compact profile shape used throughout friends/search/match-history UIs. */
+export interface ProfileSnippet {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  elo_rating: number;
+}
+
+export interface FriendSummary extends ProfileSnippet {
+  games_played: number;
+  games_won: number;
+  since: string | null;
+}
+
+export interface FriendRequestSummary extends ProfileSnippet {
+  requested_at: string;
+}
+
+export interface FriendsResponse {
+  friends: FriendSummary[];
+  pending_incoming: FriendRequestSummary[];
+  pending_outgoing: FriendRequestSummary[];
+  unread_count: number;
+}
+
+export interface UserSearchResult extends ProfileSnippet {
+  friendship: {
+    status: UserFriendshipState;
+    requested_by: string | null;
+  };
+}
+
+export interface MatchHistoryItem {
+  match_id: string;
+  completed_at: string;
+  target_score: number;
+  opponent: ProfileSnippet | null;
+  viewer_score: number;
+  opponent_score: number;
+  result: 'win' | 'loss' | 'draw';
+  viewer_elo_before: number | null;
+  viewer_elo_after: number | null;
+  elo_delta: number;
+}
+
+export interface MatchHistoryResponse {
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  items: MatchHistoryItem[];
+}
+
 export interface AchievementDef {
   id: string;
   name: string;
