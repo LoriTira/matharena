@@ -49,16 +49,23 @@ export async function POST(request: Request) {
     // Read-then-write isn't atomic, but friend requests are single-user
     // actions that don't race with themselves meaningfully. Good enough for
     // the MVP "don't let one account send 500 requests in a minute" goal.
-    const admin = createAdminClient();
+    //
+    // The admin client has no Database generic in this project, so `.from()`
+    // returns `never` for both reads and writes. Matching the existing
+    // `createAdminClient() as any` pattern used elsewhere in app/api/.
+    type RateLimitRow = { window_start: string; count: number };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = createAdminClient() as any;
     const now = Date.now();
-    const { data: existing } = await admin
+    const rateQuery = await admin
       .from('friend_request_rate_limits')
       .select('window_start, count')
       .eq('user_id', user.id)
       .maybeSingle();
+    const existing = rateQuery.data as RateLimitRow | null;
 
-    const windowStart = existing?.window_start
-      ? new Date(existing.window_start as string).getTime()
+    const windowStart = existing
+      ? new Date(existing.window_start).getTime()
       : 0;
     const windowExpired =
       !existing || now - windowStart > SOCIAL_CONFIG.FRIEND_REQUEST_RATE_WINDOW_MS;
@@ -72,7 +79,7 @@ export async function POST(request: Request) {
       });
       effectiveCount = 1;
     } else {
-      effectiveCount = ((existing?.count as number) ?? 0) + 1;
+      effectiveCount = (existing?.count ?? 0) + 1;
       await admin
         .from('friend_request_rate_limits')
         .update({ count: effectiveCount })

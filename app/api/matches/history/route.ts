@@ -28,7 +28,25 @@ export async function GET(request: Request) {
     const from = page * pageSize;
     const to = from + pageSize; // inclusive upper bound → returns pageSize+1 rows
 
-    const { data: matches, error: matchError } = await supabase
+    // Explicit row shape — the Supabase generated types in this project
+    // don't include a Database generic, so the chained select/or here
+    // otherwise degrades to GenericStringError. Cast the result.
+    type MatchRow = {
+      id: string;
+      player1_id: string;
+      player2_id: string | null;
+      player1_score: number;
+      player2_score: number;
+      player1_elo_before: number | null;
+      player1_elo_after: number | null;
+      player2_elo_before: number | null;
+      player2_elo_after: number | null;
+      winner_id: string | null;
+      target_score: number;
+      completed_at: string | null;
+    };
+
+    const matchQuery = await supabase
       .from('matches')
       .select(
         'id, player1_id, player2_id, player1_score, player2_score, ' +
@@ -40,12 +58,12 @@ export async function GET(request: Request) {
       .order('completed_at', { ascending: false, nullsFirst: false })
       .range(from, to);
 
-    if (matchError) {
-      console.error('Match history query error:', matchError);
+    if (matchQuery.error) {
+      console.error('Match history query error:', matchQuery.error);
       return NextResponse.json({ error: 'Failed to load history' }, { status: 500 });
     }
 
-    const rawMatches = matches ?? [];
+    const rawMatches = (matchQuery.data ?? []) as unknown as MatchRow[];
     const hasMore = rawMatches.length > pageSize;
     const pageRows = rawMatches.slice(0, pageSize);
 
