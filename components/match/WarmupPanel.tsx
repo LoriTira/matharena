@@ -104,28 +104,20 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
         <div className="absolute inset-0 pointer-events-none animate-warmup-sweep" />
       )}
 
-      {/* Prominent header — bold, big, unmistakable. On mobile the search
-          panel collapses to a slim bar, so this header is the ONLY visual
-          anchor distinguishing warmup from a real match. */}
-      <div className="relative flex flex-col items-center justify-center gap-1 px-5 py-5 border-b-2 border-dashed border-edge bg-shade">
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-ink-muted animate-pulse" />
-          <span className="text-[11px] tracking-[3px] text-ink-muted font-mono font-semibold">
-            WARMUP MODE
-          </span>
-          <span className="inline-block w-2 h-2 rounded-full bg-ink-muted animate-pulse" />
-        </div>
-        <div className="text-xl md:text-2xl font-serif text-ink-secondary text-center leading-tight">
-          This is not a real match
-        </div>
-        <div className="text-[11px] md:text-[12px] text-ink-faint text-center max-w-xs leading-snug">
-          Just passing the time while we look for an opponent.
-          Nothing here is saved — no Elo, no stats, no streak.
-        </div>
+      {/* Prominent header — bold, unmistakable. On mobile the search panel
+          sits above the warmup in the stacked layout, so this header still
+          needs to be the clear signal that "this is just the warmup, not
+          the real match". */}
+      <div className="relative flex items-center justify-center gap-3 px-5 py-5 border-b-2 border-dashed border-edge bg-shade">
+        <span className="inline-block w-2 h-2 rounded-full bg-ink-muted animate-pulse shrink-0" />
+        <span className="text-[13px] md:text-[14px] tracking-[3px] text-ink-secondary font-mono font-semibold text-center">
+          WARMUP WHILE YOU WAIT
+        </span>
+        <span className="inline-block w-2 h-2 rounded-full bg-ink-muted animate-pulse shrink-0" />
       </div>
 
       {/* Main area */}
-      <div className="flex flex-col items-center justify-center gap-6 px-6 py-8 md:py-12 min-h-[360px]">
+      <div className="flex flex-col items-center justify-center gap-6 px-4 sm:px-6 py-8 md:py-12 min-h-[360px]">
         {/* Streak display — the dopamine centerpiece */}
         <div className="flex flex-col items-center gap-1">
           <div className="text-[10px] tracking-[2px] text-ink-faint font-mono">
@@ -166,10 +158,15 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
           </div>
         )}
 
-        {/* Input — slim warmup version (no penalty lockout) */}
+        {/* Input — slim warmup version (no penalty lockout).
+            min-w-0 on the input is critical: by default flex-1 items have
+            min-width: auto which is the intrinsic content width, so on narrow
+            mobile viewports the input's padding + placeholder would push it
+            (and the button) past the form's right edge. min-w-0 lets flex-1
+            actually shrink below intrinsic width. */}
         <form
           onSubmit={handleSubmit}
-          className="flex items-center gap-3 w-full max-w-md"
+          className="flex items-center gap-2 w-full max-w-md min-w-0"
         >
           <input
             ref={inputRef}
@@ -179,7 +176,7 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
             disabled={paused}
             autoComplete="off"
             aria-label="Your answer"
-            className={`flex-1 px-6 py-4 text-2xl font-mono text-center rounded-sm border bg-card text-ink focus:outline-none transition-colors
+            className={`min-w-0 flex-1 px-4 sm:px-6 py-4 text-xl sm:text-2xl font-mono text-center rounded-sm border bg-card text-ink focus:outline-none transition-colors
               ${warmup.lastFeedback === 'correct' ? 'border-green-500/50 bg-green-500/5' : ''}
               ${warmup.lastFeedback === 'wrong' ? 'border-red-400/50 bg-red-400/5 animate-shake' : ''}
               ${!warmup.lastFeedback ? 'border-edge focus:border-edge-strong' : ''}
@@ -190,7 +187,7 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
           <button
             type="submit"
             disabled={paused || !value}
-            className="px-6 py-4 bg-ink-muted/10 text-ink-secondary border border-edge rounded-sm font-semibold text-xl hover:bg-ink-muted/15 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="shrink-0 px-4 sm:px-6 py-4 bg-ink-muted/10 text-ink-secondary border border-edge rounded-sm font-semibold text-xl hover:bg-ink-muted/15 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Submit answer"
           >
             →

@@ -23,7 +23,10 @@ export const GAME_CONFIG = {
 
   // ─── Match accept flow ───
   // Chess.com-style tap-to-accept after pairing.
-  MATCH_ACCEPT_TIMEOUT_MS: 10_000,
+  // 15s gives slower users (mobile, distracted tabs) enough time to notice
+  // and tap without making the opponent wait too long. The stale sweep uses
+  // MATCH_PENDING_STALE_MS * 2 = 60s as a server-side safety cutoff.
+  MATCH_ACCEPT_TIMEOUT_MS: 15_000,
   MATCH_DECLINE_COOLDOWN_MS: 30_000,
   MATCH_PENDING_STALE_MS: 30_000,
   // Buffer between "both accepted" and scheduled started_at so both clients
