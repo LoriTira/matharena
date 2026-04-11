@@ -240,6 +240,48 @@
   animation: xp-float 1s ease-out forwards;
 }
 
+/* Flow Sprint: slide-in animation for new problems (CSS-driven to sidestep
+   framer-motion's restart-on-rerender behavior). Triggered by key-based
+   remount of the wrapping div in WarmupPanel. */
+@keyframes warmup-problem-enter {
+  0% { opacity: 0; transform: translateX(30px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.animate-warmup-problem-enter {
+  animation: warmup-problem-enter 0.15s ease-in-out forwards;
+}
+
+/* Flow Sprint: particle burst on correct answer (tier-aware via transform) */
+@keyframes warmup-particle-burst {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: var(--burst-end, translate(0, -40px)) scale(0.2); opacity: 0; }
+}
+
+.animate-warmup-burst {
+  animation: warmup-particle-burst 0.45s ease-out forwards;
+}
+
+/* Flow Sprint: ephemeral background hue pulse on tier crossing */
+@keyframes warmup-tier-sweep {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-warmup-sweep {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--bg-hover) 30%,
+    var(--bg-subtle) 50%,
+    var(--bg-hover) 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: warmup-tier-sweep 0.8s ease-out forwards;
+}
+
 /* ─── Base styles ───────────────────────────────────── */
 
 body {

@@ -1,65 +1,144 @@
 'use client';
 
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useMatchmaking } from '@/hooks/useMatchmaking';
-import { GAME_CONFIG } from '@/lib/constants';
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/lib/supabase/client';
+import { WarmupPanel } from '@/components/match/WarmupPanel';
+import { SearchPanel } from '@/components/match/SearchPanel';
+import { MatchFoundModal } from '@/components/match/MatchFoundModal';
 
 function PlayContent() {
-  const { isSearching, error, eloRange, findMatch, cancel } = useMatchmaking();
+  const {
+    isSearching,
+    error,
+    eloRange,
+    matchStatus,
+    pendingMatch,
+    cooldownRemainingMs,
+    selfAccepted,
+    findMatch,
+    cancel,
+    acceptMatch,
+    declineMatch,
+  } = useMatchmaking();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const hasAutoSearched = useRef(false);
 
+  // Player's Elo (fetched once for warmup difficulty calibration)
+  const [playerElo, setPlayerElo] = useState<number | null>(null);
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
+  const supabase = useRef(createClient()).current;
+
+  // Fetch profile Elo and online count on mount
   useEffect(() => {
-    if (
-      searchParams.get('autoSearch') === 'true' &&
-      !hasAutoSearched.current &&
-      !isSearching
-    ) {
-      hasAutoSearched.current = true;
-      router.replace('/play');
-      findMatch();
-    }
-  }, [searchParams, findMatch, isSearching, router]);
+    if (!user) return;
+    let cancelled = false;
+
+    supabase
+      .from('profiles')
+      .select('elo_rating')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (!cancelled && data) setPlayerElo((data as { elo_rating: number }).elo_rating);
+      });
+
+    // Estimate online activity. We only count 'waiting' and 'active' here to
+    // stay compatible with installs that haven't applied migration 013 yet.
+    // After the migration, 'pending_accept' is a momentary state (<10s) so
+    // excluding it barely changes the number.
+    supabase
+      .from('matches')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['waiting', 'active'])
+      .then(({ count }) => {
+        if (!cancelled) setOnlineCount(count ?? 0);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, supabase]);
+
+  // Auto-start search on mount (default behavior now — no button to click).
+  // Honors the legacy ?autoSearch=true URL param for backwards compat.
+  useEffect(() => {
+    if (hasAutoSearched.current) return;
+    if (!user) return;
+    hasAutoSearched.current = true;
+    // Clean up the legacy param if present — we always auto-search now.
+    if (searchParams.get('autoSearch')) router.replace('/play');
+    findMatch();
+    // findMatch identity changes per render; we only want to run on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const showModal = matchStatus === 'pending_accept' && pendingMatch && user;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
-      <h1 className="font-serif text-4xl font-normal text-ink">Ranked Match</h1>
-      <p className="text-ink-tertiary text-[15px] max-w-md text-center leading-relaxed font-normal">
-        Compete head-to-head against another player. First to solve 5 problems wins.
-        Your Elo rating is on the line.
-      </p>
+    <div className="mx-auto w-full max-w-5xl px-4 py-6">
+      <header className="mb-5 flex items-center justify-between">
+        <h1 className="font-serif text-2xl md:text-3xl text-ink">Looking for Ranked Match…</h1>
+        <p className="hidden md:block text-[12px] text-ink-muted tracking-wide">
+          First to 5 wins · Elo on the line
+        </p>
+      </header>
 
-      {error && (
-        <div className="text-red-400/70 bg-red-400/5 border border-red-400/10 rounded-sm px-4 py-3 text-sm">
-          {error}
+      {/* Split view on desktop; stacked on mobile. On mobile the search panel
+          comes FIRST (above warmup) so users see the search status — the real
+          match information — before the warmup. Warmup is secondary content. */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4">
+        <div className="order-2 lg:order-1">
+          <WarmupPanel
+            playerElo={playerElo}
+            paused={!!showModal || cooldownRemainingMs > 0 || !isSearching}
+          />
+        </div>
+        <div className="order-1 lg:order-2">
+          <SearchPanel
+            isSearching={isSearching}
+            eloRange={eloRange}
+            onlineCount={onlineCount}
+            cooldownRemainingMs={cooldownRemainingMs}
+            error={error}
+            onCancel={() => {
+              cancel();
+              router.push('/dashboard');
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Resume-search button when search has stopped but user still on page */}
+      {!isSearching && cooldownRemainingMs === 0 && !showModal && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => findMatch()}
+            className="px-8 py-3 bg-btn text-btn-text text-[12px] font-semibold tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
+          >
+            RESUME SEARCH
+          </button>
         </div>
       )}
 
-      {isSearching ? (
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border border-edge-strong border-t-ink-secondary rounded-full animate-spin" />
-          <p className="text-ink-tertiary text-[15px]">Finding an opponent...</p>
-          {eloRange > GAME_CONFIG.MATCHMAKING_ELO_RANGE_INITIAL && (
-            <p className="text-ink-faint text-[12px] font-mono tabular-nums">
-              Widening search range&hellip; &plusmn;{eloRange} Elo
-            </p>
-          )}
-          <button
-            onClick={cancel}
-            className="px-6 py-2 text-[12px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
-          >
-            CANCEL
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={findMatch}
-          className="px-12 py-4 bg-btn text-btn-text text-sm font-semibold tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover"
-        >
-          FIND MATCH
-        </button>
+      {/* Match found modal — blocking overlay.
+          key={matchId} forces a remount whenever matchId changes so the
+          countdown state resets cleanly (avoids set-state-in-effect). */}
+      {showModal && pendingMatch && user && (
+        <MatchFoundModal
+          key={pendingMatch.id}
+          matchId={pendingMatch.id}
+          userId={user.id}
+          player1Id={pendingMatch.player1_id}
+          player2Id={pendingMatch.player2_id}
+          alreadyAccepted={selfAccepted}
+          onAccept={acceptMatch}
+          onDeclineOrTimeout={(reason) => declineMatch(reason)}
+        />
       )}
     </div>
   );
@@ -67,11 +146,13 @@ function PlayContent() {
 
 export default function PlayPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-ink-muted">Loading...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-ink-muted">Loading…</div>
+        </div>
+      }
+    >
       <PlayContent />
     </Suspense>
   );

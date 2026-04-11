@@ -1,6 +1,6 @@
 export type Operation = '+' | '-' | '*' | '/';
 
-export type MatchStatus = 'waiting' | 'active' | 'completed' | 'abandoned';
+export type MatchStatus = 'waiting' | 'pending_accept' | 'active' | 'completed' | 'abandoned';
 
 export type EventType = 'answer_correct' | 'answer_wrong';
 
@@ -55,6 +55,8 @@ export interface Match {
   player2_elo_after: number | null;
   winner_id: string | null;
   avg_difficulty: number;
+  player1_accepted_at: string | null;
+  player2_accepted_at: string | null;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;

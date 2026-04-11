@@ -12,6 +12,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // ── Step 0: Reject if caller is in a search cooldown (decline/timeout) ──
+    // Cooldowns are inserted by /api/match/decline. We fail fast with 429 and
+    // a cooldownRemainingMs field so the client can render a countdown.
+    {
+      const { data: cooldown } = await supabase
+        .from('search_cooldowns')
+        .select('expires_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (cooldown) {
+        const remainingMs = new Date(cooldown.expires_at).getTime() - Date.now();
+        if (remainingMs > 0) {
+          return NextResponse.json(
+            {
+              error: 'Search cooldown active',
+              cooldownRemainingMs: remainingMs,
+            },
+            { status: 429 }
+          );
+        }
+        // Stale cooldown — clean up so it doesn't block future searches.
+        // Best-effort; fall through regardless of success.
+        await supabase
+          .from('search_cooldowns')
+          .delete()
+          .eq('user_id', user.id);
+      }
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('elo_rating')
@@ -27,43 +57,70 @@ export async function POST(request: Request) {
     const eloRange = body.eloRange ?? GAME_CONFIG.MATCHMAKING_ELO_RANGE_INITIAL;
     const staleMs = GAME_CONFIG.MATCH_STALE_TIMEOUT_MINUTES * 60 * 1000;
 
-    // ── Step 1: Check if player is already in an active match ──
+    // ── Step 1: Check if player is already in an active or pending_accept match ──
     // Use maybeSingle() instead of single() to avoid errors when 0 or 2+ matches exist.
-    // If multiple active matches exist (race condition), pick the newest and abandon the rest.
+    // If multiple such matches exist (race condition), pick the newest and abandon the rest.
     const { data: activeMatches } = await supabase
       .from('matches')
-      .select('id, status, started_at')
+      .select('id, status, started_at, created_at')
       .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-      .eq('status', 'active')
-      .order('started_at', { ascending: false })
+      .in('status', ['active', 'pending_accept'])
+      .order('created_at', { ascending: false })
       .limit(5);
 
     if (activeMatches && activeMatches.length > 0) {
       const [newest, ...extras] = activeMatches;
 
-      // Abandon any duplicate active matches (race condition cleanup)
+      // Abandon any duplicate matches (race condition cleanup)
       for (const extra of extras) {
         await supabase
           .from('matches')
           .update({ status: 'abandoned', completed_at: new Date().toISOString() })
           .eq('id', extra.id)
-          .eq('status', 'active');
+          .in('status', ['active', 'pending_accept']);
       }
 
-      // Check if the newest active match is stale
-      const age = Date.now() - new Date(newest.started_at).getTime();
-      if (age > staleMs) {
+      // Check if the newest match is stale.
+      // - 'active': uses the full staleMs (10 min) — actual gameplay window.
+      // - 'pending_accept': uses MATCH_PENDING_STALE_MS × 2 (60s buffer) — the
+      //   client should have handled this in 10s, but clock skew + retries
+      //   warrant a small grace period.
+      const referenceMs =
+        newest.status === 'active'
+          ? new Date(newest.started_at ?? newest.created_at).getTime()
+          : new Date(newest.created_at).getTime();
+      const age = Date.now() - referenceMs;
+      const staleThreshold =
+        newest.status === 'active' ? staleMs : GAME_CONFIG.MATCH_PENDING_STALE_MS * 2;
+
+      if (age > staleThreshold) {
         await supabase
           .from('matches')
           .update({ status: 'abandoned', completed_at: new Date().toISOString() })
           .eq('id', newest.id)
-          .eq('status', 'active');
+          .in('status', ['active', 'pending_accept']);
       } else {
         return NextResponse.json({
           matchId: newest.id,
           status: newest.status,
         });
       }
+    }
+
+    // ── Step 1a: Global sweep of stale pending_accept matches ──
+    // A pending_accept match that lingers past MATCH_PENDING_STALE_MS×2 means
+    // the client(s) never accepted (tab closed, network dropped, etc). Abandon
+    // them so the players are free to search again. Cheap: the partial index
+    // on status handles this in O(log n).
+    {
+      const pendingStaleCutoff = new Date(
+        Date.now() - GAME_CONFIG.MATCH_PENDING_STALE_MS * 2
+      ).toISOString();
+      await supabase
+        .from('matches')
+        .update({ status: 'abandoned', completed_at: new Date().toISOString() })
+        .eq('status', 'pending_accept')
+        .lt('created_at', pendingStaleCutoff);
     }
 
     // ── Step 1b: Clean up any orphan waiting matches by this player first ──
@@ -120,17 +177,22 @@ export async function POST(request: Request) {
       const avgElo = Math.round((match.avg_difficulty + playerElo) / 2);
       const problems = generateProblems(avgElo, GAME_CONFIG.TARGET_SCORE + GAME_CONFIG.PROBLEMS_BUFFER);
 
-      // Join the match (optimistic lock on status=waiting prevents double-join)
+      // Pair the two players into a pending_accept match. Both clients will
+      // render the MatchFoundModal and must call /api/match/accept within
+      // MATCH_ACCEPT_TIMEOUT_MS. started_at stays null until both accept.
+      // The optimistic lock on status=waiting prevents double-join races.
       const { data: joined, error: joinError } = await supabase
         .from('matches')
         .update({
           player2_id: user.id,
-          status: 'active',
+          status: 'pending_accept',
           problems: JSON.parse(JSON.stringify(problems)),
           avg_difficulty: avgElo,
           player1_elo_before: match.avg_difficulty,
           player2_elo_before: playerElo,
-          started_at: new Date().toISOString(),
+          started_at: null,
+          player1_accepted_at: null,
+          player2_accepted_at: null,
         })
         .eq('id', match.id)
         .eq('status', 'waiting')
@@ -138,14 +200,14 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (!joinError && joined) {
-        // Successfully joined — clean up own waiting matches
+        // Successfully paired — clean up own orphan waiting matches
         await supabase
           .from('matches')
           .update({ status: 'abandoned' })
           .eq('player1_id', user.id)
           .eq('status', 'waiting');
 
-        return NextResponse.json({ matchId: match.id, status: 'active' });
+        return NextResponse.json({ matchId: match.id, status: 'pending_accept' });
       }
       // Race condition: another player joined first. Fall through.
     }
