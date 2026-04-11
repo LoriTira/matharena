@@ -9,17 +9,30 @@ interface AnswerInputProps {
   feedbackRef?: React.MutableRefObject<((correct: boolean) => void) | null>;
 }
 
+const PENALTY_MS = GAME_CONFIG.WRONG_ANSWER_PENALTY_MS;
+
 export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerInputProps) {
   const [value, setValue] = useState('');
   const [locked, setLocked] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [remainingMs, setRemainingMs] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!disabled && !locked) {
       inputRef.current?.focus();
     }
   }, [disabled, locked]);
+
+  // Clean up timers on unmount so we never tick after teardown
+  useEffect(() => {
+    return () => {
+      if (lockTimeoutRef.current) clearTimeout(lockTimeoutRef.current);
+      if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +51,29 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
 
     if (!correct) {
       setLocked(true);
-      setTimeout(() => {
+      setRemainingMs(PENALTY_MS);
+
+      const startedAt = Date.now();
+      tickIntervalRef.current = setInterval(() => {
+        const elapsed = Date.now() - startedAt;
+        const remaining = Math.max(0, PENALTY_MS - elapsed);
+        setRemainingMs(remaining);
+        if (remaining <= 0 && tickIntervalRef.current) {
+          clearInterval(tickIntervalRef.current);
+          tickIntervalRef.current = null;
+        }
+      }, 50);
+
+      lockTimeoutRef.current = setTimeout(() => {
+        if (tickIntervalRef.current) {
+          clearInterval(tickIntervalRef.current);
+          tickIntervalRef.current = null;
+        }
         setLocked(false);
         setFeedback(null);
+        setRemainingMs(0);
         inputRef.current?.focus();
-      }, GAME_CONFIG.WRONG_ANSWER_PENALTY_MS);
+      }, PENALTY_MS);
     } else {
       setTimeout(() => setFeedback(null), 500);
     }
@@ -60,6 +91,9 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
     };
   }, [feedbackRef]);
 
+  const remainingSeconds = Math.ceil(remainingMs / 1000);
+  const progressPct = locked ? (remainingMs / PENALTY_MS) * 100 : 0;
+
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-3 max-w-md mx-auto">
       <div className="relative flex-1">
@@ -74,12 +108,24 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
             ${feedback === 'wrong' || locked ? 'border-red-400/50 bg-red-400/5' : ''}
             ${!feedback && !locked ? 'border-edge focus:border-edge-strong focus:ring-1 focus:ring-edge' : ''}
           `}
-          placeholder={locked ? `Wait ${Math.ceil(GAME_CONFIG.WRONG_ANSWER_PENALTY_MS / 1000)}s...` : 'Your answer'}
+          placeholder={locked ? '' : 'Your answer'}
           autoComplete="off"
         />
         {locked && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-400/5 rounded-sm">
-            <span className="text-red-400/60 font-medium text-sm tracking-wide">Wrong — wait...</span>
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute inset-0 flex items-center justify-center rounded-sm bg-red-400/10 pointer-events-none overflow-hidden"
+          >
+            <span className="text-red-400/80 font-medium text-sm tracking-wide tabular-nums">
+              Wrong — try again in {remainingSeconds}s
+            </span>
+            <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-red-400/10 rounded-b-sm">
+              <div
+                className="h-full bg-red-400/60 transition-[width] duration-75 ease-linear"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           </div>
         )}
       </div>
