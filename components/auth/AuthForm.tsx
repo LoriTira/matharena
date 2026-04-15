@@ -102,10 +102,10 @@ export function AuthForm({
     <div className="min-h-screen flex items-center justify-center bg-page">
       <div className="w-full max-w-md p-8 border border-edge rounded-sm">
         <h1 className="font-serif text-3xl font-normal text-ink text-center mb-1">
-          {isSignIn ? 'Welcome Back' : 'Join MathArena'}
+          {isSignIn ? 'Welcome Back' : 'Join MathsArena'}
         </h1>
         <p className="text-ink-muted text-center text-sm mb-8">
-          {isSignIn ? 'Sign in to MathArena' : 'Create your account and start competing'}
+          {isSignIn ? 'Sign in to MathsArena' : 'Create your account and start competing'}
         </p>
 
         <GoogleOAuthButton redirect={redirect} />

@@ -1,4 +1,4 @@
-# MathArena
+# MathsArena
 
 A competitive mental math platform with a chess.com-style Elo ranking system. Challenge other players in real-time arithmetic duels, practice solo, and climb the leaderboard.
 
@@ -75,7 +75,7 @@ supabase/migrations/  # Database migration files (run in order)
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    PERF_SECRET=any_random_string
    RESEND_API_KEY=your_resend_api_key          # optional — email verification won't send without it
-   EMAIL_FROM=MathArena <noreply@yourdomain.com> # optional — defaults to noreply@mathsarena.com
+   EMAIL_FROM=MathsArena <noreply@yourdomain.com> # optional — defaults to noreply@mathsarena.com
    NEXT_PUBLIC_APP_URL=https://mathsarena.com  # optional — canonical URL for challenge links in emails; falls back to request host
    ```
 

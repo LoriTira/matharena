@@ -2,6 +2,7 @@
 
 import { useTheme, type Theme, type AccentColor } from '@/components/ThemeProvider';
 import { Dropdown } from '@/components/ui/Dropdown';
+import { useSound } from '@/hooks/useSound';
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] = [
   {
@@ -45,6 +46,16 @@ const ACCENT_OPTIONS: { value: AccentColor; label: string; swatch: string }[] = 
 
 export function ThemeSettings() {
   const { theme, accent, setTheme, setAccent } = useTheme();
+  const { mode: feedbackMode, setMode: setFeedbackMode, unlock } = useSound();
+
+  // Switching to "sound on" from this click counts as a user gesture, so
+  // it's a valid moment to unlock the iOS AudioContext early. If the user
+  // only ever toggles the dropdown without entering a match, this means
+  // the first correct answer will still make a sound.
+  const handleFeedbackOn = () => {
+    unlock();
+    setFeedbackMode('on');
+  };
 
   return (
     <Dropdown
@@ -83,7 +94,7 @@ export function ThemeSettings() {
 
         {/* Accent section */}
         <div className="text-[10px] tracking-[2px] text-ink-faint mb-2">ACCENT</div>
-        <div className="flex justify-between px-2">
+        <div className="flex justify-between px-2 mb-4">
           {ACCENT_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -107,6 +118,31 @@ export function ThemeSettings() {
               </span>
             </button>
           ))}
+        </div>
+
+        {/* Feedback section — single toggle governs both sound and haptics */}
+        <div className="text-[10px] tracking-[2px] text-ink-faint mb-2">FEEDBACK</div>
+        <div className="flex gap-1">
+          <button
+            onClick={handleFeedbackOn}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-sm text-[11px] transition-colors ${
+              feedbackMode === 'on'
+                ? 'bg-accent-subtle text-accent'
+                : 'text-ink-muted hover:text-ink-secondary hover:bg-tint'
+            }`}
+          >
+            Sound On
+          </button>
+          <button
+            onClick={() => setFeedbackMode('off')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-sm text-[11px] transition-colors ${
+              feedbackMode === 'off'
+                ? 'bg-accent-subtle text-accent'
+                : 'text-ink-muted hover:text-ink-secondary hover:bg-tint'
+            }`}
+          >
+            Silent
+          </button>
         </div>
       </div>
     </Dropdown>

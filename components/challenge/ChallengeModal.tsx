@@ -147,8 +147,8 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'MathArena Challenge',
-          text: 'Think you can beat me at mental math? Accept my challenge.',
+          title: 'MathsArena Challenge',
+          text: 'Think you can beat me at mental math? Match me.',
           url: challengeUrl,
         });
       } catch {

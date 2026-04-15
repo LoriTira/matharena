@@ -10,7 +10,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <span className="font-serif text-base font-bold text-ink tracking-[1px]">
-              MATH<span className="font-normal text-ink-tertiary">ARENA</span>
+              MATHS<span className="font-normal text-ink-tertiary">ARENA</span>
             </span>
             <div className="flex items-center gap-6">
               <Link href="/leaderboard" className="text-[12px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors">
@@ -37,7 +37,7 @@ export default function HomePage() {
           Where Numbers<br />Become <em className="text-ink-secondary">Sport</em>
         </h1>
         <p className="text-[15px] text-ink-tertiary max-w-[420px] leading-relaxed font-normal mb-10">
-          Challenge players worldwide in real-time mental math duels. Climb the Elo rankings. Sharpen your mind.
+          Real-time math duels. Global ladder. First to five wins.
         </p>
 
         <div className="flex gap-4">
@@ -83,7 +83,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-edge-faint py-8 text-center text-[12px] tracking-[2px] text-ink-faint relative z-[1]">
-        MATHARENA &mdash; SHARPEN YOUR MIND
+        MATHSARENA &mdash; SHARPEN YOUR MIND
       </footer>
     </div>
   );

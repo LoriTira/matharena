@@ -12,7 +12,7 @@ interface WarmupPanelProps {
   paused: boolean;
 }
 
-const TIER_LABELS = ['', '🔥', '🔥🔥', '🔥🔥🔥', 'LEGENDARY'];
+const TIER_LABELS = ['', 'WARM', 'HOT', 'BLAZING', 'LEGENDARY'];
 const TIER_COLORS = [
   'text-ink-muted',       // 0: below first milestone
   'text-ink-secondary',   // 1: ≥5

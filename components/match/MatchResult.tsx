@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { getRank, didRankChange, TIERS } from '@/lib/ranks';
 import { RankBadge } from '@/components/ui/RankBadge';
 import { useAuth } from '@/hooks/useAuth';
@@ -109,6 +109,7 @@ export function MatchResult({
 }: MatchResultProps) {
   const { user } = useAuth();
   const supabase = createClient();
+  const prefersReducedMotion = useReducedMotion();
   const eloChange = eloAfter - eloBefore;
   const rankedUp = didRankChange(eloBefore, eloAfter) && eloAfter > eloBefore;
   const newRank = getRank(eloAfter);
@@ -116,6 +117,31 @@ export function MatchResult({
   const [rematchLoading, setRematchLoading] = useState(false);
   const [incomingRematchCode, setIncomingRematchCode] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Victory confetti — fires once on mount when `won === true`, in 3 staggered
+  // bursts from the center + left edge + right edge. Respects reduced-motion
+  // (in which case the existing VictoryBurst rays remain as the fallback).
+  // Lazy-imports canvas-confetti so it only lands in the bundle when a match
+  // actually completes with a win.
+  useEffect(() => {
+    if (!won) return;
+    if (typeof window === 'undefined') return;
+    if (prefersReducedMotion) return;
+
+    let cancelled = false;
+    import('canvas-confetti').then(({ default: confetti }) => {
+      if (cancelled) return;
+      confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, scalar: 0.9 });
+      setTimeout(() => {
+        if (!cancelled) confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 } });
+      }, 180);
+      setTimeout(() => {
+        if (!cancelled) confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 } });
+      }, 360);
+    }).catch(() => { /* swallow — confetti must never crash the results screen */ });
+
+    return () => { cancelled = true; };
+  }, [won, prefersReducedMotion]);
 
   // Poll for incoming rematch from opponent
   useEffect(() => {
@@ -151,8 +177,8 @@ export function MatchResult({
 
   const handleShare = async () => {
     const text = won
-      ? `I just defeated ${opponentName} ${myScore}-${theirScore} on MathArena! Rating: ${eloAfter} ⚡`
-      : `Tough match vs ${opponentName} (${theirScore}-${myScore}) on MathArena. Rating: ${eloAfter}`;
+      ? `Beat ${opponentName} ${myScore}-${theirScore} on MathsArena. Rating ${eloAfter}.`
+      : `Lost to ${opponentName} ${theirScore}-${myScore} on MathsArena. Running it back. Rating ${eloAfter}.`;
 
     if (navigator.share) {
       try {
@@ -189,8 +215,9 @@ export function MatchResult({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 relative">
-      {/* Victory burst */}
-      {won && <VictoryBurst />}
+      {/* Victory burst — only used as the reduced-motion fallback; when motion
+          is allowed, the canvas-confetti useEffect above carries the load. */}
+      {won && prefersReducedMotion && <VictoryBurst />}
 
       {/* Result heading */}
       <motion.div
@@ -209,7 +236,7 @@ export function MatchResult({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        {won ? 'You defeated' : 'You lost to'} {opponentName}
+        {won ? `You crushed ${opponentName}` : `${opponentName} got you`}
         {opponentElo && (
           <span className="inline-flex items-center gap-1 ml-1">
             <RankBadge elo={opponentElo} size="sm" />
@@ -297,10 +324,10 @@ export function MatchResult({
           transition={{ delay: 1.3 }}
         >
           {[
-            { label: 'AVG TIME', value: formatTime(avgTimeMs!) },
+            { label: 'PACE', value: formatTime(avgTimeMs!) },
             { label: 'ACCURACY', value: accuracy !== undefined ? `${Math.round(accuracy)}%` : '—' },
-            { label: 'PENALTIES', value: totalPenalties !== undefined ? String(totalPenalties) : '—' },
-            { label: 'FASTEST', value: fastestSolveMs !== undefined ? formatTime(fastestSolveMs) : '—' },
+            { label: 'SLIPS', value: totalPenalties !== undefined ? String(totalPenalties) : '—' },
+            { label: 'LIGHTNING', value: fastestSolveMs !== undefined ? formatTime(fastestSolveMs) : '—' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -413,14 +440,14 @@ export function MatchResult({
 
         <button
           onClick={handleShare}
-          className="px-5 py-2.5 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
+          className="px-5 py-3 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
         >
           SHARE
         </button>
 
         <Link
           href="/dashboard"
-          className="px-5 py-2.5 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
+          className="px-5 py-3 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
         >
           DASHBOARD
         </Link>

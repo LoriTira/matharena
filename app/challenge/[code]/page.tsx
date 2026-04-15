@@ -95,7 +95,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
           <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Not Found</h1>
           <p className="text-ink-muted text-sm mb-8">This challenge link may have expired or is invalid.</p>
           <Link href="/" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
-            GO TO MATHARENA
+            GO TO MATHSARENA
           </Link>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
           <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Expired</h1>
           <p className="text-ink-muted text-sm mb-8">This challenge is no longer available.</p>
           <Link href="/" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
-            GO TO MATHARENA
+            GO TO MATHSARENA
           </Link>
         </div>
       </div>
@@ -142,7 +142,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
           <h1 className="font-serif text-2xl font-normal text-ink mb-2">Challenge Taken</h1>
           <p className="text-ink-muted text-sm mb-8">Someone else already accepted this challenge.</p>
           <Link href="/" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
-            GO TO MATHARENA
+            GO TO MATHSARENA
           </Link>
         </div>
       </div>

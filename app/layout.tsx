@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SoundProvider } from "@/lib/audio/SoundProvider";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -22,8 +23,22 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MathArena - Competitive Mental Math",
-  description: "Challenge players worldwide in real-time math duels. Climb the Elo rankings.",
+  title: "MathsArena — Competitive Mental Math",
+  description: "Fast mental-math duels. Climb the rankings. Sharpen your mind.",
+};
+
+// Mobile-first viewport. `viewportFit: 'cover'` enables env(safe-area-inset-*)
+// so bottom-anchored controls don't slip under the iPhone home indicator.
+// Pinch-zoom is left enabled for accessibility — the answer inputs are all
+// ≥20px and won't trigger iOS auto-zoom, so we get tighter game feel for free.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0c" },
+  ],
 };
 
 export default function RootLayout({
@@ -45,7 +60,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-page text-ink-secondary">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <SoundProvider>{children}</SoundProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

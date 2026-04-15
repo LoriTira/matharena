@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useMatch } from '@/hooks/useMatch';
 import { useAuth } from '@/hooks/useAuth';
+import { useSound } from '@/hooks/useSound';
 import { ProblemDisplay } from './ProblemDisplay';
 import { AnswerInput } from './AnswerInput';
 import { ScoreDots } from './ScoreDots';
@@ -11,7 +12,12 @@ import { Timer } from './Timer';
 import { MatchResult } from './MatchResult';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { createClient } from '@/lib/supabase/client';
+import { hapticTap } from '@/lib/haptics';
+import { GAME_CONFIG } from '@/lib/constants';
+import { computeTierIndex } from '@/hooks/useWarmup';
 import type { Profile, MatchEvent } from '@/types';
+
+const RANKED_TIER_LABELS = ['', 'HOT', 'ON FIRE', 'UNSTOPPABLE'] as const;
 
 interface MatchStats {
   avgTimeMs: number;
@@ -27,6 +33,8 @@ interface MatchBoardProps {
 export function MatchBoard({ matchId }: MatchBoardProps) {
   const { match, loading, submitAnswer, abandonMatch, refetchMatch } = useMatch(matchId);
   const { user } = useAuth();
+  const { play } = useSound();
+  const prefersReducedMotion = useReducedMotion();
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [player1Profile, setPlayer1Profile] = useState<Profile | null>(null);
   const [player2Profile, setPlayer2Profile] = useState<Profile | null>(null);
@@ -37,6 +45,14 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   const [newAchievements, setNewAchievements] = useState<{ id: string; name: string; description: string; icon: string; rarity: string }[]>([]);
   const supabase = useMemo(() => createClient(), []);
   const isSubmittingRef = useRef(false);
+
+  // Ranked streak tier — reuses the same helper warmup uses, with a tighter
+  // milestone list ([2, 3, 4]) because the ceiling in a first-to-5 match is 5.
+  const streakTier = computeTierIndex(streak, GAME_CONFIG.RANKED_STREAK_MILESTONES);
+  const prevStreakTierRef = useRef(0);
+  const prevCountdownValueRef = useRef<number | string | null>(null);
+  const prevMatchPointRef = useRef(false);
+  const matchCompleteFiredRef = useRef(false);
 
   // Fetch player profiles
   useEffect(() => {
@@ -85,24 +101,41 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
 
     const tick = () => {
       const remainingMs = startMs - Date.now();
+      let next: number | string | null;
       if (remainingMs > 0) {
         // Cap at 3 so the classic "3, 2, 1, GO!" is visible even to the fast
         // client who arrives with 4+ seconds still on the clock. Both clients
         // converge to the same value once remaining drops below 3000ms.
-        setCountdownValue(Math.min(3, Math.ceil(remainingMs / 1000)));
+        next = Math.min(3, Math.ceil(remainingMs / 1000));
       } else if (remainingMs > -400) {
         // Brief GO! flash as we cross zero.
-        setCountdownValue('GO!');
+        next = 'GO!';
       } else {
         setShowCountdown(false);
         setCountdownValue(null);
+        return;
       }
+
+      // Play tick / go sounds only on value transitions, not every 100ms.
+      if (next !== prevCountdownValueRef.current) {
+        prevCountdownValueRef.current = next;
+        if (next === 'GO!') {
+          play('countdownGo');
+        } else if (typeof next === 'number') {
+          play('countdownTick');
+        }
+      }
+
+      setCountdownValue(next);
     };
 
     tick();
     const interval = setInterval(tick, 100);
-    return () => clearInterval(interval);
-  }, [match?.status, match?.started_at]);
+    return () => {
+      clearInterval(interval);
+      prevCountdownValueRef.current = null;
+    };
+  }, [match?.status, match?.started_at, play]);
 
   // Fetch match events on completion to compute performance stats
   useEffect(() => {
@@ -159,6 +192,68 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     }
   }, [match?.player1_score, match?.player2_score, match?.player1_id, match?.status, user?.id]);
 
+  // Ranked streak tier crossing — fires on the 0→1, 1→2, 2→3 transitions
+  // (streak hits 2, 3, 4 respectively). Sound + haptic + small confetti burst.
+  // Mirrors the warmup panel's tier crossing effect but uses the accent color
+  // and escalating haptic strength.
+  useEffect(() => {
+    if (streakTier > prevStreakTierRef.current && streakTier > 0) {
+      play('streakTier', streakTier);
+      hapticTap(streakTier === 1 ? 'light' : streakTier === 2 ? 'medium' : 'heavy');
+
+      if (!prefersReducedMotion && typeof window !== 'undefined') {
+        import('canvas-confetti').then(({ default: confetti }) => {
+          confetti({
+            particleCount: 30,
+            spread: 45,
+            startVelocity: 25,
+            origin: { y: 0.35 },
+            scalar: 0.7,
+          });
+        }).catch(() => { /* swallow — confetti must never crash gameplay */ });
+      }
+    }
+    prevStreakTierRef.current = streakTier;
+  }, [streakTier, play, prefersReducedMotion]);
+
+  // Match-point tension cue — fires once on the false→true transition of
+  // isMatchPoint (computed below). We track the previous value in a ref so
+  // we only fire the effect when the state actually changes, not on every
+  // rerender while the flag is true.
+  // The `isMatchPoint` variable is computed inside the render pass, so we
+  // recompute it here for the effect's dependency array.
+  const matchPointActive =
+    !!match &&
+    match.status === 'active' &&
+    (match.player1_score === match.target_score - 1 || match.player2_score === match.target_score - 1);
+
+  useEffect(() => {
+    if (matchPointActive && !prevMatchPointRef.current) {
+      play('matchPoint');
+      hapticTap('medium');
+    }
+    prevMatchPointRef.current = matchPointActive;
+  }, [matchPointActive, play]);
+
+  // Victory / defeat cue — fires once when the match transitions to
+  // completed. We gate on a ref so we never double-fire if the parent
+  // re-renders post-completion.
+  useEffect(() => {
+    if (!match || !user) return;
+    if (match.status !== 'completed' && match.status !== 'abandoned') return;
+    if (matchCompleteFiredRef.current) return;
+    matchCompleteFiredRef.current = true;
+
+    const won = match.winner_id === user.id;
+    if (won) {
+      play('victory');
+      hapticTap('success');
+    } else {
+      play('defeat');
+      // No haptic on defeat — empathy.
+    }
+  }, [match?.status, match?.winner_id, user?.id, play]);
+
   const handleSubmit = useCallback(
     (answer: number) => {
       if (!match || match.status !== 'active' || isSubmittingRef.current) return;
@@ -174,6 +269,8 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
 
       if (isCorrect) {
         feedbackFn?.(true);
+        play('correct');
+        hapticTap('light');
         setStreak((prev) => prev + 1);
 
         const isPlayer1 = match.player1_id === user?.id;
@@ -204,12 +301,14 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
 
       // Wrong answer — show feedback immediately, record in background
       feedbackFn?.(false);
+      play('wrong');
+      hapticTap('error');
       setStreak(0);
       submitAnswer(currentProblemIndex, answer).finally(() => {
         isSubmittingRef.current = false;
       });
     },
-    [match, currentProblemIndex, submitAnswer, refetchMatch]
+    [match, currentProblemIndex, submitAnswer, refetchMatch, play]
   );
 
   if (loading) {
@@ -312,14 +411,14 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
     );
   }
 
-  // 5C: Match point detection
+  // 5C: Match point detection (same as matchPointActive above — rendered here)
   const isMatchPoint = match.player1_score === match.target_score - 1 || match.player2_score === match.target_score - 1;
 
   const player1Name = player1Profile?.username ?? 'Player 1';
   const player2Name = player2Profile?.username ?? 'Player 2';
 
   return (
-    <div className="relative">
+    <div className="relative match-screen">
       {/* 5A: Countdown overlay */}
       <AnimatePresence>
         {showCountdown && countdownValue !== null && (
@@ -378,7 +477,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
           <Timer startTime={match.started_at} isRunning={match.status === 'active'} />
           <button
             onClick={abandonMatch}
-            className="text-[12px] tracking-[1.5px] text-ink-faint hover:text-red-400/60 transition-colors"
+            className="px-3 py-3 -mr-3 text-[12px] tracking-[1.5px] text-ink-faint hover:text-red-400/60 transition-colors"
           >
             FORFEIT
           </button>
@@ -408,19 +507,27 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
           </div>
         </div>
 
-        {/* Problem counter + 5E: Streak indicator */}
-        <div className="flex items-center gap-3">
+        {/* Problem counter + ranked streak tier pill.
+            Uses the accent tokens (which warmup cannot, per its invariants) so
+            the same visual language can escalate. Tiers fire at streak 2, 3, 4
+            via RANKED_STREAK_MILESTONES; streak 5 ends the match and is handled
+            by the victory celebration. */}
+        <div className="flex flex-col items-center gap-2">
           <div className="text-[11px] tracking-[2px] text-ink-faint">
             PROBLEM {currentProblemIndex + 1}
           </div>
-          {streak >= 3 && (
+          {streak >= GAME_CONFIG.RANKED_STREAK_MILESTONES[0] && (
             <motion.div
               key={streak}
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-accent text-sm font-mono"
+              initial={{ scale: 0.5, opacity: 0, y: -6 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+              className="flex items-center gap-2 px-3 py-1 rounded-sm border border-accent/30 bg-accent-subtle"
             >
-              {'\uD83D\uDD25'} {streak}x
+              <span className="text-[10px] tracking-[2px] font-mono text-accent">
+                {RANKED_TIER_LABELS[Math.min(streakTier, RANKED_TIER_LABELS.length - 1)]}
+              </span>
+              <span className="font-mono text-accent font-semibold tabular-nums">{streak}x</span>
             </motion.div>
           )}
         </div>

@@ -1,3 +1,5 @@
+// Voice rule: confident, warm, fast. Short sentences. One exclamation per
+// screen max. Numbers do the bragging. Match copy in the app (see AGENTS.md).
 import { Resend } from 'resend';
 
 const resend = process.env.RESEND_API_KEY
@@ -6,7 +8,7 @@ const resend = process.env.RESEND_API_KEY
 
 // Use EMAIL_FROM env var for production (requires verified domain in Resend).
 // Falls back to Resend's shared test domain which works without domain setup.
-const FROM_EMAIL = process.env.EMAIL_FROM || 'MathArena <noreply@mathsarena.com>';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'MathsArena <noreply@mathsarena.com>';
 
 export async function sendVerificationEmail({
   to,
@@ -26,17 +28,17 @@ export async function sendVerificationEmail({
     await resend.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: 'Verify your MathArena email',
+      subject: 'Confirm your MathsArena email',
       html: `
         <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
           <h1 style="font-size: 24px; font-weight: 400; color: #1a1a1e; margin-bottom: 8px;">
-            Welcome, ${username}!
+            Welcome in, ${username}.
           </h1>
           <p style="font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 24px;">
-            Please verify your email address to secure your MathArena account.
+            Tap to confirm your email and lock in your account.
           </p>
           <a href="${verifyUrl}" style="display: inline-block; padding: 14px 32px; background: #b45309; color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; border-radius: 2px;">
-            VERIFY EMAIL
+            CONFIRM EMAIL
           </a>
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             This link expires in 7 days. If you didn't create this account, you can ignore this email.
@@ -68,15 +70,14 @@ export async function sendChallengeEmail({
     const result = await resend.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `${challengerName} challenged you on MathArena`,
+      subject: `${challengerName} wants to play`,
       html: `
         <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
           <h1 style="font-size: 24px; font-weight: 400; color: #1a1a1e; margin-bottom: 8px;">
-            You've been challenged!
+            You've got a match.
           </h1>
           <p style="font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 24px;">
-            <strong>${challengerName}</strong> wants to battle you in a mental math duel on MathArena.
-            First to 5 wins. Your Elo rating is on the line.
+            <strong>${challengerName}</strong> just challenged you to a mental math duel. First to five. Elo is live.
           </p>
           <a href="${challengeUrl}" style="display: inline-block; padding: 14px 32px; background: #b45309; color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; border-radius: 2px;">
             ACCEPT CHALLENGE

@@ -282,6 +282,46 @@
   animation: warmup-tier-sweep 0.8s ease-out forwards;
 }
 
+/* Ranked streak flare — sibling to warmup-tier-sweep but uses the accent
+   color tokens (which warmup cannot, per its design invariants). Fires
+   visually when the ranked streak tier crosses a milestone. */
+@keyframes ranked-streak-flare {
+  0%   { background-position: -100% 0; opacity: 0; }
+  20%  { opacity: 1; }
+  100% { background-position: 200% 0; opacity: 0; }
+}
+
+.animate-ranked-streak-flare {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-glow) 30%,
+    var(--accent-subtle) 50%,
+    var(--accent-glow) 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: ranked-streak-flare 0.6s ease-out forwards;
+}
+
+/* Respect user's reduced-motion preference across the whole dopamine layer.
+   Keep the animations that carry meaning (countdown pulse) and disable the
+   decorative ones. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake,
+  .animate-score-bounce,
+  .animate-gold-pulse,
+  .animate-shimmer,
+  .animate-heart-break,
+  .animate-xp-float,
+  .animate-warmup-problem-enter,
+  .animate-warmup-burst,
+  .animate-warmup-sweep,
+  .animate-ranked-streak-flare {
+    animation: none !important;
+  }
+}
+
 /* ─── Base styles ───────────────────────────────────── */
 
 body {
@@ -289,6 +329,16 @@ body {
   color: var(--text-secondary);
   font-weight: 400;
   font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  /* iOS notch / home indicator — respected when layout.tsx sets
+     viewportFit: 'cover'. Ensures bottom-anchored controls (forfeit,
+     answer input) never slip under the home indicator. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent pull-to-refresh mid-match on iOS/Android. Applied to the top-level
+   MatchBoard wrapper via the `.match-screen` class. */
+.match-screen {
+  overscroll-behavior-y: contain;
 }
 
 /* Hide number input spinners */

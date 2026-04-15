@@ -103,7 +103,7 @@ export default function PerfPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
-      <h1 className="text-2xl font-bold mb-1">MathArena Performance Diagnostics</h1>
+      <h1 className="text-2xl font-bold mb-1">MathsArena Performance Diagnostics</h1>
       <p className="text-neutral-500 text-sm mb-8">
         Measures latency across Vercel, Supabase, middleware, and application code.
       </p>

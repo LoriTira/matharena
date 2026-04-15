@@ -184,7 +184,7 @@ function OnboardingForm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.4 }}
         >
-          <h1 className="font-serif text-3xl font-normal text-ink mb-1">Welcome to MathArena</h1>
+          <h1 className="font-serif text-3xl font-normal text-ink mb-1">Welcome to MathsArena</h1>
           <p className="text-ink-muted text-sm">Just a couple of quick things before you start</p>
           <div className="w-8 h-px bg-edge mx-auto mt-4" />
         </motion.div>

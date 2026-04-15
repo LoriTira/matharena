@@ -21,6 +21,12 @@ export const GAME_CONFIG = {
   WARMUP_DIFFICULTY_OFFSET: -200,
   WARMUP_TIER_MILESTONES: [5, 10, 15, 25] as const,
 
+  // ─── Ranked streak tiers ───
+  // Much tighter than warmup because the ceiling in a first-to-5 match is 5
+  // correct in a row. Streak 2 is the first reward; 4-in-a-row is near-legendary;
+  // streak 5 ends the match and is handled by the victory celebration.
+  RANKED_STREAK_MILESTONES: [2, 3, 4] as const,
+
   // ─── Match accept flow ───
   // Chess.com-style tap-to-accept after pairing.
   // 15s gives slower users (mobile, distracted tabs) enough time to notice
