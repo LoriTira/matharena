@@ -4,6 +4,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Operation, Problem, PracticeConfig, PracticeSessionRecord, OperationRange } from '@/types';
 import { PRACTICE_DIFFICULTY_RANGES } from '@/lib/constants';
 import { generateMixedPracticeProblem } from '@/lib/problems/generator';
+import { useSound } from './useSound';
+import { hapticTap } from '@/lib/haptics';
 
 export type PracticePhase = 'idle' | 'countdown' | 'playing' | 'finished';
 
@@ -42,6 +44,7 @@ const DEFAULT_CONFIG: PracticeConfig = {
 };
 
 export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): PracticeSession {
+  const { play } = useSound();
   const [phase, setPhase] = useState<PracticePhase>('idle');
   const [config, setConfigState] = useState<PracticeConfig>({ ...DEFAULT_CONFIG, ...initialConfig });
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
@@ -123,6 +126,8 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
     setPreviousBest(null);
 
     setPhase('finished');
+    play('victory');
+    hapticTap('success');
 
     try {
       const res = await fetch('/api/practice/session', {
@@ -158,7 +163,7 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
     } catch {
       // silently fail — if we can't save, we also can't award a PB.
     }
-  }, []);
+  }, [play]);
 
   const startSession = useCallback(() => {
     setStats({ correct: 0, wrong: 0, streak: 0, bestStreak: 0, operationBreakdown: {} });
@@ -198,6 +203,14 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
     const isCorrect = answer === currentProblem.answer;
     const op = currentProblem.operation;
 
+    if (isCorrect) {
+      play('correct');
+      hapticTap('light');
+    } else {
+      play('wrong');
+      hapticTap('error');
+    }
+
     setStats((prev) => {
       const opBreakdown = { ...prev.operationBreakdown };
       if (!opBreakdown[op]) opBreakdown[op] = { correct: 0, wrong: 0 };
@@ -230,7 +243,7 @@ export function usePracticeSession(initialConfig?: Partial<PracticeConfig>): Pra
     }
 
     return isCorrect;
-  }, [currentProblem, phase, generateNext]);
+  }, [currentProblem, phase, generateNext, play]);
 
   const resetToSetup = useCallback(() => {
     if (timerRef.current) {

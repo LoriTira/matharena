@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react';
 import type { ClientProblem, Operation } from '@/types';
+import { useSound } from './useSound';
+import { hapticTap } from '@/lib/haptics';
 
 export type DailyPuzzleStatus =
   | 'loading'
@@ -38,6 +40,8 @@ function computeAnswer(p: ClientProblem): number {
 }
 
 export function useDailyPuzzle() {
+  const { play } = useSound();
+
   const [status, setStatus] = useState<DailyPuzzleStatus>('loading');
   const [problems, setProblems] = useState<ClientProblem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -136,8 +140,13 @@ export function useDailyPuzzle() {
         Math.abs(answer - expected) < 0.001;
 
       if (!isCorrect) {
+        play('wrong');
+        hapticTap('error');
         return false;
       }
+
+      play('correct');
+      hapticTap('light');
 
       // Record time and answer
       const newTimes = [...problemTimesRef.current, elapsed];
@@ -153,6 +162,12 @@ export function useDailyPuzzle() {
         // All problems done — submit
         const totalMs = now - puzzleStartTimeRef.current;
         setTotalTimeMs(totalMs);
+
+        // Celebration cue fires immediately on the last correct answer, not
+        // after the fetch — we want the user's reward to feel instant, and
+        // the submit + leaderboard fetches can take a few hundred ms each.
+        play('victory');
+        hapticTap('success');
 
         try {
           const res = await fetch('/api/daily/submit', {
@@ -187,7 +202,7 @@ export function useDailyPuzzle() {
 
       return true;
     },
-    [problems, currentIndex, fetchLeaderboard, fetchStreak]
+    [problems, currentIndex, fetchLeaderboard, fetchStreak, play]
   );
 
   return {

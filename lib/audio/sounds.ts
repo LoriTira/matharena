@@ -26,10 +26,41 @@ export type SoundKey =
 
 type Tone = typeof import('tone');
 
+// Shared Tone.js module cache. We track BOTH the resolved module (for
+// synchronous access after preload) and the in-flight import promise (for
+// coalescing). iOS Safari requires AudioContext.resume() to happen
+// synchronously inside a user gesture — see SoundProvider.unlock() which
+// relies on getLoadedTone() being non-null by the time the user clicks.
+let toneCache: Tone | null = null;
 let tonePromise: Promise<Tone> | null = null;
-function getTone(): Promise<Tone> {
-  if (!tonePromise) tonePromise = import('tone');
+
+/**
+ * Kick off the Tone.js dynamic import. Safe to call multiple times — it
+ * coalesces to a single import promise. Call this at provider mount so the
+ * module is resolved before the user's first click.
+ */
+export function preloadTone(): Promise<Tone> {
+  if (toneCache) return Promise.resolve(toneCache);
+  if (!tonePromise) {
+    tonePromise = import('tone').then((mod) => {
+      toneCache = mod;
+      return mod;
+    });
+  }
   return tonePromise;
+}
+
+/**
+ * Synchronous accessor — returns the resolved Tone module if it's been
+ * loaded, or null otherwise. Use this from inside gesture handlers where
+ * you cannot await (awaiting loses the iOS gesture context).
+ */
+export function getLoadedTone(): Tone | null {
+  return toneCache;
+}
+
+function getTone(): Promise<Tone> {
+  return preloadTone();
 }
 
 /**

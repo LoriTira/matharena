@@ -4,11 +4,17 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
-import { playSound, unlockAudio, type SoundKey } from './sounds';
+import {
+  playSound,
+  preloadTone,
+  getLoadedTone,
+  type SoundKey,
+} from './sounds';
 
 type FeedbackMode = 'on' | 'off';
 
@@ -87,28 +93,99 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
   const [unlocked, setUnlocked] = useState(false);
   const unlockedRef = useRef(false);
+  const hasWarnedMissingUnlockRef = useRef(false);
 
   const setMode = useCallback((next: FeedbackMode) => {
     writeMode(next);
   }, []);
 
+  // Kick off the Tone.js import as soon as the provider mounts. By the time
+  // the user's first click lands, the module should be cached and unlock()
+  // can call Tone.start() synchronously inside the gesture (iOS Safari
+  // requirement).
+  useEffect(() => {
+    preloadTone().catch((err) => {
+      console.warn('Tone.js preload failed:', err);
+    });
+  }, []);
+
   const unlock = useCallback(() => {
     if (unlockedRef.current) return;
-    unlockedRef.current = true;
-    unlockAudio().then(
-      () => setUnlocked(true),
+
+    // Happy path: Tone is preloaded and we can call start() synchronously
+    // from the current call stack. iOS Safari requires audioContext.resume()
+    // to happen inside a user gesture; awaiting the dynamic import first
+    // would yield the gesture context to the microtask queue.
+    const Tone = getLoadedTone();
+    if (Tone) {
+      unlockedRef.current = true;
+      Tone.start().then(
+        () => setUnlocked(true),
+        (err) => {
+          unlockedRef.current = false;
+          console.warn('Audio unlock failed (sync path):', err);
+        },
+      );
+      return;
+    }
+
+    // Fallback: Tone hasn't finished loading yet. Best-effort unlock — this
+    // path may silently fail on iOS Safari since the gesture context is
+    // lost by the time Tone.start() runs. Desktop Chrome/Firefox tolerate it.
+    preloadTone().then(
+      (TonePromised) => {
+        if (unlockedRef.current) return;
+        unlockedRef.current = true;
+        TonePromised.start().then(
+          () => setUnlocked(true),
+          (err) => {
+            unlockedRef.current = false;
+            console.warn('Audio unlock failed (deferred path):', err);
+          },
+        );
+      },
       (err) => {
-        // Unlock failed (rare — usually means we weren't inside a gesture).
-        // Reset the flag so a subsequent gesture can try again.
-        unlockedRef.current = false;
-        console.warn('Audio unlock failed:', err);
+        console.warn('Tone.js import failed:', err);
       },
     );
   }, []);
 
+  // Document-level one-shot unlock. Fires on the first pointerdown/keydown
+  // ANYWHERE on the page. This catches flows that don't go through our
+  // explicit unlock points — challenge lobbies, /practice, /daily, etc. —
+  // where the user never taps the matchmaking ACCEPT button. Once unlocked,
+  // the listeners detach themselves.
+  useEffect(() => {
+    const handler = () => {
+      if (unlockedRef.current) return;
+      unlock();
+    };
+    // Use capture so we fire before any stopPropagation in downstream handlers.
+    window.addEventListener('pointerdown', handler, { capture: true });
+    window.addEventListener('keydown', handler, { capture: true });
+    return () => {
+      window.removeEventListener('pointerdown', handler, { capture: true });
+      window.removeEventListener('keydown', handler, { capture: true });
+    };
+  }, [unlock]);
+
   const play = useCallback((key: SoundKey, extra = 0) => {
     if (mode === 'off') return;
-    if (!unlockedRef.current) return;
+    if (!unlockedRef.current) {
+      // Log once per session so future bugs surface in the console instead
+      // of silently eating audio. This is dev-facing; users never see it.
+      if (!hasWarnedMissingUnlockRef.current && typeof window !== 'undefined') {
+        hasWarnedMissingUnlockRef.current = true;
+        console.warn(
+          '[SoundProvider] play(%s) suppressed — audio not yet unlocked. ' +
+            'A user gesture should have already unlocked the AudioContext; ' +
+            'if you see this after clicking, check that preloadTone() has ' +
+            'resolved by the time the document-level listener fires.',
+          key,
+        );
+      }
+      return;
+    }
     playSound(key, extra).catch(() => { /* swallow — audio must never crash gameplay */ });
   }, [mode]);
 

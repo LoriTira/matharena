@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ProblemDisplay } from './ProblemDisplay';
 import { useWarmup } from '@/hooks/useWarmup';
+import { useSound } from '@/hooks/useSound';
+import { hapticTap } from '@/lib/haptics';
 import { GAME_CONFIG } from '@/lib/constants';
 
 interface WarmupPanelProps {
@@ -36,6 +38,7 @@ const TIER_COLORS = [
  */
 export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
   const warmup = useWarmup({ playerElo, paused });
+  const { play } = useSound();
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [tierCrossed, setTierCrossed] = useState(false);
@@ -55,16 +58,34 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
     }
   }, [paused, warmup.active, warmup.problem]);
 
-  // Detect tier crossings for the sweep effect.
+  // Detect tier crossings for the sweep effect + fire sound/haptic.
   useEffect(() => {
     if (warmup.tierIndex > prevTierIndexRef.current) {
       setTierCrossed(true);
+      // Pass tierIndex so the sound escalates with the tier (C → E → G chord).
+      play('streakTier', warmup.tierIndex);
+      hapticTap(
+        warmup.tierIndex === 1 ? 'light' :
+        warmup.tierIndex === 2 ? 'medium' : 'heavy',
+      );
       const t = setTimeout(() => setTierCrossed(false), 800);
       prevTierIndexRef.current = warmup.tierIndex;
       return () => clearTimeout(t);
     }
     prevTierIndexRef.current = warmup.tierIndex;
-  }, [warmup.tierIndex]);
+  }, [warmup.tierIndex, play]);
+
+  // Play correct/wrong sound + haptic whenever the warmup loop reports
+  // feedback. Keyed on lastFeedback so it fires exactly once per submit.
+  useEffect(() => {
+    if (warmup.lastFeedback === 'correct') {
+      play('correct');
+      hapticTap('light');
+    } else if (warmup.lastFeedback === 'wrong') {
+      play('wrong');
+      hapticTap('error');
+    }
+  }, [warmup.lastFeedback, play]);
 
   // Auto-clear feedback 500ms after the last correct/wrong answer.
   // Uses a ref to clearFeedback (updated via a sync effect) so this effect
