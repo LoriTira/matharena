@@ -19,6 +19,9 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
   const inputRef = useRef<HTMLInputElement>(null);
   const lockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Guards against a rapid double-tap firing two submit events before React
+  // re-renders with the cleared value — otherwise the same answer is sent twice.
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!disabled && !locked) {
@@ -36,13 +39,20 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!value || locked || disabled) return;
+    if (!value || locked || disabled || submittingRef.current) return;
 
     const answer = parseFloat(value);
     if (isNaN(answer)) return;
 
+    submittingRef.current = true;
     onSubmit(answer);
     setValue('');
+    // Explicit refocus keeps the mobile soft keyboard up across the parent
+    // re-render that swaps in the next problem.
+    inputRef.current?.focus();
+    requestAnimationFrame(() => {
+      submittingRef.current = false;
+    });
   };
 
   // Exposed method to show feedback
@@ -99,10 +109,20 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
       <div className="relative flex-1">
         <input
           ref={inputRef}
-          type="number"
+          // text + inputMode="decimal" gets the mobile numeric keypad without
+          // type="number"'s iOS blur-on-parent-rerender quirks.
+          type="text"
+          inputMode="decimal"
+          pattern="[0-9.\-]*"
+          enterKeyHint="go"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
-          disabled={locked || disabled}
+          onChange={(e) => {
+            if (locked || disabled) return;
+            setValue(e.target.value);
+          }}
+          // readOnly (not disabled) keeps the mobile keyboard up during lockout.
+          readOnly={locked || disabled}
+          aria-disabled={locked || disabled}
           className={`w-full px-6 py-4 text-2xl font-mono text-center rounded-sm border bg-card text-ink focus:outline-none transition-colors
             ${feedback === 'correct' ? 'border-green-400/50 bg-green-400/5' : ''}
             ${feedback === 'wrong' || locked ? 'border-red-400/50 bg-red-400/5' : ''}
@@ -132,6 +152,10 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
       <button
         type="submit"
         disabled={locked || disabled || !value}
+        // Prevents the button from stealing focus from the input, which would
+        // collapse the mobile keyboard. Don't do this on touchstart — that
+        // cancels the synthetic click and the form won't submit.
+        onMouseDown={(e) => e.preventDefault()}
         className="px-8 py-4 bg-btn text-btn-text font-semibold text-xl rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-30 disabled:cursor-not-allowed"
       >
         &rarr;

@@ -107,6 +107,9 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
     if (Number.isNaN(parsed)) return;
     warmup.submit(parsed);
     setValue('');
+    // Explicit refocus keeps the mobile soft keyboard up across the re-render
+    // that swaps in the next problem.
+    inputRef.current?.focus();
   };
 
   const tierLabel = TIER_LABELS[Math.min(warmup.tierIndex, TIER_LABELS.length - 1)];
@@ -191,7 +194,12 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
         >
           <input
             ref={inputRef}
-            type="number"
+            // text + inputMode="decimal" gets the mobile numeric keypad without
+            // type="number"'s iOS blur-on-parent-rerender quirks.
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9.\-]*"
+            enterKeyHint="go"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             disabled={paused}
@@ -208,6 +216,8 @@ export function WarmupPanel({ playerElo, paused }: WarmupPanelProps) {
           <button
             type="submit"
             disabled={paused || !value}
+            // Prevents focus steal from the input — keeps the mobile keyboard up.
+            onMouseDown={(e) => e.preventDefault()}
             className="shrink-0 px-4 sm:px-6 py-4 bg-ink-muted/10 text-ink-secondary border border-edge rounded-sm font-semibold text-xl hover:bg-ink-muted/15 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Submit answer"
           >

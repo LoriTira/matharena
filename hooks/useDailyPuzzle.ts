@@ -57,6 +57,10 @@ export function useDailyPuzzle() {
   const puzzleStartTimeRef = useRef<number>(0);
   const answersRef = useRef<number[]>([]);
   const problemTimesRef = useRef<number[]>([]);
+  // Blocks concurrent submitAnswer calls — without this a user on a slow
+  // connection would see the final problem still on screen during the submit
+  // fetch, re-type their answer, and trigger a second run.
+  const submittingRef = useRef(false);
 
   const fetchLeaderboard = useCallback(async () => {
     try {
@@ -131,76 +135,86 @@ export function useDailyPuzzle() {
 
   const submitAnswer = useCallback(
     async (answer: number): Promise<boolean> => {
-      const now = Date.now();
-      const elapsed = now - problemStartTimeRef.current;
-      const expected = computeAnswer(problems[currentIndex]);
+      if (submittingRef.current) return false;
+      submittingRef.current = true;
+      try {
+        const now = Date.now();
+        const elapsed = now - problemStartTimeRef.current;
+        const expected = computeAnswer(problems[currentIndex]);
 
-      // Round to handle floating point for division
-      const isCorrect =
-        Math.abs(answer - expected) < 0.001;
+        // Round to handle floating point for division
+        const isCorrect =
+          Math.abs(answer - expected) < 0.001;
 
-      if (!isCorrect) {
-        play('wrong');
-        hapticTap('error');
-        return false;
-      }
-
-      play('correct');
-      hapticTap('light');
-
-      // Record time and answer
-      const newTimes = [...problemTimesRef.current, elapsed];
-      const newAnswers = [...answersRef.current, answer];
-      problemTimesRef.current = newTimes;
-      answersRef.current = newAnswers;
-      setProblemTimes(newTimes);
-      setAnswers(newAnswers);
-
-      const nextIndex = currentIndex + 1;
-
-      if (nextIndex >= problems.length) {
-        // All problems done — submit
-        const totalMs = now - puzzleStartTimeRef.current;
-        setTotalTimeMs(totalMs);
-
-        // Celebration cue fires immediately on the last correct answer, not
-        // after the fetch — we want the user's reward to feel instant, and
-        // the submit + leaderboard fetches can take a few hundred ms each.
-        play('victory');
-        hapticTap('success');
-
-        try {
-          const res = await fetch('/api/daily/submit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              answers: newAnswers,
-              problemTimes: newTimes,
-              totalTimeMs: totalMs,
-            }),
-          });
-
-          if (res.ok) {
-            const submitData = await res.json();
-            setResult({
-              rank: submitData.rank,
-              totalPlayers: submitData.totalPlayers,
-              totalTimeMs: submitData.totalTimeMs,
-            });
-          }
-        } catch {
-          // Submission failed — still show completed locally
+        if (!isCorrect) {
+          play('wrong');
+          hapticTap('error');
+          return false;
         }
 
-        setStatus('completed');
-        await Promise.all([fetchLeaderboard(), fetchStreak()]);
-      } else {
-        // Move to next problem
-        setCurrentIndex(nextIndex);
-        problemStartTimeRef.current = Date.now();
-      }
+        play('correct');
+        hapticTap('light');
 
-      return true;
+        // Record time and answer
+        const newTimes = [...problemTimesRef.current, elapsed];
+        const newAnswers = [...answersRef.current, answer];
+        problemTimesRef.current = newTimes;
+        answersRef.current = newAnswers;
+        setProblemTimes(newTimes);
+        setAnswers(newAnswers);
+
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex >= problems.length) {
+          // All problems done — submit
+          const totalMs = now - puzzleStartTimeRef.current;
+          setTotalTimeMs(totalMs);
+
+          // Celebration cue fires immediately on the last correct answer, not
+          // after the fetch — we want the user's reward to feel instant, and
+          // the submit + leaderboard fetches can take a few hundred ms each.
+          play('victory');
+          hapticTap('success');
+
+          // Transition the UI off the playing view before awaiting the fetch.
+          // Otherwise the user sees the last problem still on screen and may
+          // re-submit, thinking their answer was lost.
+          setStatus('completed');
+
+          try {
+            const res = await fetch('/api/daily/submit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                answers: newAnswers,
+                problemTimes: newTimes,
+                totalTimeMs: totalMs,
+              }),
+            });
+
+            if (res.ok) {
+              const submitData = await res.json();
+              setResult({
+                rank: submitData.rank,
+                totalPlayers: submitData.totalPlayers,
+                totalTimeMs: submitData.totalTimeMs,
+              });
+            }
+          } catch {
+            // Submission failed — still show completed locally
+          }
+
+          await Promise.all([fetchLeaderboard(), fetchStreak()]);
+        } else {
+          // Move to next problem
+          setCurrentIndex(nextIndex);
+          problemStartTimeRef.current = Date.now();
+        }
+
+        return true;
+      } finally {
+        submittingRef.current = false;
+      }
     },
     [problems, currentIndex, fetchLeaderboard, fetchStreak, play]
   );
