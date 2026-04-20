@@ -1,15 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Profile, UserAchievement } from '@/types';
 import { ACHIEVEMENTS } from '@/lib/achievements';
-import { AchievementBadge } from '@/components/ui/AchievementBadge';
+import { Panel } from '@/components/arcade/Panel';
+import { SectionHead } from '@/components/arcade/SectionHead';
+import { Btn } from '@/components/arcade/Btn';
+import { RankPip } from '@/components/arcade/RankPip';
+import { Sparkline } from '@/components/arcade/Sparkline';
+import { Bar } from '@/components/arcade/Bar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { MatchHistoryList } from '@/components/profile/MatchHistoryList';
 import { FriendsSection } from '@/components/profile/FriendsSection';
 import { UserSearchModal } from '@/components/search/UserSearchModal';
+import { getRank } from '@/lib/ranks';
+import { type Tier } from '@/components/arcade/tokens';
+
+function tierToArcade(tier: string): Tier {
+  switch (tier) {
+    case 'Bronze':      return 'Bronze';
+    case 'Silver':      return 'Silver';
+    case 'Gold':        return 'Gold';
+    case 'Platinum':    return 'Platinum';
+    case 'Diamond':     return 'Diamond';
+    case 'Grandmaster': return 'Grand';
+    default:            return 'Wood';
+  }
+}
+
+type OpAccuracy = { label: string; op: string; correct: number; total: number };
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -23,63 +44,122 @@ export default function ProfilePage() {
   const [earnedAchievementIds, setEarnedAchievementIds] = useState<Set<string>>(new Set());
   const [sprintPB, setSprintPB] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const supabase = createClient();
+  const [eloHistory, setEloHistory] = useState<number[]>([]);
+  const [peakElo, setPeakElo] = useState<number | null>(null);
+  const [avgTimeSec, setAvgTimeSec] = useState<number | null>(null);
+  const [opAccuracy, setOpAccuracy] = useState<OpAccuracy[]>([]);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     if (!user) return;
 
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    const load = async () => {
+      const [profileRes, achRes, sprintRes, matchesRes, eventsRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('user_achievements').select('achievement_id').eq('user_id', user.id),
+        supabase.from('practice_sessions')
+          .select('score')
+          .eq('user_id', user.id)
+          .eq('duration', 120)
+          .order('score', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase.from('matches')
+          .select('player1_id, player2_id, player1_elo_after, player2_elo_after, completed_at')
+          .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+          .eq('status', 'completed')
+          .order('completed_at', { ascending: true })
+          .limit(90),
+        supabase.from('match_events')
+          .select('event, problem_snapshot')
+          .eq('player_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(500),
+      ]);
 
-      if (data) {
-        const p = data as Profile;
+      if (profileRes.data) {
+        const p = profileRes.data as Profile;
         setProfile(p);
         setDisplayName(p.display_name || '');
         setAffiliation(p.affiliation || '');
         setAffiliationType((p.affiliation_type as 'school' | 'company') || '');
         setCountry(p.country || '');
       }
-    };
 
-    fetchProfile();
+      if (achRes.data) {
+        setEarnedAchievementIds(
+          new Set((achRes.data as Pick<UserAchievement, 'achievement_id'>[]).map((a) => a.achievement_id))
+        );
+      }
+      if (sprintRes.data) setSprintPB(sprintRes.data.score);
 
-    const fetchAchievements = async () => {
-      try {
-        const { data } = await supabase
-          .from('user_achievements')
-          .select('achievement_id')
-          .eq('user_id', user.id);
+      if (matchesRes.data) {
+        const eloPts = matchesRes.data.map((m) => {
+          const isP1 = m.player1_id === user.id;
+          return (isP1 ? m.player1_elo_after : m.player2_elo_after) ?? 1000;
+        });
+        setEloHistory(eloPts);
+        if (eloPts.length > 0) setPeakElo(Math.max(...eloPts));
+      }
 
-        if (data) {
-          setEarnedAchievementIds(new Set((data as Pick<UserAchievement, 'achievement_id'>[]).map(a => a.achievement_id)));
+      if (eventsRes.data) {
+        const byOp: Record<string, { c: number; t: number; times: number[] }> = {};
+        for (const ev of eventsRes.data as { event: string; problem_snapshot: { operation?: string } | null }[]) {
+          const op = ev.problem_snapshot?.operation;
+          if (!op) continue;
+          if (!byOp[op]) byOp[op] = { c: 0, t: 0, times: [] };
+          byOp[op].t += 1;
+          if (ev.event === 'answer_correct') byOp[op].c += 1;
         }
-      } catch {
-        // Table may not exist yet; ignore
+        const labels: Record<string, string> = {
+          '+': 'Addition',
+          '-': 'Subtraction',
+          '*': 'Multiplication',
+          '/': 'Division',
+        };
+        const order = ['+', '-', '*', '/'];
+        setOpAccuracy(
+          order
+            .filter((op) => byOp[op] && byOp[op].t > 0)
+            .map((op) => ({ label: labels[op], op, correct: byOp[op].c, total: byOp[op].t }))
+        );
       }
-    };
-    fetchAchievements();
 
-    const fetchSprintPB = async () => {
-      try {
-        const { data } = await supabase
-          .from('practice_sessions')
-          .select('score')
-          .eq('user_id', user.id)
-          .eq('duration', 120)
-          .order('score', { ascending: false })
-          .limit(1)
-          .single();
-        if (data) setSprintPB(data.score);
-      } catch {
-        // No sprint sessions yet
+      // Avg solve time proxy: group by match and take deltas between consecutive
+      // correct answers (elapsed_ms is cumulative from match start, not per-problem).
+      const { data: timing } = await supabase
+        .from('match_events')
+        .select('match_id, elapsed_ms, event, created_at')
+        .eq('player_id', user.id)
+        .eq('event', 'answer_correct')
+        .order('match_id', { ascending: true })
+        .order('elapsed_ms', { ascending: true })
+        .limit(200);
+      if (timing && timing.length > 0) {
+        const typed = timing as { match_id: string; elapsed_ms: number }[];
+        const deltas: number[] = [];
+        let prevMatch: string | null = null;
+        let prevElapsed = 0;
+        for (const ev of typed) {
+          if (ev.match_id !== prevMatch) {
+            deltas.push(ev.elapsed_ms);
+            prevMatch = ev.match_id;
+          } else {
+            deltas.push(ev.elapsed_ms - prevElapsed);
+          }
+          prevElapsed = ev.elapsed_ms;
+        }
+        // Filter outliers >60s (likely match-boundary artefacts)
+        const clean = deltas.filter((d) => d > 0 && d < 60000);
+        if (clean.length > 0) {
+          const total = clean.reduce((a, b) => a + b, 0);
+          setAvgTimeSec((total / clean.length) / 1000);
+        }
       }
     };
-    fetchSprintPB();
-  }, [user]);
+
+    load();
+  }, [user, supabase]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -93,7 +173,6 @@ export default function ProfilePage() {
         country: country || null,
       }),
     });
-
     const data = await res.json();
     if (data.profile) {
       setProfile(data.profile as Profile);
@@ -104,192 +183,242 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* Profile card skeleton */}
-        <div className="border border-edge rounded-sm p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Skeleton className="w-14 h-14 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-7 w-48" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-            </div>
-            <Skeleton className="h-8 w-28" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-36" />
-            <Skeleton className="h-4 w-44" />
-          </div>
+      <div className="max-w-5xl mx-auto space-y-6">
+        <Skeleton className="h-48" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-[10px]">
+          <Skeleton className="h-24" /><Skeleton className="h-24" />
+          <Skeleton className="h-24" /><Skeleton className="h-24" />
         </div>
-
-        {/* Stats grid skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-shade rounded-sm overflow-hidden">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-page p-5 flex flex-col items-center gap-2">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-8 w-16" />
-            </div>
-          ))}
-        </div>
-
-        {/* Trophy case skeleton */}
-        <div>
-          <Skeleton className="h-3 w-24 mb-4" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-16" />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-[14px]">
+          <Skeleton className="h-64" /><Skeleton className="h-64" />
         </div>
       </div>
     );
   }
 
+  const rank = getRank(profile.elo_rating);
+  const arcadeTier = tierToArcade(rank.tier);
   const winRate = profile.games_played > 0
     ? Math.round((profile.games_won / profile.games_played) * 100)
     : 0;
+  const initial = (profile.display_name || profile.username)?.[0]?.toUpperCase() ?? 'Y';
+
+  const displayedName = profile.display_name || profile.username;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="border border-edge rounded-sm p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="font-serif text-3xl font-normal text-ink">{profile.display_name || profile.username}</h1>
-            <p className="text-ink-muted text-sm mt-1">@{profile.username}</p>
-          </div>
-          <button
-            onClick={() => setEditing(!editing)}
-            className="px-4 py-2 text-[12px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
+    <div className="space-y-[14px]">
+      {/* Header card */}
+      <Panel padding={0} className="overflow-hidden">
+        <div
+          className="flex flex-col md:flex-row items-center md:items-center gap-[16px] md:gap-[28px] text-center md:text-left p-[28px] md:p-[40px]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(54,228,255,0.13), rgba(255,42,127,0.13) 70%, transparent)',
+          }}
+        >
+          <div
+            className="shrink-0 grid place-items-center font-display font-extrabold text-[#0a0612]"
+            style={{
+              width: 92,
+              height: 92,
+              background: 'linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta))',
+              boxShadow: '0 0 30px rgba(54,228,255,0.4)',
+              fontSize: 48,
+            }}
           >
-            {editing ? 'CANCEL' : 'EDIT PROFILE'}
-          </button>
-        </div>
-
-        {editing ? (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Display Name</label>
+            {initial}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[2px] mb-[6px]">
+              @{profile.username}{profile.created_at ? ` · joined ${new Date(profile.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}` : ''}
+            </div>
+            {editing ? (
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="font-display font-extrabold text-[28px] md:text-[40px] tracking-[-1px] leading-[1] bg-transparent border-b border-cyan text-ink focus:outline-none w-full"
+                placeholder="Display name"
               />
+            ) : (
+              <div className="font-display font-extrabold text-[32px] md:text-[48px] tracking-[-1.2px] leading-[1] text-ink">
+                {displayedName}
+              </div>
+            )}
+            <div className="mt-[10px] flex gap-[10px] items-center flex-wrap justify-center md:justify-start">
+              <RankPip tier={arcadeTier} size={24} showLabel />
+              <span className="font-mono text-[12px] text-cyan font-bold tracking-[1px]">{profile.elo_rating} Elo</span>
+              <span className="font-mono text-[11px] text-ink-tertiary tracking-[1px]">
+                · {rank.name}
+              </span>
             </div>
-            <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Affiliation</label>
+          </div>
+          <div className="flex gap-[8px] flex-wrap justify-center">
+            <Btn size="md" variant={editing ? 'primary' : 'ghost'} onClick={() => editing ? handleSave() : setEditing(true)} disabled={saving}>
+              {editing ? (saving ? 'Saving…' : 'Save') : 'Edit profile'}
+            </Btn>
+            {editing && (
+              <Btn size="md" variant="ghost" onClick={() => setEditing(false)}>
+                Cancel
+              </Btn>
+            )}
+          </div>
+        </div>
+
+        {editing && (
+          <div className="p-6 border-t border-edge grid grid-cols-1 md:grid-cols-3 gap-4">
+            <label className="block">
+              <span className="block font-mono text-[10px] uppercase tracking-[1.6px] text-ink-faint mb-[6px]">Country</span>
+              <input
+                type="text"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="United States"
+                className="w-full px-3 py-2 bg-page border border-edge text-ink font-mono text-[12px] focus:outline-none focus:border-cyan transition-colors"
+              />
+            </label>
+            <label className="block">
+              <span className="block font-mono text-[10px] uppercase tracking-[1.6px] text-ink-faint mb-[6px]">Affiliation</span>
               <input
                 type="text"
                 value={affiliation}
                 onChange={(e) => setAffiliation(e.target.value)}
                 placeholder="MIT, Google, etc."
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="w-full px-3 py-2 bg-page border border-edge text-ink font-mono text-[12px] focus:outline-none focus:border-cyan transition-colors"
               />
-            </div>
-            <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Country</label>
-              <input
-                type="text"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                placeholder="United States, France, etc."
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Type</label>
+            </label>
+            <label className="block">
+              <span className="block font-mono text-[10px] uppercase tracking-[1.6px] text-ink-faint mb-[6px]">Type</span>
               <select
                 value={affiliationType}
                 onChange={(e) => setAffiliationType(e.target.value as 'school' | 'company' | '')}
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="w-full px-3 py-2 bg-page border border-edge text-ink font-mono text-[12px] focus:outline-none focus:border-cyan transition-colors"
               >
                 <option value="">None</option>
                 <option value="school">School</option>
                 <option value="company">Company</option>
               </select>
+            </label>
+          </div>
+        )}
+      </Panel>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-[10px]">
+        {[
+          { l: 'Matches', v: String(profile.games_played), c: 'text-cyan' },
+          { l: 'Win rate', v: `${winRate}%`, c: 'text-lime' },
+          { l: 'Peak Elo', v: peakElo !== null ? String(peakElo) : String(profile.elo_rating), c: 'text-gold' },
+          { l: 'Avg speed', v: avgTimeSec !== null ? `${avgTimeSec.toFixed(2)}s` : (sprintPB !== null ? `${sprintPB} PB` : '—'), c: 'text-magenta' },
+        ].map((s) => (
+          <div key={s.l} className="border border-edge-strong bg-panel p-[16px] md:p-[20px]">
+            <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[1.4px]">{s.l}</div>
+            <div className={`font-display font-extrabold text-[28px] md:text-[36px] tracking-[-0.8px] mt-[6px] tabular-nums ${s.c}`}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-[14px]">
+        {/* Elo history chart */}
+        <Panel padding={24}>
+          <SectionHead no="01" title="Elo · last 90 days" color="cyan" />
+          {eloHistory.length > 1 ? (
+            <div className="h-[140px] md:h-[180px]">
+              <Sparkline points={eloHistory} color="cyan" height={180} />
             </div>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50"
-            >
-              {saving ? 'SAVING...' : 'SAVE CHANGES'}
-            </button>
+          ) : (
+            <div className="h-[140px] grid place-items-center font-mono text-[11px] text-ink-faint uppercase tracking-[1.4px]">
+              Play a match to see history
+            </div>
+          )}
+        </Panel>
+
+        {/* Badges */}
+        <Panel padding={24}>
+          <SectionHead
+            no="02"
+            title={`Badges · ${earnedAchievementIds.size}`}
+            color="gold"
+          />
+          <div className="grid grid-cols-4 gap-[10px]">
+            {[...ACHIEVEMENTS]
+              .sort((a, b) => {
+                const aU = earnedAchievementIds.has(a.id);
+                const bU = earnedAchievementIds.has(b.id);
+                if (aU && !bU) return -1;
+                if (!aU && bU) return 1;
+                return 0;
+              })
+              .slice(0, 8)
+              .map((ach) => {
+                const unlocked = earnedAchievementIds.has(ach.id);
+                return (
+                  <div
+                    key={ach.id}
+                    title={`${ach.name} — ${ach.description}`}
+                    className="aspect-square flex flex-col items-center justify-center p-1 transition-all"
+                    style={{
+                      border: unlocked
+                        ? '1px solid var(--neon-cyan)'
+                        : '1px solid var(--border-default)',
+                      background: unlocked ? 'rgba(54,228,255,0.1)' : 'var(--bg-base)',
+                      opacity: unlocked ? 1 : 0.4,
+                    }}
+                  >
+                    <div
+                      className="font-display font-extrabold text-[22px] leading-none"
+                      style={{ color: unlocked ? 'var(--neon-cyan)' : 'var(--text-faint)' }}
+                    >
+                      {ach.icon}
+                    </div>
+                    <div className="font-mono text-[7px] text-ink-tertiary uppercase tracking-[0.8px] mt-[4px] text-center leading-tight">
+                      {ach.name}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
-        ) : (
-          <>
-            {profile.country && (
-              <p className="text-ink-secondary text-sm">
-                <span className="text-ink-faint">Country: </span>
-                {profile.country}
-              </p>
-            )}
-            {profile.affiliation && (
-              <p className="text-ink-secondary text-sm mt-1">
-                <span className="text-ink-faint capitalize">{profile.affiliation_type}: </span>
-                {profile.affiliation}
-              </p>
-            )}
-          </>
-        )}
+          {earnedAchievementIds.size > 0 && (
+            <div className="text-center font-mono text-[10px] text-ink-faint tracking-[1.2px] uppercase mt-[14px]">
+              {earnedAchievementIds.size} / {ACHIEVEMENTS.length} unlocked
+            </div>
+          )}
+        </Panel>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-shade rounded-sm overflow-hidden">
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">RATING</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.elo_rating}</div>
-        </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_played}</div>
-        </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WINS</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_won}</div>
-        </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
-        </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">SPRINT PB</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{sprintPB ?? '—'}</div>
-        </div>
-      </div>
-
-      {/* Match history */}
-      <MatchHistoryList userId={user!.id} viewerId={user!.id} />
-
-      {/* Friends & incoming requests */}
-      <FriendsSection onOpenSearch={() => setSearchOpen(true)} />
-
-      {/* Trophy Case */}
-      <div>
-        <div className="text-[11px] tracking-[3px] text-ink-faint mb-4">TROPHY CASE</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {[...ACHIEVEMENTS]
-            .sort((a, b) => {
-              const aUnlocked = earnedAchievementIds.has(a.id);
-              const bUnlocked = earnedAchievementIds.has(b.id);
-              if (aUnlocked && !bUnlocked) return -1;
-              if (!aUnlocked && bUnlocked) return 1;
-              return 0;
-            })
-            .map((achievement) => (
-              <AchievementBadge
-                key={achievement.id}
-                achievement={achievement}
-                unlocked={earnedAchievementIds.has(achievement.id)}
-                size="md"
-              />
-            ))}
-        </div>
-        {earnedAchievementIds.size > 0 && (
-          <div className="text-center text-ink-faint text-[11px] mt-4">
-            {earnedAchievementIds.size} / {ACHIEVEMENTS.length} unlocked
+      {/* Operation accuracy heatmap */}
+      {opAccuracy.length > 0 && (
+        <Panel padding={24}>
+          <SectionHead no="03" title="Operation accuracy" color="magenta" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-[10px]">
+            {opAccuracy.map((s) => {
+              const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+              const c = pct >= 80 ? 'lime' : pct >= 60 ? 'gold' : pct >= 40 ? 'cyan' : 'magenta';
+              const txt = { lime: 'text-lime', gold: 'text-gold', cyan: 'text-cyan', magenta: 'text-magenta' }[c] as string;
+              return (
+                <div key={s.op}>
+                  <div className="flex justify-between mb-[6px]">
+                    <span className="font-mono text-[10px] text-ink-tertiary uppercase tracking-[1.2px]">{s.label}</span>
+                    <span className={`font-mono text-[11px] font-bold ${txt}`}>{pct}%</span>
+                  </div>
+                  <Bar progress={pct / 100} color={c as 'lime' | 'gold' | 'cyan' | 'magenta'} height={6} />
+                </div>
+              );
+            })}
           </div>
-        )}
+        </Panel>
+      )}
+
+      {/* Match history + Friends */}
+      <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-[14px]">
+        <Panel padding={24}>
+          <SectionHead no="04" title="Match history" color="cyan" />
+          <MatchHistoryList userId={user!.id} viewerId={user!.id} />
+        </Panel>
+
+        <Panel padding={24}>
+          <SectionHead no="05" title="Friends" color="lime" />
+          <FriendsSection onOpenSearch={() => setSearchOpen(true)} />
+        </Panel>
       </div>
 
       <UserSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />

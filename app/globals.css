@@ -1,135 +1,103 @@
 @import "tailwindcss";
 
-/* ─── Light mode (default) ──────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   MATHSARENA — NEON ARCADE CRT palette
+   Source of truth: /tmp/matharena-design/extracted/mathsarena/project/
+   Dark (default for CRT feel) + a warm tan "arcade light" mode.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Light mode (arcade tan) ───────────────────────── */
 :root {
   color-scheme: light;
 
-  --bg-base: #f5f5f7;
-  --bg-raised: #ffffff;
-  --bg-inset: #ebebed;
-  --bg-surface: rgba(0, 0, 0, 0.025);
-  --bg-hover: rgba(0, 0, 0, 0.05);
-  --bg-subtle: rgba(0, 0, 0, 0.04);
-  --border-hairline: rgba(0, 0, 0, 0.06);
-  --border-default: rgba(0, 0, 0, 0.1);
-  --border-strong: rgba(0, 0, 0, 0.18);
-  --text-primary: rgba(0, 0, 0, 0.92);
-  --text-secondary: rgba(0, 0, 0, 0.72);
-  --text-tertiary: rgba(0, 0, 0, 0.55);
-  --text-muted: rgba(0, 0, 0, 0.4);
-  --text-faint: rgba(0, 0, 0, 0.25);
-  --nav-bg: rgba(245, 245, 247, 0.8);
-  --overlay: rgba(0, 0, 0, 0.3);
-  --cta-bg: rgba(0, 0, 0, 0.87);
-  --cta-text: #ffffff;
-  --cta-hover: rgba(0, 0, 0, 0.95);
-  --on-accent: #ffffff;
-  --feedback-correct: rgba(22, 163, 74, 0.8);
-  --feedback-wrong: rgba(220, 38, 38, 0.8);
+  --bg-base: #f4eddb;
+  --bg-raised: #ebe1c7;
+  --bg-inset: #e1d4b3;
+  --bg-surface: rgba(26, 15, 46, 0.04);
+  --bg-hover: rgba(26, 15, 46, 0.07);
+  --bg-subtle: rgba(26, 15, 46, 0.05);
+  --border-hairline: rgba(26, 15, 46, 0.08);
+  --border-default: rgba(26, 15, 46, 0.14);
+  --border-strong: rgba(26, 15, 46, 0.25);
+  --text-primary: #1a0f2e;
+  --text-secondary: rgba(26, 15, 46, 0.78);
+  --text-tertiary: rgba(26, 15, 46, 0.65);
+  --text-muted: rgba(26, 15, 46, 0.45);
+  --text-faint: rgba(26, 15, 46, 0.3);
+  --nav-bg: rgba(244, 237, 219, 0.82);
+  --overlay: rgba(26, 15, 46, 0.35);
+  --cta-bg: #1a0f2e;
+  --cta-text: #f4eddb;
+  --cta-hover: #0a0612;
+  --on-accent: #1a0f2e;
+  --feedback-correct: #4f8f1a;
+  --feedback-wrong: #d91e6a;
 
-  /* Default accent: violet */
-  --accent: #7C3AED;
-  --accent-muted: rgba(124, 58, 237, 0.7);
-  --accent-subtle: rgba(124, 58, 237, 0.12);
-  --accent-glow: rgba(124, 58, 237, 0.06);
+  /* Neon accents (muted for light theme readability) */
+  --neon-magenta: #d91e6a;
+  --neon-cyan: #0093b3;
+  --neon-gold: #b5751e;
+  --neon-lime: #4f8f1a;
+  --neon-coral: #d2651a;
+  --neon-danger: #d91e6a;
+
+  /* Primary accent = cyan in arcade language */
+  --accent: var(--neon-cyan);
+  --accent-muted: rgba(0, 147, 179, 0.65);
+  --accent-subtle: rgba(0, 147, 179, 0.14);
+  --accent-glow: rgba(0, 147, 179, 0.08);
+
+  /* CRT overlay strength */
+  --scanline-strength: 0.04;
+  --vignette-strength: 0.08;
+  --grid-strength: 0.35;
+  --glow-opacity: 0.2;
 }
 
-/* ─── Dark mode ─────────────────────────────────────── */
+/* ─── Dark mode (arcade dark — the default vibe) ────── */
 .dark {
   color-scheme: dark;
 
-  --bg-base: #111113;
-  --bg-raised: #1a1a1e;
-  --bg-inset: #0c0c0e;
-  --bg-surface: rgba(255, 255, 255, 0.03);
-  --bg-hover: rgba(255, 255, 255, 0.05);
-  --bg-subtle: rgba(255, 255, 255, 0.06);
-  --border-hairline: rgba(255, 255, 255, 0.05);
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
-  --text-primary: rgba(255, 255, 255, 0.95);
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.52);
-  --text-muted: rgba(255, 255, 255, 0.38);
-  --text-faint: rgba(255, 255, 255, 0.25);
-  --nav-bg: rgba(17, 17, 19, 0.8);
-  --overlay: rgba(0, 0, 0, 0.6);
-  --cta-bg: rgba(255, 255, 255, 0.9);
-  --cta-text: #111113;
+  --bg-base: #0a0612;
+  --bg-raised: #120a1f;
+  --bg-inset: #1a0f2e;
+  --bg-surface: rgba(254, 246, 228, 0.04);
+  --bg-hover: rgba(254, 246, 228, 0.08);
+  --bg-subtle: rgba(254, 246, 228, 0.06);
+  --border-hairline: rgba(254, 246, 228, 0.08);
+  --border-default: rgba(254, 246, 228, 0.12);
+  --border-strong: rgba(254, 246, 228, 0.24);
+  --text-primary: #fef6e4;
+  --text-secondary: rgba(254, 246, 228, 0.75);
+  --text-tertiary: rgba(254, 246, 228, 0.62);
+  --text-muted: rgba(254, 246, 228, 0.45);
+  --text-faint: rgba(254, 246, 228, 0.32);
+  --nav-bg: rgba(10, 6, 18, 0.78);
+  --overlay: rgba(0, 0, 0, 0.65);
+  --cta-bg: #fef6e4;
+  --cta-text: #0a0612;
   --cta-hover: #ffffff;
-  --on-accent: #111113;
-  --feedback-correct: rgba(74, 222, 128, 0.7);
-  --feedback-wrong: rgba(248, 113, 113, 0.7);
+  --on-accent: #0a0612;
+  --feedback-correct: #a6ff4d;
+  --feedback-wrong: #ff2a7f;
 
-  /* Dark accent defaults (violet) */
-  --accent: #A78BFA;
-  --accent-muted: rgba(167, 139, 250, 0.6);
-  --accent-subtle: rgba(167, 139, 250, 0.15);
-  --accent-glow: rgba(167, 139, 250, 0.08);
-}
+  /* Neon accents — full voltage in the dark */
+  --neon-magenta: #ff2a7f;
+  --neon-cyan: #36e4ff;
+  --neon-gold: #ffd23f;
+  --neon-lime: #a6ff4d;
+  --neon-coral: #ff8b3d;
+  --neon-danger: #ff4d6d;
 
-/* ─── Accent: Violet (default) ─────────────────────── */
-[data-accent="violet"] {
-  --accent: #7C3AED;
-  --accent-muted: rgba(124, 58, 237, 0.7);
-  --accent-subtle: rgba(124, 58, 237, 0.12);
-  --accent-glow: rgba(124, 58, 237, 0.06);
-  --on-accent: #ffffff;
-}
-[data-accent="violet"].dark {
-  --accent: #A78BFA;
-  --accent-muted: rgba(167, 139, 250, 0.6);
-  --accent-subtle: rgba(167, 139, 250, 0.15);
-  --accent-glow: rgba(167, 139, 250, 0.08);
-  --on-accent: #111113;
-}
+  --accent: var(--neon-cyan);
+  --accent-muted: rgba(54, 228, 255, 0.65);
+  --accent-subtle: rgba(54, 228, 255, 0.14);
+  --accent-glow: rgba(54, 228, 255, 0.08);
 
-/* ─── Accent: Teal ─────────────────────────────────── */
-[data-accent="teal"] {
-  --accent: #0D9488;
-  --accent-muted: rgba(13, 148, 136, 0.7);
-  --accent-subtle: rgba(13, 148, 136, 0.12);
-  --accent-glow: rgba(13, 148, 136, 0.06);
-  --on-accent: #ffffff;
-}
-[data-accent="teal"].dark {
-  --accent: #2DD4BF;
-  --accent-muted: rgba(45, 212, 191, 0.6);
-  --accent-subtle: rgba(45, 212, 191, 0.15);
-  --accent-glow: rgba(45, 212, 191, 0.08);
-  --on-accent: #111113;
-}
-
-/* ─── Accent: Gold ─────────────────────────────────── */
-[data-accent="gold"] {
-  --accent: #B45309;
-  --accent-muted: rgba(180, 83, 9, 0.7);
-  --accent-subtle: rgba(180, 83, 9, 0.12);
-  --accent-glow: rgba(180, 83, 9, 0.06);
-  --on-accent: #ffffff;
-}
-[data-accent="gold"].dark {
-  --accent: #F59E0B;
-  --accent-muted: rgba(245, 158, 11, 0.6);
-  --accent-subtle: rgba(245, 158, 11, 0.15);
-  --accent-glow: rgba(245, 158, 11, 0.08);
-  --on-accent: #111113;
-}
-
-/* ─── Accent: Blue ─────────────────────────────────── */
-[data-accent="blue"] {
-  --accent: #2563EB;
-  --accent-muted: rgba(37, 99, 235, 0.7);
-  --accent-subtle: rgba(37, 99, 235, 0.12);
-  --accent-glow: rgba(37, 99, 235, 0.06);
-  --on-accent: #ffffff;
-}
-[data-accent="blue"].dark {
-  --accent: #60A5FA;
-  --accent-muted: rgba(96, 165, 250, 0.6);
-  --accent-subtle: rgba(96, 165, 250, 0.15);
-  --accent-glow: rgba(96, 165, 250, 0.08);
-  --on-accent: #111113;
+  --scanline-strength: 0.22;
+  --vignette-strength: 0.55;
+  --grid-strength: 0.35;
+  --glow-opacity: 0.32;
 }
 
 /* ─── Tailwind theme tokens ─────────────────────────── */
@@ -163,48 +131,123 @@
   --color-accent-glow: var(--accent-glow);
   --color-on-accent: var(--on-accent);
 
+  --color-magenta: var(--neon-magenta);
+  --color-cyan: var(--neon-cyan);
+  --color-gold: var(--neon-gold);
+  --color-lime: var(--neon-lime);
+  --color-coral: var(--neon-coral);
+  --color-danger: var(--neon-danger);
+
   --color-background: var(--bg-base);
   --color-foreground: var(--text-primary);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-display);
+  --font-display: var(--font-display);
+  --font-serif: var(--font-display);
   --font-mono: var(--font-jetbrains);
 }
 
-/* ─── Animations ────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   CRT chrome — scanlines, grid, vignette, glow blobs
+   ═══════════════════════════════════════════════════════════ */
+
+.arcade-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, var(--scanline-strength)) 2px,
+    rgba(0, 0, 0, var(--scanline-strength)) 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+.arcade-vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 49;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, var(--vignette-strength)) 100%
+  );
+}
+
+.arcade-grid {
+  background-image:
+    linear-gradient(var(--border-default) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-default) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: var(--grid-strength);
+}
+
+.arcade-glow-magenta {
+  background: radial-gradient(circle, var(--neon-magenta), transparent 60%);
+  opacity: var(--glow-opacity);
+  filter: blur(60px);
+}
+
+.arcade-glow-cyan {
+  background: radial-gradient(circle, var(--neon-cyan), transparent 60%);
+  opacity: var(--glow-opacity);
+  filter: blur(80px);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Animations (dopamine layer)
+   ═══════════════════════════════════════════════════════════ */
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
   20%, 40%, 60%, 80% { transform: translateX(4px); }
 }
-
-.animate-shake {
-  animation: shake 0.5s ease-in-out;
-}
+.animate-shake { animation: shake 0.5s ease-in-out; }
 
 @keyframes score-bounce {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.25); }
 }
-
-.animate-score-bounce {
-  animation: score-bounce 0.4s ease-out;
-}
+.animate-score-bounce { animation: score-bounce 0.4s ease-out; }
 
 @keyframes gold-pulse {
   0%, 100% { border-color: var(--accent-subtle); }
   50% { border-color: var(--accent-muted); }
 }
+.animate-gold-pulse { animation: gold-pulse 2s ease-in-out infinite; }
 
-.animate-gold-pulse {
-  animation: gold-pulse 2s ease-in-out infinite;
+@keyframes neon-pulse {
+  0%, 100% { box-shadow: 0 0 12px var(--neon-cyan), inset 0 0 12px rgba(54,228,255,0.2); }
+  50%      { box-shadow: 0 0 24px var(--neon-cyan), inset 0 0 20px rgba(54,228,255,0.4); }
 }
+.animate-neon-pulse { animation: neon-pulse 1.6s ease-in-out infinite; }
 
-@keyframes burst-ray {
-  0% { opacity: 0; transform: scaleY(0); }
-  50% { opacity: 1; }
-  100% { opacity: 0; transform: scaleY(1); }
+@keyframes neon-flicker {
+  0%, 100% { opacity: 1; }
+  43% { opacity: 1; }
+  45% { opacity: 0.7; }
+  47% { opacity: 1; }
+  78% { opacity: 0.85; }
 }
+.animate-neon-flicker { animation: neon-flicker 4s linear infinite; }
+
+@keyframes scanline-drift {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(3px); }
+}
+.animate-scanline-drift::before { animation: scanline-drift 8s linear infinite; }
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker { animation: ticker-scroll 60s linear infinite; }
 
 @keyframes countdown-pulse {
   0% { transform: scale(0.5); opacity: 0; }
@@ -216,59 +259,38 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
-
-.animate-shimmer {
-  animation: shimmer 1.5s ease-in-out infinite;
-}
+.animate-shimmer { animation: shimmer 1.5s ease-in-out infinite; }
 
 @keyframes heart-break {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.3); opacity: 0.6; }
   100% { transform: scale(0.8); opacity: 0.4; }
 }
-
-.animate-heart-break {
-  animation: heart-break 0.4s ease-out forwards;
-}
+.animate-heart-break { animation: heart-break 0.4s ease-out forwards; }
 
 @keyframes xp-float {
   0% { transform: translateY(0); opacity: 1; }
   100% { transform: translateY(-30px); opacity: 0; }
 }
+.animate-xp-float { animation: xp-float 1s ease-out forwards; }
 
-.animate-xp-float {
-  animation: xp-float 1s ease-out forwards;
-}
-
-/* Flow Sprint: slide-in animation for new problems (CSS-driven to sidestep
-   framer-motion's restart-on-rerender behavior). Triggered by key-based
-   remount of the wrapping div in WarmupPanel. */
 @keyframes warmup-problem-enter {
   0% { opacity: 0; transform: translateX(30px); }
   100% { opacity: 1; transform: translateX(0); }
 }
+.animate-warmup-problem-enter { animation: warmup-problem-enter 0.15s ease-in-out forwards; }
 
-.animate-warmup-problem-enter {
-  animation: warmup-problem-enter 0.15s ease-in-out forwards;
-}
-
-/* Flow Sprint: particle burst on correct answer (tier-aware via transform) */
 @keyframes warmup-particle-burst {
   0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
   20% { opacity: 1; }
   100% { transform: var(--burst-end, translate(0, -40px)) scale(0.2); opacity: 0; }
 }
+.animate-warmup-burst { animation: warmup-particle-burst 0.45s ease-out forwards; }
 
-.animate-warmup-burst {
-  animation: warmup-particle-burst 0.45s ease-out forwards;
-}
-
-/* Flow Sprint: ephemeral background hue pulse on tier crossing */
 @keyframes warmup-tier-sweep {
-  0% { background-position: -100% 0; }
+  0%   { background-position: -100% 0; }
   100% { background-position: 200% 0; }
 }
-
 .animate-warmup-sweep {
   background: linear-gradient(
     90deg,
@@ -282,15 +304,11 @@
   animation: warmup-tier-sweep 0.8s ease-out forwards;
 }
 
-/* Ranked streak flare — sibling to warmup-tier-sweep but uses the accent
-   color tokens (which warmup cannot, per its design invariants). Fires
-   visually when the ranked streak tier crosses a milestone. */
 @keyframes ranked-streak-flare {
   0%   { background-position: -100% 0; opacity: 0; }
   20%  { opacity: 1; }
   100% { background-position: 200% 0; opacity: 0; }
 }
-
 .animate-ranked-streak-flare {
   background: linear-gradient(
     90deg,
@@ -304,13 +322,14 @@
   animation: ranked-streak-flare 0.6s ease-out forwards;
 }
 
-/* Respect user's reduced-motion preference across the whole dopamine layer.
-   Keep the animations that carry meaning (countdown pulse) and disable the
-   decorative ones. */
 @media (prefers-reduced-motion: reduce) {
   .animate-shake,
   .animate-score-bounce,
   .animate-gold-pulse,
+  .animate-neon-pulse,
+  .animate-neon-flicker,
+  .animate-scanline-drift::before,
+  .animate-ticker,
   .animate-shimmer,
   .animate-heart-break,
   .animate-xp-float,
@@ -322,21 +341,20 @@
   }
 }
 
-/* ─── Base styles ───────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   Base styles
+   ═══════════════════════════════════════════════════════════ */
 
 body {
   background: var(--bg-base);
   color: var(--text-secondary);
   font-weight: 400;
-  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
-  /* iOS notch / home indicator — respected when layout.tsx sets
-     viewportFit: 'cover'. Ensures bottom-anchored controls (forfeit,
-     answer input) never slip under the home indicator. */
+  font-family: var(--font-display), 'Space Grotesk', system-ui, sans-serif;
+  font-feature-settings: "ss01", "ss02";
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Prevent pull-to-refresh mid-match on iOS/Android. Applied to the top-level
-   MatchBoard wrapper via the `.match-screen` class. */
+/* Prevent pull-to-refresh mid-match */
 .match-screen {
   overscroll-behavior-y: contain;
 }
@@ -347,35 +365,15 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
-input[type="number"] {
-  -moz-appearance: textfield;
-}
+input[type="number"] { -moz-appearance: textfield; }
 
 /* Card hover lift */
 .card-hover {
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .card-hover:hover {
-  transform: scale(1.005);
-}
-
-/* Nav link underline animation */
-.nav-underline {
-  position: relative;
-}
-.nav-underline::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: var(--text-muted);
-  transition: width 0.2s ease;
-}
-.nav-underline:hover::after {
-  width: 100%;
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
 }
 
 /* Custom range slider */
@@ -386,34 +384,43 @@ input[type="range"] {
   cursor: pointer;
   width: 100%;
 }
-
 input[type="range"]::-webkit-slider-track {
   height: 2px;
   background: var(--border-default);
   border-radius: 1px;
 }
-
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--text-primary);
+  background: var(--neon-cyan);
   margin-top: -6px;
   border: none;
+  box-shadow: 0 0 8px var(--neon-cyan);
 }
-
 input[type="range"]::-moz-range-track {
   height: 2px;
   background: var(--border-default);
   border-radius: 1px;
   border: none;
 }
-
 input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--text-primary);
+  background: var(--neon-cyan);
   border: none;
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+
+/* Neon text-stroke headline utility */
+.neon-outline {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--neon-magenta);
+  text-shadow: 0 0 24px rgba(255, 42, 127, 0.4), 4px 4px 0 rgba(54, 228, 255, 0.15);
+}
+:root:not(.dark) .neon-outline {
+  -webkit-text-stroke-width: 1.5px;
+  text-shadow: none;
 }
