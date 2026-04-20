@@ -1,21 +1,25 @@
 /**
- * Tiny haptic feedback helper. Wraps `navigator.vibrate` with named patterns
- * and respects the shared `ma-sound` localStorage toggle (same key the audio
- * provider uses) so users get a single "feedback on/off" control.
+ * Tiny haptic feedback helper. Wraps `navigator.vibrate` on the web and
+ * `@capacitor/haptics` (CoreHaptics) on native iOS/Android, behind named
+ * patterns. Respects the shared `ma-sound` localStorage toggle (same key
+ * the audio provider uses) so users get a single "feedback on/off" control.
  *
  * Graceful no-op on:
- *   - SSR (no window / navigator)
- *   - iOS Safari (Vibration API is not exposed — Apple only permits haptics
- *     to native apps)
+ *   - SSR (no window)
+ *   - iOS Safari (no Vibration API — feedback only available in the native
+ *     iOS app wrapper via Capacitor)
  *   - Feedback disabled
  *
  * Do NOT React-ify this. It's called from effects, event handlers, and
  * timers — the simplest possible API surface wins.
  */
 
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+
 export type HapticStrength = 'light' | 'medium' | 'heavy' | 'success' | 'error';
 
-const PATTERNS: Record<HapticStrength, number | number[]> = {
+const WEB_PATTERNS: Record<HapticStrength, number | number[]> = {
   light: 15,
   medium: 40,
   heavy: 60,
@@ -23,21 +27,51 @@ const PATTERNS: Record<HapticStrength, number | number[]> = {
   error: [40, 60, 40],
 };
 
+function isFeedbackEnabled(): boolean {
+  try {
+    return localStorage.getItem('ma-sound') !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+function nativeHaptic(strength: HapticStrength): void {
+  switch (strength) {
+    case 'light':
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+      return;
+    case 'medium':
+      Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+      return;
+    case 'heavy':
+      Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
+      return;
+    case 'success':
+      Haptics.notification({ type: NotificationType.Success }).catch(() => {});
+      return;
+    case 'error':
+      Haptics.notification({ type: NotificationType.Error }).catch(() => {});
+      return;
+  }
+}
+
+function webHaptic(strength: HapticStrength): void {
+  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+  try {
+    navigator.vibrate(WEB_PATTERNS[strength]);
+  } catch {
+    /* some browsers throw when the tab is backgrounded */
+  }
+}
+
 export function hapticTap(strength: HapticStrength): void {
   if (typeof window === 'undefined') return;
-  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+  if (!isFeedbackEnabled()) return;
 
-  // Respect the shared feedback toggle. Read on every call — it's cheap and
-  // avoids stale closures if the user toggles mid-match.
-  try {
-    if (localStorage.getItem('ma-sound') === 'off') return;
-  } catch {
-    /* storage may throw in private mode — fall through and vibrate */
+  if (Capacitor.isNativePlatform()) {
+    nativeHaptic(strength);
+    return;
   }
 
-  try {
-    navigator.vibrate(PATTERNS[strength]);
-  } catch {
-    /* some browsers throw if the tab is backgrounded */
-  }
+  webHaptic(strength);
 }
