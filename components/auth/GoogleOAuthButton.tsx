@@ -2,6 +2,50 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { isNativePlatform } from '@/lib/native/platform';
+import { Browser } from '@capacitor/browser';
+import { App as CapApp, type URLOpenListenerEvent } from '@capacitor/app';
+
+const NATIVE_REDIRECT = 'com.mathsarena.app://auth/callback';
+
+async function handleNativeOAuth(supabase: ReturnType<typeof createClient>) {
+  // Ask Supabase for the Google OAuth URL without redirecting the WebView
+  // (Google blocks OAuth inside embedded WebViews, and our app-bound domain
+  // policy blocks navigation away from mathsarena.com anyway).
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: NATIVE_REDIRECT,
+      skipBrowserRedirect: true,
+    },
+  });
+  if (error || !data?.url) throw error ?? new Error('No OAuth URL returned');
+
+  // Open the OAuth URL in SFSafariViewController. When Google redirects to
+  // our custom URL scheme, iOS dispatches `appUrlOpen` and we exchange the
+  // auth code for a Supabase session.
+  const urlListener = await CapApp.addListener('appUrlOpen', async (event: URLOpenListenerEvent) => {
+    if (!event.url.startsWith(NATIVE_REDIRECT)) return;
+
+    await Browser.close().catch(() => {});
+    urlListener.remove();
+
+    const callbackUrl = new URL(event.url);
+    const code = callbackUrl.searchParams.get('code');
+    if (!code) return;
+
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    if (exchangeError) {
+      console.error('Code exchange failed:', exchangeError.message);
+      return;
+    }
+
+    // Reload the WebView so server components pick up the new auth cookie.
+    window.location.reload();
+  });
+
+  await Browser.open({ url: data.url, presentationStyle: 'popover' });
+}
 
 export function GoogleOAuthButton({ redirect, label = 'Continue with Google' }: { redirect?: string | null; label?: string }) {
   const [loading, setLoading] = useState(false);
@@ -10,8 +54,18 @@ export function GoogleOAuthButton({ redirect, label = 'Continue with Google' }: 
   const handleGoogleLogin = async () => {
     setLoading(true);
 
-    // Store redirect in sessionStorage (survives OAuth redirect chain reliably)
-    // and as cookie fallback for the server-side callback route
+    if (isNativePlatform()) {
+      try {
+        await handleNativeOAuth(supabase);
+      } catch (err) {
+        console.error('Native Google OAuth error:', err);
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Web: store redirect in sessionStorage (survives OAuth redirect chain
+    // reliably) and as cookie fallback for the server-side callback route.
     if (redirect) {
       try { sessionStorage.setItem('ma-pending-redirect', redirect); } catch {}
       document.cookie = `ma-oauth-redirect=${encodeURIComponent(redirect)}; path=/; max-age=300; SameSite=Lax`;

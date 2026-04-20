@@ -5,7 +5,9 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleOAuthButton } from '@/components/auth/GoogleOAuthButton';
+import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import { getValidRedirect } from '@/lib/auth/redirect';
+import { useIsNative } from '@/lib/native/platform';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -25,6 +27,7 @@ export function AuthForm({
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const isNative = useIsNative();
 
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
@@ -108,7 +111,18 @@ export function AuthForm({
           {isSignIn ? 'Sign in to MathsArena' : 'Create your account and start competing'}
         </p>
 
-        <GoogleOAuthButton redirect={redirect} />
+        <div className="space-y-3">
+          {isNative && (
+            <AppleSignInButton
+              redirect={redirect}
+              label={isSignIn ? 'Sign in with Apple' : 'Sign up with Apple'}
+            />
+          )}
+          <GoogleOAuthButton
+            redirect={redirect}
+            label={isSignIn ? 'Continue with Google' : 'Sign up with Google'}
+          />
+        </div>
 
         <div className="flex items-center gap-3 my-6">
           <div className="flex-1 h-px bg-edge" />

@@ -1,0 +1,19 @@
+{
+  "name": "matharena-apple-sign-in",
+  "version": "0.0.0",
+  "description": "In-tree Capacitor plugin exposing ASAuthorizationAppleIDProvider",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "ios/",
+    "Package.swift",
+    "index.js",
+    "index.d.ts"
+  ],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}
