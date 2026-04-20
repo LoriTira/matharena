@@ -1,20 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
+import { Panel } from '@/components/arcade/Panel';
+import { RankPip } from '@/components/arcade/RankPip';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { getRank } from '@/lib/ranks';
+import { TIER_COLORS, type Tier } from '@/components/arcade/tokens';
 import type { Profile } from '@/types';
 
+type Scope = 'Global' | 'Friends' | 'Country';
+
+function tierToArcade(tier: string): Tier {
+  switch (tier) {
+    case 'Bronze':      return 'Bronze';
+    case 'Silver':      return 'Silver';
+    case 'Gold':        return 'Gold';
+    case 'Platinum':    return 'Platinum';
+    case 'Diamond':     return 'Diamond';
+    case 'Grandmaster': return 'Grand';
+    default:            return 'Wood';
+  }
+}
+
 export default function LeaderboardPage() {
+  const { user } = useAuth();
   const [players, setPlayers] = useState<Profile[]>([]);
-  const [sprintPBs, setSprintPBs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
-  const supabase = createClient();
+  const [scope, setScope] = useState<Scope>('Global');
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      setLoading(true);
       let query = supabase
         .from('profiles')
         .select('*')
@@ -26,135 +47,209 @@ export default function LeaderboardPage() {
       }
 
       const { data } = await query;
-      if (data) {
-        const profiles = data as Profile[];
-        setPlayers(profiles);
-
-        // Batch-fetch sprint PBs for all players
-        const playerIds = profiles.map((p) => p.id);
-        if (playerIds.length > 0) {
-          const { data: sprintData } = await supabase
-            .from('practice_sessions')
-            .select('user_id, score')
-            .in('user_id', playerIds)
-            .eq('duration', 120)
-            .order('score', { ascending: false });
-
-          if (sprintData) {
-            const pbs: Record<string, number> = {};
-            for (const s of sprintData as { user_id: string; score: number }[]) {
-              if (!(s.user_id in pbs)) {
-                pbs[s.user_id] = s.score;
-              }
-            }
-            setSprintPBs(pbs);
-          }
-        }
-      }
+      if (data) setPlayers(data as Profile[]);
       setLoading(false);
     };
-
     fetchLeaderboard();
-  }, [filter]);
+  }, [filter, supabase]);
+
+  const me = user ? players.find((p) => p.id === user.id) : null;
+  const meRank = user ? players.findIndex((p) => p.id === user.id) + 1 : 0;
+  const top3 = players.slice(0, 3);
+  const otherRows = players.slice(0, 20);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-3xl font-normal text-ink">Leaderboard</h1>
-        <input
-          type="text"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter by school/company..."
-          className="px-4 py-2 bg-card border border-edge rounded-sm text-ink-secondary placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong w-64 text-sm transition-colors"
-        />
+    <div className="space-y-[14px]">
+      {/* Header */}
+      <div className="flex items-end justify-between gap-[18px] flex-wrap mb-2">
+        <div>
+          <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[2px] mb-[8px]">
+            / Global · Season 04
+          </div>
+          <h1 className="font-display font-extrabold text-[30px] md:text-[52px] tracking-[-1.2px] leading-[1]">
+            The <span className="text-gold italic">top</span> of the arena.
+          </h1>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex border border-edge-strong">
+            {(['Global', 'Friends', 'Country'] as Scope[]).map((t, i) => (
+              <button
+                key={t}
+                onClick={() => setScope(t)}
+                className={`font-mono text-[10px] uppercase tracking-[1.4px] font-bold px-[14px] py-[8px] transition-colors ${
+                  i > 0 ? 'border-l border-edge-strong' : ''
+                } ${
+                  scope === t ? 'bg-cyan text-[#0a0612]' : 'text-ink-tertiary hover:text-ink'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter by school/company…"
+            className="font-mono text-[12px] px-3 py-2 bg-panel border border-edge text-ink placeholder:text-ink-faint focus:outline-none focus:border-cyan w-60 transition-colors"
+          />
+        </div>
       </div>
 
-      {loading ? (
-        <div className="border border-edge-faint rounded-sm overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-edge">
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint w-16">#</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">PLAYER</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">COUNTRY</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">AFFILIATION</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">SPRINT PB</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} className="border-b border-edge-faint">
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-6" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-28" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
-                  <td className="px-4 py-3 flex justify-end"><Skeleton className="h-4 w-12" /></td>
-                  <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-14" /></div></td>
-                  <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-10" /></div></td>
-                  <td className="px-4 py-3"><div className="flex justify-end"><Skeleton className="h-4 w-10" /></div></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="border border-edge-faint rounded-sm overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead>
-              <tr className="border-b border-edge">
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint w-16">#</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">PLAYER</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">COUNTRY</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">AFFILIATION</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">SPRINT PB</th>
-              </tr>
-            </thead>
-            <tbody>
-              {players.map((player, index) => {
-                const winRate = player.games_played > 0
-                  ? Math.round((player.games_won / player.games_played) * 100)
-                  : 0;
-                const losses = player.games_played - player.games_won;
-
-                return (
-                  <tr key={player.id} className="border-b border-edge-faint hover:bg-card transition-colors">
-                    <td className="px-4 py-3 font-mono text-ink-muted text-sm tabular-nums">{index + 1}</td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/profile/${player.id}`}
-                        className="text-ink-secondary hover:text-ink text-sm transition-colors"
-                      >
-                        {player.display_name || player.username}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-ink-muted text-sm">{player.country ?? '—'}</td>
-                    <td className="px-4 py-3 text-ink-muted text-sm">{player.affiliation ?? '—'}</td>
-                    <td className="px-4 py-3 text-right font-mono font-medium text-ink tabular-nums text-sm">{player.elo_rating}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm tabular-nums">
-                      <span className="text-ink-secondary">{player.games_won}</span>
-                      <span className="text-ink-faint"> / </span>
-                      <span className="text-ink-muted">{losses}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono text-ink-tertiary text-sm tabular-nums">{winRate}%</td>
-                    <td className="px-4 py-3 text-right font-mono text-ink-tertiary text-sm tabular-nums">{sprintPBs[player.id] ?? '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {players.length === 0 && (
-            <div className="text-center py-12 text-ink-faint">No players found</div>
-          )}
+      {/* Podium (desktop) */}
+      {!loading && top3.length >= 3 && (
+        <div className="hidden md:grid grid-cols-[1fr_1.1fr_1fr] gap-[10px] mb-[4px] items-end">
+          {[top3[1], top3[0], top3[2]].map((p) => {
+            const rank = players.findIndex((q) => q.id === p.id) + 1;
+            const isFirst = rank === 1;
+            const color = rank === 1 ? TIER_COLORS.Gold : rank === 2 ? TIER_COLORS.Silver : TIER_COLORS.Bronze;
+            const initial = (p.display_name || p.username)?.[0]?.toUpperCase() ?? '?';
+            return (
+              <Link
+                key={p.id}
+                href={`/profile/${p.id}`}
+                className={`border text-center relative block ${isFirst ? 'py-8 px-6' : 'py-6 px-5'}`}
+                style={{
+                  borderColor: color,
+                  background: `linear-gradient(180deg, ${color}15, transparent)`,
+                  boxShadow: isFirst ? `0 0 30px ${color}44` : 'none',
+                }}
+              >
+                <div
+                  className="font-mono font-extrabold tracking-[1px]"
+                  style={{ fontSize: isFirst ? 22 : 16, color }}
+                >
+                  #{rank}
+                </div>
+                <div
+                  className="grid place-items-center mx-auto my-[14px] font-display font-extrabold text-[#0a0612]"
+                  style={{
+                    width: isFirst ? 72 : 56,
+                    height: isFirst ? 72 : 56,
+                    fontSize: isFirst ? 28 : 22,
+                    background: `radial-gradient(circle at 30% 30%, ${color}, ${color}33)`,
+                    border: `2px solid ${color}`,
+                    boxShadow: `0 0 20px ${color}66`,
+                  }}
+                >
+                  {initial}
+                </div>
+                <div className="font-display font-bold text-[14px] md:text-[16px] text-ink">
+                  {p.display_name || p.username}
+                </div>
+                <div className="font-mono text-[11px] tracking-[1.2px] mt-[6px]" style={{ color }}>
+                  {p.elo_rating} Elo
+                </div>
+                <div className="font-mono text-[9px] text-ink-tertiary mt-[4px] tracking-[1.2px] uppercase">
+                  {p.country ?? '—'} · {p.affiliation ?? '—'}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
+
+      {/* Dense table */}
+      <Panel padding={0}>
+        {/* Header */}
+        <div className="grid items-center font-mono text-[9px] text-ink-faint uppercase tracking-[1.6px] px-[14px] md:px-[18px] py-[14px] border-b border-edge gap-3 grid-cols-[28px_28px_1fr_56px_48px] md:grid-cols-[50px_36px_1fr_minmax(70px,90px)_80px_80px]">
+          <span>#</span>
+          <span>Tier</span>
+          <span>Player</span>
+          <span className="text-right hidden md:block">Country</span>
+          <span className="text-right">Elo</span>
+          <span className="text-right">Win%</span>
+        </div>
+
+        {loading ? (
+          Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="grid px-[14px] md:px-[18px] py-[12px] border-b border-edge gap-3 grid-cols-[28px_28px_1fr_56px_48px] md:grid-cols-[50px_36px_1fr_minmax(70px,90px)_80px_80px]">
+              <Skeleton className="h-4 w-8" />
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-4 w-12 ml-auto hidden md:block" />
+              <Skeleton className="h-4 w-12 ml-auto" />
+              <Skeleton className="h-4 w-10 ml-auto" />
+            </div>
+          ))
+        ) : (
+          otherRows.map((p) => {
+            const rk = players.findIndex((q) => q.id === p.id) + 1;
+            const winRate =
+              p.games_played > 0 ? Math.round((p.games_won / p.games_played) * 100) : 0;
+            const tier = tierToArcade(getRank(p.elo_rating).tier);
+            const isMe = user && p.id === user.id;
+
+            const baseStyle = isMe
+              ? { background: 'linear-gradient(90deg, rgba(54,228,255,0.13), transparent)' }
+              : undefined;
+            const borderClass = isMe
+              ? 'border-t border-b border-cyan'
+              : 'border-b border-edge';
+
+            return (
+              <Link
+                key={p.id}
+                href={`/profile/${p.id}`}
+                className={`grid items-center px-[14px] md:px-[18px] py-[12px] font-mono text-[12px] gap-3 hover:bg-tint transition-colors grid-cols-[28px_28px_1fr_56px_48px] md:grid-cols-[50px_36px_1fr_minmax(70px,90px)_80px_80px] ${borderClass}`}
+                style={baseStyle}
+              >
+                <span
+                  className={`font-bold ${rk <= 3 ? 'text-gold' : 'text-ink-tertiary'} ${isMe ? 'text-cyan' : ''}`}
+                >
+                  {rk}
+                </span>
+                <RankPip tier={tier} size={20} />
+                <span className={`font-display font-semibold text-[14px] ${isMe ? 'text-cyan' : 'text-ink'} truncate`}>
+                  {p.display_name || p.username}
+                  {isMe && (
+                    <span className="font-mono text-[9px] tracking-[1.4px] ml-2 opacity-70">YOU</span>
+                  )}
+                </span>
+                <span className="text-right text-ink-tertiary text-[10px] tracking-[1.2px] uppercase hidden md:block">
+                  {p.country ?? '—'}
+                </span>
+                <span className={`text-right font-bold ${isMe ? 'text-cyan' : 'text-cyan'}`}>{p.elo_rating}</span>
+                <span className="text-right text-ink-tertiary">{winRate}%</span>
+              </Link>
+            );
+          })
+        )}
+
+        {/* Pinned user row if outside top 20 */}
+        {!loading && me && meRank > 20 && (
+          <div
+            className="grid items-center px-[14px] md:px-[18px] py-[14px] font-mono text-[12px] gap-3 border-t border-cyan grid-cols-[28px_28px_1fr_56px_48px] md:grid-cols-[50px_36px_1fr_minmax(70px,90px)_80px_80px]"
+            style={{
+              background: 'linear-gradient(90deg, rgba(54,228,255,0.13), transparent)',
+            }}
+          >
+            <span className="text-cyan font-bold">{meRank}</span>
+            <RankPip tier={tierToArcade(getRank(me.elo_rating).tier)} size={20} />
+            <span className="font-display font-bold text-[14px] text-cyan">
+              {me.display_name || me.username}
+              <span className="font-mono text-[9px] tracking-[1.4px] ml-2 opacity-70">YOU</span>
+            </span>
+            <span className="text-right text-ink-tertiary text-[10px] tracking-[1.2px] uppercase hidden md:block">
+              {me.country ?? '—'}
+            </span>
+            <span className="text-right text-cyan font-bold">{me.elo_rating}</span>
+            <span className="text-right text-ink-tertiary">
+              {me.games_played > 0 ? Math.round((me.games_won / me.games_played) * 100) : 0}%
+            </span>
+          </div>
+        )}
+
+        {!loading && players.length === 0 && (
+          <div className="text-center py-12 font-mono text-[12px] text-ink-faint uppercase tracking-[1.4px]">
+            No players found
+          </div>
+        )}
+      </Panel>
+
+      <div className="text-center font-mono text-[10px] text-ink-faint tracking-[1.2px] uppercase mt-[14px]">
+        Season 04 · top {Math.min(players.length, 100)}
+      </div>
     </div>
   );
 }

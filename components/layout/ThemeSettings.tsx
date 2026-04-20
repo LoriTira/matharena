@@ -1,6 +1,6 @@
 'use client';
 
-import { useTheme, type Theme, type AccentColor } from '@/components/ThemeProvider';
+import { useTheme, type Theme } from '@/components/ThemeProvider';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { useSound } from '@/hooks/useSound';
 
@@ -37,21 +37,10 @@ const THEME_OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] = 
   },
 ];
 
-const ACCENT_OPTIONS: { value: AccentColor; label: string; swatch: string }[] = [
-  { value: 'violet', label: 'Violet', swatch: '#7C3AED' },
-  { value: 'blue', label: 'Blue', swatch: '#2563EB' },
-  { value: 'teal', label: 'Teal', swatch: '#0D9488' },
-  { value: 'gold', label: 'Gold', swatch: '#B45309' },
-];
-
 export function ThemeSettings() {
-  const { theme, accent, setTheme, setAccent } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { mode: feedbackMode, setMode: setFeedbackMode, unlock } = useSound();
 
-  // Switching to "sound on" from this click counts as a user gesture, so
-  // it's a valid moment to unlock the iOS AudioContext early. If the user
-  // only ever toggles the dropdown without entering a match, this means
-  // the first correct answer will still make a sound.
   const handleFeedbackOn = () => {
     unlock();
     setFeedbackMode('on');
@@ -62,7 +51,7 @@ export function ThemeSettings() {
       align="right"
       trigger={
         <button
-          className="p-1.5 text-ink-tertiary hover:text-ink-secondary transition-colors"
+          className="p-1.5 text-ink-tertiary hover:text-ink transition-colors"
           aria-label="Theme settings"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -73,17 +62,16 @@ export function ThemeSettings() {
       }
     >
       <div className="p-3 w-56">
-        {/* Theme section */}
-        <div className="text-[10px] tracking-[2px] text-ink-faint mb-2">THEME</div>
+        <div className="text-[10px] tracking-[2px] text-ink-faint mb-2 font-mono">THEME</div>
         <div className="flex gap-1 mb-4">
           {THEME_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setTheme(opt.value)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-sm text-[11px] transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] border transition-colors ${
                 theme === opt.value
-                  ? 'bg-accent-subtle text-accent'
-                  : 'text-ink-muted hover:text-ink-secondary hover:bg-tint'
+                  ? 'border-cyan text-cyan bg-accent-glow'
+                  : 'border-edge text-ink-muted hover:text-ink hover:border-edge-strong'
               }`}
             >
               {opt.icon}
@@ -92,53 +80,24 @@ export function ThemeSettings() {
           ))}
         </div>
 
-        {/* Accent section */}
-        <div className="text-[10px] tracking-[2px] text-ink-faint mb-2">ACCENT</div>
-        <div className="flex justify-between px-2 mb-4">
-          {ACCENT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setAccent(opt.value)}
-              className="group flex flex-col items-center gap-1"
-              aria-label={opt.label}
-            >
-              <div
-                className={`w-6 h-6 rounded-full transition-all ${
-                  accent === opt.value ? '' : 'group-hover:scale-110'
-                }`}
-                style={{
-                  backgroundColor: opt.swatch,
-                  boxShadow: accent === opt.value ? `0 0 0 2px var(--bg-raised), 0 0 0 4px ${opt.swatch}` : undefined,
-                }}
-              />
-              <span className={`text-[9px] tracking-wider ${
-                accent === opt.value ? 'text-ink-secondary' : 'text-ink-faint'
-              }`}>
-                {opt.label}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Feedback section — single toggle governs both sound and haptics */}
-        <div className="text-[10px] tracking-[2px] text-ink-faint mb-2">FEEDBACK</div>
+        <div className="text-[10px] tracking-[2px] text-ink-faint mb-2 font-mono">FEEDBACK</div>
         <div className="flex gap-1">
           <button
             onClick={handleFeedbackOn}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-sm text-[11px] transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] border transition-colors ${
               feedbackMode === 'on'
-                ? 'bg-accent-subtle text-accent'
-                : 'text-ink-muted hover:text-ink-secondary hover:bg-tint'
+                ? 'border-cyan text-cyan bg-accent-glow'
+                : 'border-edge text-ink-muted hover:text-ink hover:border-edge-strong'
             }`}
           >
             Sound On
           </button>
           <button
             onClick={() => setFeedbackMode('off')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-sm text-[11px] transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] border transition-colors ${
               feedbackMode === 'off'
-                ? 'bg-accent-subtle text-accent'
-                : 'text-ink-muted hover:text-ink-secondary hover:bg-tint'
+                ? 'border-cyan text-cyan bg-accent-glow'
+                : 'border-edge text-ink-muted hover:text-ink hover:border-edge-strong'
             }`}
           >
             Silent
