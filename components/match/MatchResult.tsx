@@ -4,16 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { getRank, didRankChange, TIERS } from '@/lib/ranks';
+import { RankBadge } from '@/components/ui/RankBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
-import { Panel } from '@/components/arcade/Panel';
-import { Btn } from '@/components/arcade/Btn';
-import { Bar } from '@/components/arcade/Bar';
-import { BigNum } from '@/components/arcade/BigNum';
-import { RankPip } from '@/components/arcade/RankPip';
-import { SectionHead } from '@/components/arcade/SectionHead';
-import { Tag } from '@/components/arcade/Tag';
-import { type Tier } from '@/components/arcade/tokens';
 
 interface MatchResultProps {
   won: boolean;
@@ -35,31 +28,43 @@ interface MatchResultProps {
   matchId?: string;
 }
 
-function tierToArcade(tier: string): Tier {
-  switch (tier) {
-    case 'Bronze':      return 'Bronze';
-    case 'Silver':      return 'Silver';
-    case 'Gold':        return 'Gold';
-    case 'Platinum':    return 'Platinum';
-    case 'Diamond':     return 'Diamond';
-    case 'Grandmaster': return 'Grand';
-    default:            return 'Wood';
-  }
+function VictoryBurst() {
+  const rays = 8;
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+      {Array.from({ length: rays }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-[2px] h-32 origin-bottom"
+          style={{
+            rotate: `${(360 / rays) * i}deg`,
+            background: 'linear-gradient(to top, transparent, rgba(245, 158, 11, 0.4), transparent)',
+          }}
+          initial={{ scaleY: 0, opacity: 0 }}
+          animate={{ scaleY: [0, 1.5, 0], opacity: [0, 0.8, 0] }}
+          transition={{ duration: 1.2, delay: 0.1 + i * 0.05, ease: 'easeOut' }}
+        />
+      ))}
+    </div>
+  );
 }
 
 function AnimatedNumber({ value, duration = 1.2 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0);
+
   useEffect(() => {
+    let start = 0;
     const startTime = Date.now();
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / (duration * 1000), 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(value * eased));
+      setDisplay(Math.round(start + (value - start) * eased));
       if (progress < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
   }, [value, duration]);
+
   return <>{display}</>;
 }
 
@@ -74,7 +79,7 @@ function formatTime(ms: number): string {
 function getNextTierName(elo: number): string | null {
   for (const tier of TIERS) {
     if (elo >= tier.min && elo <= tier.max) {
-      if (tier.max === Infinity) return null;
+      if (tier.max === Infinity) return null; // Grandmaster
       const idx = TIERS.indexOf(tier);
       if (idx < TIERS.length - 1) return TIERS[idx + 1].name;
       return null;
@@ -93,6 +98,7 @@ export function MatchResult({
   penalties,
   opponentName,
   opponentElo,
+  onRematch,
   avgTimeMs,
   accuracy,
   fastestSolveMs,
@@ -107,12 +113,16 @@ export function MatchResult({
   const eloChange = eloAfter - eloBefore;
   const rankedUp = didRankChange(eloBefore, eloAfter) && eloAfter > eloBefore;
   const newRank = getRank(eloAfter);
-  const arcadeTier = tierToArcade(newRank.tier);
   const winsToRecover = eloChange < 0 ? Math.max(1, Math.ceil(Math.abs(eloChange) / 20)) : 0;
   const [rematchLoading, setRematchLoading] = useState(false);
   const [incomingRematchCode, setIncomingRematchCode] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Victory confetti — fires once on mount when `won === true`, in 3 staggered
+  // bursts from the center + left edge + right edge. Respects reduced-motion
+  // (in which case the existing VictoryBurst rays remain as the fallback).
+  // Lazy-imports canvas-confetti so it only lands in the bundle when a match
+  // actually completes with a win.
   useEffect(() => {
     if (!won) return;
     if (typeof window === 'undefined') return;
@@ -121,19 +131,19 @@ export function MatchResult({
     let cancelled = false;
     import('canvas-confetti').then(({ default: confetti }) => {
       if (cancelled) return;
-      const neon = ['#36e4ff', '#ff2a7f', '#ffd23f', '#a6ff4d'];
-      confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, scalar: 0.9, colors: neon });
+      confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, scalar: 0.9 });
       setTimeout(() => {
-        if (!cancelled) confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 }, colors: neon });
+        if (!cancelled) confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 } });
       }, 180);
       setTimeout(() => {
-        if (!cancelled) confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 }, colors: neon });
+        if (!cancelled) confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 } });
       }, 360);
-    }).catch(() => {});
+    }).catch(() => { /* swallow — confetti must never crash the results screen */ });
 
     return () => { cancelled = true; };
   }, [won, prefersReducedMotion]);
 
+  // Poll for incoming rematch from opponent
   useEffect(() => {
     if (!user || !opponentId) return;
 
@@ -171,7 +181,11 @@ export function MatchResult({
       : `Lost to ${opponentName} ${theirScore}-${myScore} on MathsArena. Running it back. Rating ${eloAfter}.`;
 
     if (navigator.share) {
-      try { await navigator.share({ text }); } catch {}
+      try {
+        await navigator.share({ text });
+      } catch {
+        // User cancelled
+      }
     } else {
       await navigator.clipboard.writeText(text);
     }
@@ -190,7 +204,9 @@ export function MatchResult({
         const data = await res.json();
         window.location.href = `/challenge/${data.challenge.code}/lobby`;
       }
-    } catch {} finally {
+    } catch {
+      // fallback — silently fail
+    } finally {
       setRematchLoading(false);
     }
   };
@@ -198,161 +214,182 @@ export function MatchResult({
   const hasStats = avgTimeMs !== undefined;
 
   return (
-    <div className="flex flex-col items-center gap-6 py-6 md:py-10">
-      {/* Victory/defeat banner */}
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 relative">
+      {/* Victory burst — only used as the reduced-motion fallback; when motion
+          is allowed, the canvas-confetti useEffect above carries the load. */}
+      {won && prefersReducedMotion && <VictoryBurst />}
+
+      {/* Result heading */}
       <motion.div
-        initial={{ scale: won ? 0.5 : 0.95, opacity: 0 }}
+        className={`font-serif text-5xl md:text-6xl font-normal ${won ? 'text-accent' : 'text-ink-tertiary'}`}
+        initial={{ scale: won ? 0.5 : 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={won ? { type: 'spring', stiffness: 200, damping: 15, delay: 0.2 } : { duration: 0.6, delay: 0.2 }}
+        transition={won ? { type: 'spring', stiffness: 200, damping: 15, delay: 0.3 } : { duration: 0.8, delay: 0.2 }}
       >
-        <Tag color={won ? 'lime' : 'magenta'} className="text-[11px] px-[14px] py-[6px] tracking-[2px]">
-          ◆ {won ? 'Victory' : 'Defeat'}
-        </Tag>
+        {won ? 'Victory' : 'Defeat'}
+      </motion.div>
+
+      {/* Opponent info */}
+      <motion.div
+        className="text-[13px] text-ink-muted flex items-center gap-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        {won ? `You crushed ${opponentName}` : `${opponentName} got you`}
+        {opponentElo && (
+          <span className="inline-flex items-center gap-1 ml-1">
+            <RankBadge elo={opponentElo} size="sm" />
+            <span className="font-mono text-ink-faint">{opponentElo}</span>
+          </span>
+        )}
       </motion.div>
 
       {/* Score */}
       <motion.div
-        className="font-display font-extrabold text-[56px] md:text-[120px] leading-[0.95] tracking-[-4px] text-center"
+        className="font-mono text-4xl font-medium text-ink tabular-nums"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.7 }}
       >
-        <span className="text-cyan">{myScore}</span>
-        <span className="text-ink-tertiary mx-[0.15em]">—</span>
-        <span className="text-magenta">{theirScore}</span>
+        <AnimatedNumber value={myScore} duration={0.8} />
+        <span className="text-ink-faint mx-2">&ndash;</span>
+        <AnimatedNumber value={theirScore} duration={0.8} />
+        <span className="text-ink-faint text-lg ml-2">/ {targetScore}</span>
       </motion.div>
 
+      {/* Elo change */}
       <motion.div
-        className="font-mono text-[12px] text-ink-tertiary uppercase tracking-[1.6px]"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-      >
-        vs {opponentName}{opponentElo ? ` · ${opponentElo}` : ''} · first to {targetScore}
-      </motion.div>
-
-      {/* Elo money shot */}
-      <motion.div
-        className="w-full max-w-2xl"
+        className="flex flex-col items-center gap-1"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
+        transition={{ delay: 1.0 }}
       >
-        <Panel padding={32} className="text-center">
-          <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[2px] mb-[14px]">
-            Rating change
-          </div>
-          <div className="flex flex-wrap justify-center items-baseline gap-4 md:gap-5">
-            <BigNum n={eloBefore} color="ink-dim" size={40} />
-            <span className={`font-mono text-[14px] md:text-[20px] ${eloChange >= 0 ? 'text-lime' : 'text-magenta'}`}>
-              →
-            </span>
-            <span
-              className="font-display font-extrabold leading-none tabular-nums text-cyan"
-              style={{ fontSize: 72, letterSpacing: -72 * 0.03 }}
-            >
-              <AnimatedNumber value={eloAfter} duration={1.2} />
-            </span>
-            <span
-              className="font-display font-extrabold text-[28px] md:text-[40px]"
-              style={{
-                color: eloChange >= 0 ? 'var(--neon-lime)' : 'var(--neon-magenta)',
-                textShadow: `0 0 20px ${eloChange >= 0 ? 'rgba(166,255,77,0.5)' : 'rgba(255,42,127,0.5)'}`,
-              }}
-            >
-              {eloChange >= 0 ? '+' : ''}<AnimatedNumber value={eloChange} duration={1.2} />
-            </span>
-          </div>
-          <div className="mt-[18px] max-w-[420px] mx-auto">
-            <Bar progress={newRank.progress} color="cyan" height={8} />
-            <div className="mt-[6px] font-mono text-[10px] text-ink-faint uppercase tracking-[1.2px] flex items-center justify-center gap-2">
-              <RankPip tier={arcadeTier} size={14} />
-              <span>{newRank.name}</span>
-              {nextTierName && <span>· {ptsToNext} pts to {nextTierName}</span>}
-              {!nextTierName && <span>· Grandmaster</span>}
-            </div>
-          </div>
-        </Panel>
+        <div className={`font-mono text-3xl font-medium tabular-nums ${eloChange >= 0 ? 'text-accent' : 'text-red-400/60'}`}>
+          {eloChange >= 0 ? '+' : ''}<AnimatedNumber value={eloChange} duration={1.2} /> Elo
+        </div>
+        <div className="text-ink-faint text-sm font-mono tabular-nums flex items-center gap-2">
+          {eloBefore} &rarr; {eloAfter}
+          <RankBadge elo={eloAfter} size="sm" showLabel />
+        </div>
       </motion.div>
 
-      {/* Rank up banner */}
+      {/* Rating progress bar */}
+      <motion.div
+        className="w-full max-w-xs flex flex-col gap-1.5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1 }}
+      >
+        <div className="h-1.5 w-full rounded-full bg-shade overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ backgroundColor: newRank.color }}
+            initial={{ width: '0%' }}
+            animate={{ width: `${newRank.progress * 100}%` }}
+            transition={{ delay: 1.2, duration: 0.8, ease: 'easeOut' }}
+          />
+        </div>
+        <div className="text-[12px] text-ink-faint text-center font-mono">
+          {newRank.tier === 'Grandmaster'
+            ? 'Grandmaster'
+            : nextTierName
+              ? `${ptsToNext} pts to ${nextTierName}`
+              : ''
+          }
+        </div>
+      </motion.div>
+
+      {/* Rank up */}
       <AnimatePresence>
         {rankedUp && (
           <motion.div
+            className="px-6 py-3 rounded-sm border border-accent/30 bg-accent-glow flex items-center gap-3"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
-            className="px-6 py-3 border border-gold bg-accent-glow flex items-center gap-3 animate-gold-pulse"
+            transition={{ delay: 1.4, type: 'spring', stiffness: 200 }}
           >
-            <span className="font-mono text-[12px] tracking-[2.4px] text-gold font-bold">★ RANK UP ★</span>
-            <RankPip tier={arcadeTier} size={28} showLabel />
+            <span className="text-[12px] tracking-[2px] text-accent font-semibold">RANK UP!</span>
+            <RankBadge elo={eloAfter} size="lg" showLabel />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Stats grid */}
+      {/* Performance stats */}
       {hasStats && (
         <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-[1px] w-full max-w-2xl bg-edge"
+          className="grid grid-cols-2 gap-[1px] w-full max-w-xs bg-shade rounded-sm overflow-hidden"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0 }}
+          transition={{ delay: 1.3 }}
         >
           {[
-            { label: 'ACCURACY', value: accuracy !== undefined ? `${Math.round(accuracy)}%` : '—', color: 'text-cyan' },
-            { label: 'AVG SPEED', value: formatTime(avgTimeMs!), color: 'text-gold' },
-            { label: 'LIGHTNING', value: fastestSolveMs !== undefined ? formatTime(fastestSolveMs) : '—', color: 'text-lime' },
-            { label: 'SLIPS', value: totalPenalties !== undefined ? String(totalPenalties) : String(penalties), color: 'text-magenta' },
+            { label: 'PACE', value: formatTime(avgTimeMs!) },
+            { label: 'ACCURACY', value: accuracy !== undefined ? `${Math.round(accuracy)}%` : '—' },
+            { label: 'SLIPS', value: totalPenalties !== undefined ? String(totalPenalties) : '—' },
+            { label: 'LIGHTNING', value: fastestSolveMs !== undefined ? formatTime(fastestSolveMs) : '—' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
-              className="bg-panel px-4 py-4 flex flex-col gap-1"
+              className="bg-page px-4 py-3 flex flex-col items-center gap-1"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1 + i * 0.06 }}
+              transition={{ delay: 1.4 + i * 0.08 }}
             >
-              <div className="font-mono text-[10px] tracking-[1.4px] text-ink-faint uppercase">{stat.label}</div>
-              <div className={`font-display font-bold text-[22px] tabular-nums ${stat.color}`}>{stat.value}</div>
+              <div className="text-[8px] tracking-[1.5px] text-ink-muted">{stat.label}</div>
+              <div className="font-mono text-[15px] text-ink-secondary tabular-nums">{stat.value}</div>
             </motion.div>
           ))}
         </motion.div>
       )}
 
-      {/* Loss recovery */}
+      {/* Penalties (only if no stats section) */}
+      {!hasStats && penalties > 0 && (
+        <motion.div
+          className="text-ink-faint text-xs"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+        >
+          {penalties} wrong {penalties === 1 ? 'answer' : 'answers'}
+        </motion.div>
+      )}
+
+      {/* Motivational copy for losses */}
       {!won && winsToRecover > 0 && (
         <motion.div
-          className="font-mono text-[12px] text-ink-tertiary uppercase tracking-[1.4px]"
+          className="text-ink-muted text-[13px] font-normal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.3 }}
         >
-          {winsToRecover === 1 ? '▸ one more win to recover it' : `▸ ${winsToRecover} wins to recover`}
+          {winsToRecover === 1 ? 'One more win to recover it.' : `${winsToRecover} wins to recover.`}
         </motion.div>
       )}
 
       {/* Achievement unlocks */}
       {newAchievements && newAchievements.length > 0 && (
         <motion.div
-          className="flex flex-col items-center gap-3 w-full max-w-md"
+          className="flex flex-col items-center gap-3 w-full max-w-sm"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5 }}
+          transition={{ delay: 1.6 }}
         >
-          <div className="font-mono text-[11px] tracking-[2px] text-gold uppercase font-bold">
-            ✦ {newAchievements.length === 1 ? 'Achievement unlocked' : 'Achievements unlocked'}
+          <div className="text-[11px] tracking-[2px] text-accent">
+            {newAchievements.length === 1 ? 'ACHIEVEMENT UNLOCKED' : 'ACHIEVEMENTS UNLOCKED'}
           </div>
           {newAchievements.map((a, i) => (
             <motion.div
               key={a.id}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.7 + i * 0.15 }}
-              className="w-full border border-gold bg-accent-glow px-4 py-3 flex items-center gap-3"
+              transition={{ delay: 1.8 + i * 0.2 }}
+              className="w-full border border-accent/20 bg-accent-glow rounded-sm px-4 py-3 flex items-center gap-3"
             >
-              <span className="text-[24px]">{a.icon}</span>
+              <span className="text-2xl">{a.icon}</span>
               <div>
-                <div className="font-display font-bold text-[14px] text-ink">{a.name}</div>
-                <div className="font-mono text-[11px] text-ink-tertiary uppercase tracking-[1px]">{a.description}</div>
+                <div className="text-sm text-ink font-medium">{a.name}</div>
+                <div className="text-[11px] text-ink-muted">{a.description}</div>
               </div>
             </motion.div>
           ))}
@@ -361,35 +398,58 @@ export function MatchResult({
 
       {/* Actions */}
       <motion.div
-        className="flex flex-wrap items-center justify-center gap-3 mt-2"
+        className="flex flex-wrap items-center justify-center gap-3 mt-4"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.4 }}
+        transition={{ delay: 1.5 }}
       >
         {opponentId && (
           incomingRematchCode ? (
-            <Link href={`/challenge/${incomingRematchCode}/lobby`}>
-              <Btn size="lg" variant="primary" className="animate-neon-pulse">Join rematch</Btn>
-            </Link>
+            <a
+              href={`/challenge/${incomingRematchCode}/lobby`}
+              className="px-12 py-4 font-semibold text-sm tracking-[2px] rounded-sm transition-colors bg-accent text-on-accent hover:bg-accent-muted animate-pulse"
+            >
+              JOIN REMATCH
+            </a>
           ) : (
-            <Btn size="lg" variant="primary" disabled={rematchLoading} onClick={handleRematch}>
-              {rematchLoading ? 'Creating…' : '▶ Rematch'}
-            </Btn>
+            <button
+              onClick={handleRematch}
+              disabled={rematchLoading}
+              className="px-12 py-4 font-semibold text-sm tracking-[2px] rounded-sm transition-colors bg-btn text-btn-text hover:bg-btn-hover disabled:opacity-40"
+            >
+              {rematchLoading ? 'CREATING...' : 'REMATCH'}
+            </button>
           )
         )}
 
-        <Link href="/play"><Btn size="lg" variant="gold">New opponent</Btn></Link>
-
         {matchId && (
-          <Link href={`/play/${matchId}/analysis`}>
-            <Btn size="md" variant="ghost">Analysis</Btn>
+          <Link
+            href={`/play/${matchId}/analysis`}
+            className="px-6 py-3 border border-edge text-ink-tertiary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+          >
+            GAME ANALYSIS
           </Link>
         )}
 
-        <Btn size="md" variant="ghost" onClick={handleShare}>Share</Btn>
+        <Link
+          href="/play"
+          className="px-6 py-3 border border-edge text-ink-tertiary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+        >
+          PLAY AGAIN
+        </Link>
 
-        <Link href="/dashboard">
-          <Btn size="md" variant="ghost">Dashboard</Btn>
+        <button
+          onClick={handleShare}
+          className="px-5 py-3 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
+        >
+          SHARE
+        </button>
+
+        <Link
+          href="/dashboard"
+          className="px-5 py-3 text-ink-muted text-[12px] tracking-[1.5px] rounded-sm transition-colors hover:text-ink-tertiary"
+        >
+          DASHBOARD
         </Link>
       </motion.div>
     </div>

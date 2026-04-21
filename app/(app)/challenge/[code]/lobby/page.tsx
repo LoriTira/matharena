@@ -18,36 +18,27 @@ function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready:
     : 0;
 
   return (
-    <div
-      className={`border p-6 flex-1 min-w-[200px] transition-colors bg-panel ${
-        ready ? 'border-lime' : 'border-edge-strong'
-      }`}
-      style={ready ? { boxShadow: '0 0 18px rgba(166,255,77,0.25)' } : undefined}
-    >
+    <div className={`border rounded-sm p-6 flex-1 min-w-[200px] transition-colors ${
+      isYou ? 'border-edge-strong bg-card' : 'border-edge bg-card'
+    }`}>
       <div className="flex items-center gap-2 mb-4">
-        <div
-          className="w-[8px] h-[8px] rounded-full transition-colors"
-          style={{
-            background: ready ? 'var(--neon-lime)' : 'var(--border-strong)',
-            boxShadow: ready ? '0 0 8px var(--neon-lime)' : 'none',
-          }}
-        />
-        <span className={`font-mono text-[10px] tracking-[1.6px] uppercase font-bold ${ready ? 'text-lime' : 'text-ink-tertiary'}`}>
-          {ready ? 'Ready' : 'Waiting'}
+        <div className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400/80' : 'bg-edge'}`} />
+        <span className="text-[11px] tracking-[2px] text-ink-muted">
+          {ready ? 'READY' : 'WAITING'}
         </span>
       </div>
-      <div className="font-display font-bold text-[18px] text-ink mb-1 truncate">
+      <div className="font-serif text-lg text-ink mb-1 truncate">
         {profile.display_name || profile.username}
       </div>
-      <div className="font-mono text-[12px] text-cyan tracking-[1px] mb-3">
-        {profile.elo_rating.toLocaleString()} Elo
+      <div className="font-mono text-sm text-ink-muted mb-3">
+        Elo {profile.elo_rating.toLocaleString()}
       </div>
-      <div className="flex gap-4 font-mono text-[10px] text-ink-tertiary uppercase tracking-[1px]">
+      <div className="flex gap-4 text-[11px] text-ink-faint">
         <span>{profile.games_played} played</span>
         <span>{winRate}% win</span>
       </div>
       {isYou && (
-        <div className="font-mono text-[10px] tracking-[1.6px] text-cyan mt-3 uppercase font-bold">You</div>
+        <div className="text-[11px] tracking-[1.5px] text-ink-faint mt-3">YOU</div>
       )}
     </div>
   );
@@ -359,15 +350,9 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
       <div className="text-center">
-        <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[2px] mb-[8px]">
-          / Challenge lobby
-        </div>
-        <h1 className="font-display font-extrabold text-[26px] md:text-[36px] tracking-[-0.8px] text-ink leading-[1.05]">
-          {starting ? (
-            <>Starting <span className="text-cyan italic">match…</span></>
-          ) : (
-            <>Waiting for <span className="text-cyan italic">players.</span></>
-          )}
+        <div className="text-[11px] tracking-[3px] text-ink-faint mb-2">CHALLENGE LOBBY</div>
+        <h1 className="font-serif text-3xl font-normal text-ink">
+          {starting ? 'Starting match...' : 'Waiting for players'}
         </h1>
       </div>
 
@@ -378,7 +363,7 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
           isYou={true}
         />
         <div className="flex items-center justify-center">
-          <span className="font-display font-bold text-[18px] text-ink-tertiary italic">vs</span>
+          <span className="font-serif text-xl text-ink-faint italic">vs</span>
         </div>
         <PlayerCard
           profile={opponentProfile}

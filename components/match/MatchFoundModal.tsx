@@ -144,30 +144,22 @@ export function MatchFoundModal({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="w-full max-w-[420px] bg-panel border border-cyan overflow-hidden"
-          style={{ boxShadow: '0 0 30px rgba(54,228,255,0.25)' }}
+          className="w-full max-w-md bg-panel border border-accent/30 rounded-sm shadow-2xl overflow-hidden"
         >
-          {/* Header */}
-          <div className="flex items-center justify-center gap-[10px] py-[14px] border-b border-edge bg-[rgba(54,228,255,0.08)]">
-            <span
-              className="font-mono text-[11px] text-cyan uppercase tracking-[2px] font-bold"
+          {/* Header — distinctly accented so it can't be mistaken for the warmup */}
+          <div className="flex items-center justify-center gap-2 py-4 border-b border-edge-faint bg-accent-subtle">
+            <span className="text-xl">🏆</span>
+            <h2
               id="match-found-title"
+              className="font-serif text-xl text-ink tracking-wide"
             >
-              ◆ Match found
-            </span>
+              MATCH FOUND
+            </h2>
           </div>
 
           {/* Opponent card */}
-          <div className="flex flex-col items-center gap-[12px] px-6 py-8">
-            <div
-              className="grid place-items-center overflow-hidden"
-              style={{
-                width: 72,
-                height: 72,
-                background: 'linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta))',
-                boxShadow: '0 0 24px rgba(54,228,255,0.35)',
-              }}
-            >
+          <div className="flex flex-col items-center gap-3 px-6 py-8">
+            <div className="w-16 h-16 rounded-full bg-inset border border-edge flex items-center justify-center overflow-hidden">
               {opponent?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -176,50 +168,49 @@ export function MatchFoundModal({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="font-display font-extrabold text-[32px] text-[#0a0612]">
+                <span className="text-2xl text-ink-muted font-serif">
                   {opponentName.charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
-            <div className="flex flex-col items-center gap-[4px]">
-              <div className="font-display font-bold text-[20px] text-ink">{opponentName}</div>
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="text-lg font-medium text-ink">{opponentName}</div>
               {opponentElo !== undefined && (
-                <div className="font-mono text-[11px] tracking-[1.4px] text-cyan uppercase">
-                  {opponentElo} Elo
+                <div className="text-[11px] tracking-[1.5px] text-ink-muted font-mono">
+                  ELO {opponentElo}
                 </div>
               )}
             </div>
 
             {alreadyAccepted && (
-              <div className="font-mono text-[11px] text-ink-tertiary uppercase tracking-[1.2px] mt-[4px]">
-                Waiting for opponent…
+              <div className="text-[11px] text-ink-tertiary mt-1 tracking-wide">
+                Waiting for opponent to accept…
               </div>
             )}
           </div>
 
           {/* Accept button with integrated countdown */}
-          <div className="px-6 pb-6 flex flex-col gap-[10px]">
+          <div className="px-6 pb-6 flex flex-col gap-3">
             <button
               onClick={handleAccept}
               disabled={alreadyAccepted}
+              className="relative w-full bg-btn text-btn-text font-semibold tracking-[1.5px] py-4 rounded-sm overflow-hidden transition-opacity disabled:opacity-60 hover:bg-btn-hover"
               aria-label="Accept match"
-              className="relative w-full bg-cyan text-[#0a0612] border border-ink overflow-hidden transition-all font-mono text-[13px] font-bold uppercase tracking-[1.4px] py-[16px] disabled:opacity-60 hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[4px] active:translate-y-[4px]"
-              style={{ boxShadow: '4px 4px 0 var(--neon-magenta)' }}
             >
               {/* Countdown progress bar across the bottom of the button */}
               <div
-                className="absolute bottom-0 left-0 h-[2px] bg-magenta transition-[width] duration-100 ease-linear"
+                className="absolute bottom-0 left-0 h-0.5 bg-accent transition-[width] duration-100 ease-linear"
                 style={{ width: `${progress * 100}%` }}
               />
               <span className="relative">
-                {alreadyAccepted ? '✓ Accepted' : `▶ Accept · ${seconds}s`}
+                {alreadyAccepted ? 'ACCEPTED' : `ACCEPT · ${seconds}s`}
               </span>
             </button>
 
             <button
               onClick={() => onDeclineOrTimeout('declined')}
               disabled={alreadyAccepted}
-              className="font-mono text-[10px] uppercase tracking-[1.4px] text-ink-tertiary hover:text-magenta py-[10px] transition-colors disabled:opacity-30"
+              className="py-3 px-6 text-[11px] tracking-[1.5px] text-ink-muted hover:text-ink-tertiary transition-colors disabled:opacity-30"
             >
               Decline ({Math.round(GAME_CONFIG.MATCH_DECLINE_COOLDOWN_MS / 1000)}s cooldown)
             </button>

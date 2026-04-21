@@ -197,38 +197,25 @@ export default function MatchAnalysisPage({ params }: { params: Promise<{ matchI
       <div>
         <Link
           href={`/play/${matchId}`}
-          className="font-mono text-[11px] text-ink-tertiary hover:text-cyan uppercase tracking-[1.2px] transition-colors"
+          className="text-[12px] text-ink-faint hover:text-ink-tertiary transition-colors"
         >
-          ← Back to results
+          &larr; Back to results
         </Link>
-        <div className="mt-[8px] font-mono text-[10px] text-ink-faint uppercase tracking-[2px]">
-          / Analysis
-        </div>
-        <h1 className="font-display font-extrabold text-[26px] md:text-[36px] tracking-[-0.8px] text-ink leading-[1.05] mt-[4px]">
-          Game <span className="text-cyan italic">breakdown.</span>
-        </h1>
+        <h1 className="font-serif text-2xl text-ink mt-2">Game Analysis</h1>
       </div>
 
       {/* Match summary */}
-      <div className="border border-edge-strong bg-panel p-5">
+      <div className="border border-edge rounded-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span
-              className={`font-mono text-[10px] uppercase tracking-[2px] font-bold border px-[8px] py-[3px] ${
-                won ? 'text-lime border-lime' : 'text-magenta border-magenta'
-              }`}
-            >
-              ◆ {won ? 'Victory' : 'Defeat'}
+            <span className={`font-serif text-lg ${won ? 'text-accent' : 'text-ink-tertiary'}`}>
+              {won ? 'Victory' : 'Defeat'}
             </span>
-            <span className="font-display font-extrabold text-[24px] tabular-nums">
-              <span className="text-cyan">{myScore}</span>
-              <span className="text-ink-tertiary mx-[0.2em]">—</span>
-              <span className="text-magenta">{theirScore}</span>
+            <span className="font-mono text-lg text-ink tabular-nums">
+              {myScore}&ndash;{theirScore}
             </span>
           </div>
-          <span
-            className={`font-display font-bold text-[18px] tabular-nums ${eloChange >= 0 ? 'text-lime' : 'text-magenta'}`}
-          >
+          <span className={`font-mono text-sm tabular-nums ${eloChange >= 0 ? 'text-accent' : 'text-red-400/60'}`}>
             {eloChange >= 0 ? '+' : ''}{eloChange} Elo
           </span>
         </div>

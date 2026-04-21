@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
 import { PracticeSetup } from '@/components/practice/PracticeSetup';
 import { PracticeGame } from '@/components/practice/PracticeGame';
 import { PracticeResults } from '@/components/practice/PracticeResults';
-import { Countdown } from '@/components/arcade/Countdown';
 import type { PracticeConfig } from '@/types';
 
 export default function PracticePage() {
@@ -44,7 +43,7 @@ export default function PracticePage() {
       )}
 
       {session.phase === 'countdown' && (
-        <PracticeCountdown key="countdown" />
+        <Countdown key="countdown" />
       )}
 
       {session.phase === 'playing' && (
@@ -81,7 +80,7 @@ export default function PracticePage() {
 
 const COUNTDOWN_SEQUENCE = ['3', '2', '1', 'GO!'];
 
-function PracticeCountdown() {
+function Countdown() {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -91,5 +90,29 @@ function PracticeCountdown() {
     }
   }, [index]);
 
-  return <Countdown value={COUNTDOWN_SEQUENCE[index]} fixed />;
+  return (
+    <motion.div
+      className="flex items-center justify-center min-h-[60vh]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          className={`font-serif tabular-nums ${
+            index === COUNTDOWN_SEQUENCE.length - 1
+              ? 'text-6xl text-accent'
+              : 'text-8xl text-ink'
+          }`}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: [0.5, 1.15, 1], opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
+          {COUNTDOWN_SEQUENCE[index]}
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
+  );
 }

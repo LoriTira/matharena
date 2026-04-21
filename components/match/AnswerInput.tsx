@@ -19,12 +19,17 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
   const inputRef = useRef<HTMLInputElement>(null);
   const lockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Guards against a rapid double-tap firing two submit events before React
+  // re-renders with the cleared value — otherwise the same answer is sent twice.
   const submittingRef = useRef(false);
 
   useEffect(() => {
-    if (!disabled && !locked) inputRef.current?.focus();
+    if (!disabled && !locked) {
+      inputRef.current?.focus();
+    }
   }, [disabled, locked]);
 
+  // Clean up timers on unmount so we never tick after teardown
   useEffect(() => {
     return () => {
       if (lockTimeoutRef.current) clearTimeout(lockTimeoutRef.current);
@@ -35,17 +40,22 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!value || locked || disabled || submittingRef.current) return;
+
     const answer = parseFloat(value);
     if (isNaN(answer)) return;
+
     submittingRef.current = true;
     onSubmit(answer);
     setValue('');
+    // Explicit refocus keeps the mobile soft keyboard up across the parent
+    // re-render that swaps in the next problem.
     inputRef.current?.focus();
     requestAnimationFrame(() => {
       submittingRef.current = false;
     });
   };
 
+  // Exposed method to show feedback
   const showFeedback = (correct: boolean) => {
     setFeedback(correct ? 'correct' : 'wrong');
 
@@ -79,6 +89,7 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
     }
   };
 
+  // Attach showFeedback via ref if provided, otherwise use global pattern
   useEffect(() => {
     if (feedbackRef) {
       feedbackRef.current = showFeedback;
@@ -93,30 +104,13 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
   const remainingSeconds = Math.ceil(remainingMs / 1000);
   const progressPct = locked ? (remainingMs / PENALTY_MS) * 100 : 0;
 
-  const borderColor =
-    feedback === 'correct' ? 'var(--neon-lime)'
-    : feedback === 'wrong' || locked ? 'var(--neon-magenta)'
-    : 'var(--neon-cyan)';
-  const bgTint =
-    feedback === 'correct' ? 'rgba(166,255,77,0.06)'
-    : feedback === 'wrong' || locked ? 'rgba(255,42,127,0.08)'
-    : 'transparent';
-
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
-      <div
-        className="relative flex items-center gap-3 px-4 md:px-5 py-3 md:py-4 border-2"
-        style={{
-          borderColor,
-          background: `linear-gradient(180deg, ${bgTint}, var(--bg-panel))`,
-          boxShadow: locked
-            ? `0 0 24px rgba(255,42,127,0.25), inset 0 0 20px rgba(255,42,127,0.1)`
-            : `0 0 24px ${borderColor}33, inset 0 0 20px ${borderColor}11`,
-        }}
-      >
-        <span className="font-mono text-cyan text-[16px] md:text-[22px]">❯</span>
+    <form onSubmit={handleSubmit} className="flex items-center gap-3 max-w-md mx-auto">
+      <div className="relative flex-1">
         <input
           ref={inputRef}
+          // text + inputMode="decimal" gets the mobile numeric keypad without
+          // type="number"'s iOS blur-on-parent-rerender quirks.
           type="text"
           inputMode="decimal"
           pattern="[0-9.\-]*"
@@ -126,39 +120,46 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
             if (locked || disabled) return;
             setValue(e.target.value);
           }}
+          // readOnly (not disabled) keeps the mobile keyboard up during lockout.
           readOnly={locked || disabled}
           aria-disabled={locked || disabled}
-          className="flex-1 min-w-0 bg-transparent text-left font-display font-extrabold text-[24px] md:text-[40px] tracking-[-1px] text-gold placeholder:text-ink-faint placeholder:font-mono placeholder:text-[14px] placeholder:font-normal focus:outline-none"
-          placeholder={locked ? '' : 'your answer'}
+          className={`w-full px-6 py-4 text-2xl font-mono text-center rounded-sm border bg-card text-ink focus:outline-none transition-colors
+            ${feedback === 'correct' ? 'border-green-400/50 bg-green-400/5' : ''}
+            ${feedback === 'wrong' || locked ? 'border-red-400/50 bg-red-400/5' : ''}
+            ${!feedback && !locked ? 'border-edge focus:border-edge-strong focus:ring-1 focus:ring-edge' : ''}
+          `}
+          placeholder={locked ? '' : 'Your answer'}
           autoComplete="off"
         />
-        <button
-          type="submit"
-          disabled={locked || disabled || !value}
-          onMouseDown={(e) => e.preventDefault()}
-          className="font-mono text-[10px] md:text-[11px] text-ink-tertiary uppercase tracking-[1.4px] disabled:opacity-30"
-        >
-          Enter ↵
-        </button>
-
         {locked && (
           <div
             role="status"
             aria-live="polite"
-            className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+            className="absolute inset-0 flex items-center justify-center rounded-sm bg-red-400/10 pointer-events-none overflow-hidden"
           >
-            <span className="font-mono text-magenta text-[13px] tracking-[1.2px] tabular-nums">
-              WRONG — RETRY IN {remainingSeconds}S
+            <span className="text-red-400/80 font-medium text-sm tracking-wide tabular-nums">
+              Wrong — try again in {remainingSeconds}s
             </span>
-            <div className="absolute left-0 right-0 bottom-0 h-0.5">
+            <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-red-400/10 rounded-b-sm">
               <div
-                className="h-full transition-[width] duration-75 ease-linear"
-                style={{ width: `${progressPct}%`, background: 'var(--neon-magenta)' }}
+                className="h-full bg-red-400/60 transition-[width] duration-75 ease-linear"
+                style={{ width: `${progressPct}%` }}
               />
             </div>
           </div>
         )}
       </div>
+      <button
+        type="submit"
+        disabled={locked || disabled || !value}
+        // Prevents the button from stealing focus from the input, which would
+        // collapse the mobile keyboard. Don't do this on touchstart — that
+        // cancels the synthetic click and the form won't submit.
+        onMouseDown={(e) => e.preventDefault()}
+        className="px-8 py-4 bg-btn text-btn-text font-semibold text-xl rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        &rarr;
+      </button>
     </form>
   );
 }

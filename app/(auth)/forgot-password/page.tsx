@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { Shell } from '@/components/arcade/Shell';
-import { Btn } from '@/components/arcade/Btn';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -17,96 +15,83 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/callback?next=/reset-password`,
     });
+
     if (error) {
       setError(error.message);
+      setLoading(false);
     } else {
       setSent(true);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <Shell>
-      <div className="min-h-screen flex items-center justify-center px-5 py-12">
-        <div className="w-full max-w-[420px]">
-          <Link href="/" className="flex items-center gap-[10px] justify-center mb-8">
-            <span
-              className="grid place-items-center font-mono font-bold text-[14px] text-[#0a0612]"
-              style={{
-                width: 28, height: 28,
-                background: 'var(--neon-magenta)',
-                boxShadow: '0 0 18px var(--neon-magenta), inset 0 0 0 2px rgba(0,0,0,0.15)',
-              }}
-            >∑</span>
-            <span className="font-display font-bold text-[17px] tracking-[-0.3px] text-ink">
-              MATHS<span className="text-cyan">ARENA</span>
-            </span>
-          </Link>
+    <div className="min-h-screen flex items-center justify-center bg-page">
+      <div className="w-full max-w-md p-8 border border-edge rounded-sm">
+        <h1 className="font-serif text-3xl font-normal text-ink text-center mb-1">Reset Password</h1>
+        <p className="text-ink-muted text-center text-sm mb-8">
+          Enter your email and we&apos;ll send you a reset link
+        </p>
 
-          <div className="border border-edge-strong bg-panel p-[28px] md:p-[40px]">
-            <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[2px] text-center mb-[10px]">
-              / Reset access
+        {sent ? (
+          <div className="space-y-4">
+            <div className="p-4 rounded-sm bg-card border border-edge text-center">
+              <p className="text-ink-secondary text-sm">
+                Check your email for a password reset link.
+              </p>
+              <p className="text-ink-muted text-[12px] mt-2">
+                If you don&apos;t see it, check your spam folder.
+              </p>
             </div>
-            <h1 className="font-display font-extrabold text-[32px] md:text-[38px] tracking-[-1px] leading-[1.05] text-ink text-center">
-              Forgot <span className="text-gold italic">password?</span>
-            </h1>
-            <p className="font-mono text-[11px] text-ink-tertiary text-center mt-[10px] tracking-[1px] uppercase">
-              Enter your email and we&apos;ll send a reset link
-            </p>
-
-            <div className="mt-[24px]">
-              {sent ? (
-                <div className="space-y-4">
-                  <div className="border border-lime bg-[rgba(166,255,77,0.06)] px-4 py-3 text-center">
-                    <div className="font-mono text-[12px] text-lime tracking-[0.5px]">
-                      ✓ Check your inbox
-                    </div>
-                    <div className="font-mono text-[10px] text-ink-tertiary mt-[4px] tracking-[1px] uppercase">
-                      If you don&apos;t see it, check spam
-                    </div>
-                  </div>
-                  <Link href="/login" className="block">
-                    <Btn variant="primary" full size="lg">← Back to sign in</Btn>
-                  </Link>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-[14px]">
-                  <div>
-                    <label htmlFor="email" className="block font-mono text-[10px] tracking-[1.6px] text-ink-faint mb-[6px] uppercase">
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-3 bg-page border border-edge text-ink font-mono text-[13px] placeholder:text-ink-faint focus:outline-none focus:border-cyan transition-colors"
-                      placeholder="you@example.com"
-                      required
-                    />
-                  </div>
-                  {error && (
-                    <p className="font-mono text-[11px] text-magenta">{error}</p>
-                  )}
-                  <Btn type="submit" variant="primary" full size="lg" disabled={loading}>
-                    {loading ? 'Sending…' : '▶ Send reset link'}
-                  </Btn>
-                </form>
-              )}
-            </div>
-
-            <p className="mt-6 text-center font-mono text-[11px] text-ink-tertiary tracking-[0.5px]">
-              Remember your password?{' '}
-              <Link href="/login" className="text-cyan hover:underline transition-colors">
-                Sign in
-              </Link>
-            </p>
+            <Link
+              href="/login"
+              className="block w-full py-3 text-center bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover"
+            >
+              BACK TO SIGN IN
+            </Link>
           </div>
-        </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-400/70 text-sm">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'SENDING...' : 'SEND RESET LINK'}
+            </button>
+          </form>
+        )}
+
+        <p className="mt-6 text-center text-ink-muted text-sm">
+          Remember your password?{' '}
+          <Link href="/login" className="text-ink-secondary underline underline-offset-2 decoration-edge hover:text-ink transition-colors">
+            Sign in
+          </Link>
+        </p>
       </div>
-    </Shell>
+    </div>
   );
 }
