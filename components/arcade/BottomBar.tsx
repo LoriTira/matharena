@@ -24,16 +24,18 @@ function isActive(pathname: string, item: Item) {
 }
 
 /**
- * Mobile-only sticky bottom tab bar. Sits inside the (app) layout so protected
- * routes get primary navigation on phones. Hidden on md+ where the top nav
- * handles it.
+ * Mobile-only fixed bottom tab bar. Uses `fixed` rather than `sticky` because
+ * the surrounding Shell has `overflow-hidden` for its scanline/vignette pseudo-
+ * elements, which would otherwise re-root the sticky containing block to the
+ * page height and pin the bar to the bottom of the document instead of the
+ * viewport. Main is given `pb-24` in the (app) layout to compensate.
  */
 export function BottomBar() {
   const pathname = usePathname() ?? '';
 
   return (
     <nav
-      className="md:hidden sticky bottom-0 left-0 right-0 z-40 border-t border-edge-strong bg-chrome backdrop-blur-[12px] grid grid-cols-5 px-2 pt-[10px]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-edge-strong bg-chrome backdrop-blur-[12px] grid grid-cols-5 px-2 pt-[10px]"
       style={{ paddingBottom: 'calc(18px + env(safe-area-inset-bottom))' }}
     >
       {ITEMS.map((it) => {
