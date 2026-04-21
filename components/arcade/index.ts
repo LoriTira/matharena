@@ -11,6 +11,7 @@ export { RankPip } from './RankPip';
 export { RaceLane } from './RaceLane';
 export { Sparkline } from './Sparkline';
 export { Keypad } from './Keypad';
+export { Countdown } from './Countdown';
 
 export { TIER_COLORS, TIER_ORDER, TIER_RANGES, tierForElo, NEON } from './tokens';
 export type { Tier, NeonColor } from './tokens';

@@ -15,6 +15,7 @@ import { hapticTap } from '@/lib/haptics';
 import { GAME_CONFIG } from '@/lib/constants';
 import { computeTierIndex } from '@/hooks/useWarmup';
 import { RaceLane } from '@/components/arcade/RaceLane';
+import { Countdown } from '@/components/arcade/Countdown';
 import { type Tier } from '@/components/arcade/tokens';
 import { getRank } from '@/lib/ranks';
 import type { Profile, MatchEvent } from '@/types';
@@ -363,37 +364,7 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
 
   return (
     <div className="relative match-screen">
-      <AnimatePresence>
-        {showCountdown && countdownValue !== null && (
-          <motion.div
-            key="countdown-overlay"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-page/90 backdrop-blur-sm"
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={String(countdownValue)}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20, duration: 0.4 }}
-                className={`font-display font-extrabold text-[140px] md:text-[220px] select-none tracking-[-10px] ${
-                  countdownValue === 'GO!' ? 'text-cyan' : 'text-ink'
-                }`}
-                style={{
-                  textShadow: countdownValue === 'GO!'
-                    ? '0 0 60px rgba(54,228,255,0.6)'
-                    : '0 0 40px rgba(254,246,228,0.2)',
-                }}
-              >
-                {countdownValue}
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showCountdown && countdownValue !== null && <Countdown value={countdownValue} fixed />}
 
       <div className="flex flex-col gap-5 md:gap-7 py-4 md:py-6">
         {/* Match chrome */}

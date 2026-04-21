@@ -371,9 +371,12 @@ function DashboardContent() {
             <span className="text-ink-tertiary italic font-semibold">Sharpen the blade.</span>
           </div>
         </div>
-        <div className="hidden md:flex gap-[10px]">
-          <Link href="/practice"><Btn variant="ghost">Practice</Btn></Link>
-          <Link href="/play"><Btn variant="primary">▶ Quick match</Btn></Link>
+        <div className="flex gap-[10px] flex-wrap">
+          <Btn variant="primary" onClick={() => setChallengeModalOpen(true)}>
+            ⚔ Challenge a friend
+          </Btn>
+          <Link href="/play"><Btn variant="ghost">Play online</Btn></Link>
+          <Link href="/practice?sprint=120"><Btn variant="ghost">120s Sprint</Btn></Link>
         </div>
       </div>
 
