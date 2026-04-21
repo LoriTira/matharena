@@ -82,9 +82,16 @@ function PlayContent() {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6">
       <header className="mb-5 flex items-center justify-between">
-        <h1 className="font-serif text-2xl md:text-3xl text-ink">Looking for Ranked Match…</h1>
-        <p className="hidden md:block text-[12px] text-ink-muted tracking-wide">
-          First to 5 wins · Elo on the line
+        <div>
+          <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[2px] mb-[6px]">
+            / Matchmaking
+          </div>
+          <h1 className="font-display font-extrabold text-[24px] md:text-[36px] tracking-[-0.8px] text-ink leading-[1.05]">
+            Looking for an <span className="text-cyan italic">opponent…</span>
+          </h1>
+        </div>
+        <p className="hidden md:block font-mono text-[11px] text-ink-tertiary uppercase tracking-[1.2px]">
+          First to 5 · Elo on the line
         </p>
       </header>
 

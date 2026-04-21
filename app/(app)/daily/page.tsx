@@ -13,6 +13,7 @@ import { Btn } from '@/components/arcade/Btn';
 import { BigNum } from '@/components/arcade/BigNum';
 import { Tag } from '@/components/arcade/Tag';
 import { SectionHead } from '@/components/arcade/SectionHead';
+import { Countdown } from '@/components/arcade/Countdown';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { NextPuzzleCountdown } from '@/components/daily/NextPuzzleCountdown';
 import { formatLeaderboardTime } from '@/lib/daily/formatTime';
@@ -32,7 +33,8 @@ function formatTotalTime(ms: number): string {
 }
 
 // ─────────────────────────────────────────────
-// Countdown overlay
+// Countdown overlay — uses the shared arcade Countdown for visual consistency
+// with ranked matches and practice drills.
 // ─────────────────────────────────────────────
 function CountdownOverlay({ onComplete }: { onComplete: () => void }) {
   const [count, setCount] = useState(3);
@@ -46,26 +48,7 @@ function CountdownOverlay({ onComplete }: { onComplete: () => void }) {
     return () => clearTimeout(timer);
   }, [count, onComplete]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-page/95 backdrop-blur-sm">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={count}
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 1.5, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="font-display font-extrabold text-[140px] md:text-[220px] tabular-nums leading-none tracking-[-10px]"
-          style={{
-            color: count > 0 ? 'var(--text-primary)' : 'var(--neon-cyan)',
-            textShadow: count === 0 ? '0 0 60px rgba(54,228,255,0.6)' : '0 0 40px rgba(254,246,228,0.2)',
-          }}
-        >
-          {count > 0 ? count : 'GO!'}
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
+  return <Countdown value={count > 0 ? count : 'GO!'} fixed />;
 }
 
 // ─────────────────────────────────────────────

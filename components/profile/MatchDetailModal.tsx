@@ -115,16 +115,24 @@ export function MatchDetailModal({
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg max-h-[85vh] bg-panel border border-edge rounded-sm shadow-2xl overflow-hidden flex flex-col"
+            className="w-full max-w-[520px] max-h-[85vh] bg-panel border border-edge-strong overflow-hidden flex flex-col"
+            style={{ boxShadow: '0 0 30px rgba(54,228,255,0.15)' }}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-edge-faint">
-              <h2 className="font-serif text-lg text-ink">Match breakdown</h2>
+            <div className="flex items-center justify-between px-6 py-[14px] border-b border-edge">
+              <div>
+                <div className="font-mono text-[10px] text-ink-faint uppercase tracking-[2px]">
+                  / Analysis
+                </div>
+                <h2 className="font-display font-bold text-[18px] text-ink mt-[2px]">
+                  Match breakdown
+                </h2>
+              </div>
               <button
                 onClick={onClose}
-                className="text-ink-faint hover:text-ink-secondary transition-colors text-lg leading-none"
+                className="text-ink-faint hover:text-magenta transition-colors text-[14px] leading-none font-mono"
                 aria-label="Close"
               >
-                ×
+                ✕
               </button>
             </div>
 

@@ -55,7 +55,7 @@ export default function ChallengeAcceptPage({ params }: { params: Promise<{ code
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-normal text-ink mb-2">Cannot Join Challenge</h1>
+          <h1 className="font-display font-extrabold text-[24px] md:text-[30px] tracking-[-0.6px] text-ink mb-2">Cannot Join Challenge</h1>
           <p className="text-ink-muted text-sm mb-8">{error}</p>
           <Link
             href="/dashboard"
