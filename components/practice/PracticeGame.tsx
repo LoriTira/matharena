@@ -68,11 +68,11 @@ export function PracticeGame({
       <div className="flex items-center gap-8">
         <div className="text-center">
           <div className="text-[10px] tracking-[2px] text-ink-faint">CORRECT</div>
-          <div className="font-mono text-xl text-green-500 tabular-nums">{stats.correct}</div>
+          <div className="font-mono text-xl text-feedback-correct tabular-nums">{stats.correct}</div>
         </div>
         <div className="text-center">
           <div className="text-[10px] tracking-[2px] text-ink-faint">WRONG</div>
-          <div className="font-mono text-xl text-red-400/70 tabular-nums">{stats.wrong}</div>
+          <div className="font-mono text-xl text-feedback-wrong tabular-nums">{stats.wrong}</div>
         </div>
         <div className="text-center">
           <div className="text-[10px] tracking-[2px] text-ink-faint">ACCURACY</div>

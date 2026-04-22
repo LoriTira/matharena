@@ -10,6 +10,7 @@ import { AnswerInput } from './AnswerInput';
 import { ScoreDots } from './ScoreDots';
 import { Timer } from './Timer';
 import { MatchResult } from './MatchResult';
+import { Countdown } from '@/components/game/Countdown';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { hapticTap } from '@/lib/haptics';
@@ -420,41 +421,13 @@ export function MatchBoard({ matchId }: MatchBoardProps) {
   return (
     <div className="relative match-screen">
       {/* 5A: Countdown overlay */}
-      <AnimatePresence>
-        {showCountdown && countdownValue !== null && (
-          <motion.div
-            key="countdown-overlay"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-page/90"
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={String(countdownValue)}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 300,
-                  damping: 20,
-                  duration: 0.4,
-                }}
-                className={`text-8xl font-serif font-bold select-none ${
-                  countdownValue === 'GO!' ? 'text-accent' : 'text-ink'
-                }`}
-              >
-                {countdownValue}
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Countdown
+        value={showCountdown ? (countdownValue as number | 'GO!' | null) : null}
+      />
 
       {/* 5C: Match point container with pulsing border */}
       <div
-        className={`flex flex-col items-center gap-8 py-8 rounded-lg ${
+        className={`flex flex-col items-center gap-8 py-8 rounded-sm ${
           isMatchPoint ? 'border border-accent/30 animate-gold-pulse p-4' : ''
         }`}
       >

@@ -135,15 +135,19 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
           <div
             role="status"
             aria-live="polite"
-            className="absolute inset-0 flex items-center justify-center rounded-sm bg-red-400/10 pointer-events-none overflow-hidden"
+            className="absolute inset-0 flex items-center justify-center rounded-sm pointer-events-none overflow-hidden"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--feedback-wrong) 10%, transparent)' }}
           >
-            <span className="text-red-400/80 font-medium text-sm tracking-wide tabular-nums">
+            <span className="text-feedback-wrong font-medium text-sm tracking-wide tabular-nums">
               Wrong — try again in {remainingSeconds}s
             </span>
-            <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-red-400/10 rounded-b-sm">
+            <div
+              className="absolute left-0 right-0 bottom-0 h-0.5 rounded-b-sm"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--feedback-wrong) 10%, transparent)' }}
+            >
               <div
-                className="h-full bg-red-400/60 transition-[width] duration-75 ease-linear"
-                style={{ width: `${progressPct}%` }}
+                className="h-full transition-[width] duration-75 ease-linear"
+                style={{ width: `${progressPct}%`, backgroundColor: 'color-mix(in srgb, var(--feedback-wrong) 60%, transparent)' }}
               />
             </div>
           </div>

@@ -9,59 +9,15 @@ import { ProblemDisplay } from '@/components/match/ProblemDisplay';
 import { AnswerInput } from '@/components/match/AnswerInput';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Countdown } from '@/components/game/Countdown';
+import { GameTimer } from '@/components/game/GameTimer';
 import { NextPuzzleCountdown } from '@/components/daily/NextPuzzleCountdown';
 import { formatLeaderboardTime } from '@/lib/daily/formatTime';
+import { formatElapsedWithTenths } from '@/lib/format/time';
 
 function formatProblemTime(ms: number): string {
   return (ms / 1000).toFixed(1) + 's';
 }
-
-function formatTotalTime(ms: number): string {
-  const totalSeconds = ms / 1000;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes > 0) {
-    return `${minutes}:${seconds.toFixed(1).padStart(4, '0')}`;
-  }
-  return seconds.toFixed(1) + 's';
-}
-
-// --- Countdown Overlay ---
-
-function CountdownOverlay({ onComplete }: { onComplete: () => void }) {
-  const [count, setCount] = useState(3);
-
-  useEffect(() => {
-    if (count > 0) {
-      const timer = setTimeout(() => setCount(count - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      // Show "GO!" for 600ms, then transition
-      const timer = setTimeout(onComplete, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [count, onComplete]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-page/95">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={count}
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 1.5, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="font-mono text-[120px] md:text-[180px] font-bold tabular-nums"
-          style={{ color: count > 0 ? 'rgba(255,255,255,0.9)' : '#F59E0B' }}
-        >
-          {count > 0 ? count : 'GO!'}
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// --- Timer Display ---
 
 function TimerDisplay({ startTime }: { startTime: number }) {
   const [elapsed, setElapsed] = useState(0);
@@ -73,11 +29,7 @@ function TimerDisplay({ startTime }: { startTime: number }) {
     return () => clearInterval(interval);
   }, [startTime]);
 
-  return (
-    <span className="font-mono text-2xl text-ink-secondary tabular-nums">
-      {formatTotalTime(elapsed)}
-    </span>
-  );
+  return <GameTimer elapsedMs={elapsed} variant="prominent" />;
 }
 
 // --- Leaderboard Table ---
@@ -161,7 +113,7 @@ function ResultsView({
         </motion.div>
       ) : (
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-normal text-ink-secondary">
+          <h1 className="font-serif text-3xl font-normal text-ink-secondary">
             Today&apos;s Puzzle
           </h1>
           <p className="text-[11px] text-ink-muted mt-1">You already completed today&apos;s puzzle</p>
@@ -175,7 +127,7 @@ function ResultsView({
       <div className="text-center">
         <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">TOTAL TIME</div>
         <div className="font-mono text-[48px] md:text-[56px] font-normal text-ink tabular-nums leading-none">
-          {formatTotalTime(totalTimeMs)}
+          {formatElapsedWithTenths(totalTimeMs)}
         </div>
       </div>
 
@@ -315,7 +267,7 @@ export default function DailyPuzzlePage() {
   if (status === 'countdown') {
     return (
       <div className="max-w-2xl mx-auto">
-        <CountdownOverlay onComplete={handleCountdownComplete} />
+        <Countdown onComplete={handleCountdownComplete} stepMs={1000} />
         {/* Underlying content so the page isn't blank after overlay fades */}
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 opacity-0">
           <h1 className="font-serif text-3xl font-normal text-ink">DAILY PUZZLE</h1>

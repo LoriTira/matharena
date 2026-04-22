@@ -161,16 +161,16 @@ function MatchRow({
   const opponentName = opponent ? (opponent.display_name || opponent.username) : 'Unknown';
   const resultBadge =
     item.result === 'win'
-      ? { label: 'W', border: 'border-l-emerald-500', text: 'text-emerald-500' }
+      ? { label: 'W', border: 'border-l-[var(--feedback-correct)]', text: 'text-feedback-correct' }
       : item.result === 'loss'
-      ? { label: 'L', border: 'border-l-red-500', text: 'text-red-400' }
+      ? { label: 'L', border: 'border-l-[var(--feedback-wrong)]', text: 'text-feedback-wrong' }
       : { label: 'D', border: 'border-l-ink-muted', text: 'text-ink-muted' };
 
   const deltaClass =
     item.elo_delta > 0
-      ? 'text-emerald-500'
+      ? 'text-feedback-correct'
       : item.elo_delta < 0
-      ? 'text-red-400'
+      ? 'text-feedback-wrong'
       : 'text-ink-faint';
   const deltaSign = item.elo_delta > 0 ? '+' : item.elo_delta < 0 ? '' : '±';
 

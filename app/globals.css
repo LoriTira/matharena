@@ -165,6 +165,10 @@
 
   --color-background: var(--bg-base);
   --color-foreground: var(--text-primary);
+
+  --color-feedback-correct: var(--feedback-correct);
+  --color-feedback-wrong: var(--feedback-wrong);
+
   --font-sans: var(--font-inter);
   --font-serif: var(--font-playfair);
   --font-mono: var(--font-jetbrains);

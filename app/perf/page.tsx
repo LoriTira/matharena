@@ -111,13 +111,13 @@ export default function PerfPage() {
       <button
         onClick={runDiagnostics}
         disabled={loading}
-        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-700 disabled:text-neutral-500 rounded-lg font-medium transition-colors"
+        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-700 disabled:text-neutral-500 rounded-sm font-medium transition-colors"
       >
         {loading ? 'Running diagnostics...' : 'Run Diagnostics'}
       </button>
 
       {error && (
-        <div className="mt-6 p-4 bg-red-950 border border-red-800 rounded-lg text-red-300 text-sm">
+        <div className="mt-6 p-4 bg-red-950 border border-red-800 rounded-sm text-red-300 text-sm">
           {error}
         </div>
       )}
@@ -125,7 +125,7 @@ export default function PerfPage() {
       {report && (
         <div className="mt-8 space-y-8">
           {/* Summary */}
-          <section className="p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+          <section className="p-6 bg-neutral-900 rounded-sm border border-neutral-800">
             <h2 className="text-lg font-semibold mb-4">Summary</h2>
             <div className="grid grid-cols-3 gap-4">
               <div>
@@ -155,7 +155,7 @@ export default function PerfPage() {
           </section>
 
           {/* Layer Attribution */}
-          <section className="p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+          <section className="p-6 bg-neutral-900 rounded-sm border border-neutral-800">
             <h2 className="text-lg font-semibold mb-4">Latency Attribution</h2>
             <div className="space-y-3">
               {Object.entries(report.layers)
@@ -181,7 +181,7 @@ export default function PerfPage() {
           </section>
 
           {/* Dashboard Waterfall */}
-          <section className="p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+          <section className="p-6 bg-neutral-900 rounded-sm border border-neutral-800">
             <h2 className="text-lg font-semibold mb-1">Dashboard Query Waterfall</h2>
             <p className="text-xs text-neutral-500 mb-4">
               Sequential: {Math.round(report.raw.dashboard.sequential.total_ms)}ms |
@@ -225,7 +225,7 @@ export default function PerfPage() {
           </section>
 
           {/* Recommendations */}
-          <section className="p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+          <section className="p-6 bg-neutral-900 rounded-sm border border-neutral-800">
             <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
             <div className="space-y-4">
               {report.recommendations.map((rec, i) => (
@@ -249,7 +249,7 @@ export default function PerfPage() {
 
           {/* Browser Timing */}
           {navTiming && (
-            <section className="p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+            <section className="p-6 bg-neutral-900 rounded-sm border border-neutral-800">
               <h2 className="text-lg font-semibold mb-4">Browser Navigation Timing</h2>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -297,7 +297,7 @@ export default function PerfPage() {
           )}
 
           {/* Raw JSON */}
-          <section className="p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+          <section className="p-6 bg-neutral-900 rounded-sm border border-neutral-800">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Raw Data</h2>
               <button

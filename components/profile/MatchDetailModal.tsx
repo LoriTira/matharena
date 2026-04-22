@@ -200,7 +200,7 @@ function EventCell({ ev }: { ev: MatchEvent | undefined }) {
   }
   const correct = ev.event === 'answer_correct';
   const mark = correct ? '✓' : '✗';
-  const markClass = correct ? 'text-emerald-500' : 'text-red-400';
+  const markClass = correct ? 'text-feedback-correct' : 'text-feedback-wrong';
   return (
     <div className="w-20 text-right text-[11px] font-mono tabular-nums flex items-center justify-end gap-1.5">
       <span className={markClass}>{mark}</span>

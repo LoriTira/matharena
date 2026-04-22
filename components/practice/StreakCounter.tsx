@@ -10,8 +10,8 @@ function getStreakTier(streak: number) {
   if (streak >= 15) {
     return {
       emoji: '🔥🔥🔥',
-      colorClass: 'text-amber-400',
-      glowClass: 'drop-shadow-[0_0_12px_rgba(245,158,11,0.6)]',
+      colorClass: 'text-accent',
+      glowClass: 'drop-shadow-[0_0_12px_var(--accent-muted)]',
       sizeClass: 'text-xl',
       animate: 'animate-gold-pulse',
     };
@@ -19,8 +19,8 @@ function getStreakTier(streak: number) {
   if (streak >= 10) {
     return {
       emoji: '🔥🔥',
-      colorClass: 'text-amber-400',
-      glowClass: 'drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]',
+      colorClass: 'text-accent',
+      glowClass: 'drop-shadow-[0_0_8px_var(--accent-glow)]',
       sizeClass: 'text-lg',
       animate: '',
     };

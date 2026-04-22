@@ -94,7 +94,7 @@ export function PracticeResults({
           transition={{ delay: 0.8 }}
         >
           {isNewPersonalBest ? (
-            <div className="text-[12px] text-green-500 font-mono">
+            <div className="text-[12px] text-feedback-correct font-mono">
               Previous best: {previousBest} → {score} (+{score - previousBest})
             </div>
           ) : (
@@ -129,10 +129,10 @@ export function PracticeResults({
         transition={{ delay: 1.0 }}
       >
         {[
-          { label: 'CORRECT', value: String(correctCount), color: 'text-green-500' },
-          { label: 'WRONG', value: String(wrongCount), color: 'text-red-400/70' },
+          { label: 'CORRECT', value: String(correctCount), color: 'text-feedback-correct' },
+          { label: 'WRONG', value: String(wrongCount), color: 'text-feedback-wrong' },
           { label: 'ACCURACY', value: `${accuracy}%`, color: 'text-accent' },
-          { label: 'STREAK', value: `🔥 ${bestStreak}`, color: 'text-amber-400' },
+          { label: 'STREAK', value: `🔥 ${bestStreak}`, color: 'text-accent-muted' },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -160,7 +160,7 @@ export function PracticeResults({
             {operations.map(([op, data]) => {
               const total = data.correct + data.wrong;
               const pct = total > 0 ? Math.round((data.correct / total) * 100) : 0;
-              const colorClass = pct >= 80 ? 'text-green-500' : pct >= 60 ? 'text-amber-400' : 'text-red-400/70';
+              const colorClass = pct >= 80 ? 'text-feedback-correct' : pct >= 60 ? 'text-ink-secondary' : 'text-feedback-wrong';
 
               return (
                 <div key={op} className="flex items-center justify-between text-[13px]">

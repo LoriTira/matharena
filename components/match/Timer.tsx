@@ -1,6 +1,7 @@
 'use client';
 
 import { useTimer } from '@/hooks/useTimer';
+import { GameTimer } from '@/components/game/GameTimer';
 
 interface TimerProps {
   startTime: string | null;
@@ -8,11 +9,11 @@ interface TimerProps {
 }
 
 export function Timer({ startTime, isRunning }: TimerProps) {
-  const { formatted } = useTimer(startTime, isRunning);
+  const { elapsed } = useTimer(startTime, isRunning);
 
   return (
     <div className="text-center">
-      <span className="font-mono text-lg text-ink-muted tabular-nums">{formatted}</span>
+      <GameTimer elapsedMs={elapsed * 1000} variant="compact" />
     </div>
   );
 }

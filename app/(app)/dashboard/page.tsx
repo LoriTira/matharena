@@ -373,7 +373,7 @@ function DashboardContent() {
     <div className="space-y-6">
       {/* Greeting */}
       <div>
-        <h1 className="font-serif text-[28px] font-normal text-ink">
+        <h1 className="font-serif text-3xl font-normal text-ink">
           Welcome back, {profile.display_name || profile.username}
         </h1>
         <p className="text-[13px] text-ink-muted mt-1">Your mind is your weapon. Keep it sharp.</p>
