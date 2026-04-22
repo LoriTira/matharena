@@ -79,6 +79,12 @@ export async function POST(request: Request) {
           player2Profile.games_played
         );
 
+        // Snapshot the same ratings used as inputs to calculateElo into
+        // _before so elo_after - elo_before equals the delta actually applied
+        // to the profile — the values set earlier in find/challenge-start can
+        // drift if the player's rating changed between pairing and abandon.
+        updates.player1_elo_before = player1Profile.elo_rating;
+        updates.player2_elo_before = player2Profile.elo_rating;
         updates.player1_elo_after = newRatingA;
         updates.player2_elo_after = newRatingB;
 

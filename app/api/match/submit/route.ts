@@ -125,15 +125,43 @@ export async function POST(request: Request) {
       updates[penaltyField] = (isPlayer1 ? match.player1_penalties : match.player2_penalties) + 1;
     }
 
-    // Write match update FIRST — this must succeed for the match to progress
-    const { error: updateError } = await supabase
+    // Use .select() so we can tell whether this update actually landed. When
+    // both players submit a winning answer within the same ~300ms, only the
+    // first update matches the status='active' guard; the second silently
+    // no-ops. Without knowing that, the ELO block below would still run on
+    // the race-loser's request and overwrite the stored ELO with an inverted
+    // calculation, because isPlayer1 there now refers to the actual loser.
+    const { data: updatedRow, error: updateError } = await supabase
       .from('matches')
       .update(updates)
       .eq('id', matchId)
-      .eq('status', 'active');
+      .eq('status', 'active')
+      .select('id')
+      .maybeSingle();
 
     if (updateError) {
       return NextResponse.json({ error: 'Failed to update match' }, { status: 500 });
+    }
+
+    // If we intended to complete the match (winning answer) but our update
+    // didn't match any row, a concurrent submit already completed it. Return
+    // the current state without recomputing ELO.
+    if (matchCompleted && !updatedRow) {
+      const { data: freshMatch } = await supabase
+        .from('matches')
+        .select('status, winner_id, player1_score, player2_score')
+        .eq('id', matchId)
+        .single();
+
+      return NextResponse.json({
+        correct: true,
+        matchStatus: freshMatch?.status ?? 'completed',
+        scores: {
+          player1: freshMatch?.player1_score ?? match.player1_score,
+          player2: freshMatch?.player2_score ?? match.player2_score,
+        },
+        newAchievements: [],
+      });
     }
 
     // Elo calculation and profile updates — non-blocking, must not prevent match completion
@@ -161,10 +189,16 @@ export async function POST(request: Request) {
             player2Profile.games_played
           );
 
-          // Store Elo results on the match
+          // Store Elo results on the match. We also (re)write _before using the
+          // same profile values passed into calculateElo so that elo_after -
+          // elo_before equals the delta actually applied to the profile — the
+          // values set earlier in find/challenge-start can drift if the player's
+          // rating changed between pairing and match completion.
           await supabase
             .from('matches')
             .update({
+              player1_elo_before: player1Profile.elo_rating,
+              player2_elo_before: player2Profile.elo_rating,
               player1_elo_after: newRatingA,
               player2_elo_after: newRatingB,
             })
@@ -207,7 +241,14 @@ export async function POST(request: Request) {
         .eq('match_id', matchId)
         .eq('status', 'accepted');
 
-      // Check achievements for the current user
+      // Re-read the just-updated match row so elo_before reflects the fresh
+      // snapshot written above (not the stale value from the initial fetch).
+      const { data: freshElo } = await supabase
+        .from('matches')
+        .select('player1_elo_before, player2_elo_before')
+        .eq('id', matchId)
+        .single();
+
       try {
         const achievementMatchData = {
           winner_id: (updates.winner_id as string) ?? null,
@@ -217,8 +258,8 @@ export async function POST(request: Request) {
           player2_score: (updates.player2_score as number) ?? match.player2_score,
           player1_penalties: (updates.player1_penalties as number) ?? match.player1_penalties,
           player2_penalties: (updates.player2_penalties as number) ?? match.player2_penalties,
-          player1_elo_before: match.player1_elo_before,
-          player2_elo_before: match.player2_elo_before,
+          player1_elo_before: freshElo?.player1_elo_before ?? match.player1_elo_before,
+          player2_elo_before: freshElo?.player2_elo_before ?? match.player2_elo_before,
           started_at: match.started_at,
           completed_at: (updates.completed_at as string) ?? match.completed_at,
         };
