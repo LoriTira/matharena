@@ -221,7 +221,7 @@ export function PlayHub({
               title="120s Sprint"
               blurb="Beat your best in 2 minutes"
               stat={sprintStat}
-              ctaLabel={isGuest ? '▶ PLAY FREE' : 'START SPRINT'}
+              ctaLabel={isGuest ? '▸ PLAY NOW' : 'START SPRINT'}
               onActivate={() => router.push('/practice?sprint=120')}
               ariaLabel={
                 isGuest
