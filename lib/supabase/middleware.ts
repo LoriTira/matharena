@@ -37,8 +37,17 @@ export async function updateSession(request: NextRequest) {
 
   const user = session?.user ?? null;
 
-  // Redirect unauthenticated users to login for protected routes
-  const protectedPaths = ['/dashboard', '/play', '/practice', '/lessons', '/profile', '/daily', '/onboarding'];
+  // /dashboard redirects to / (the play hub now lives at root) for everyone.
+  if (request.nextUrl.pathname === '/dashboard' || request.nextUrl.pathname.startsWith('/dashboard/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    url.search = request.nextUrl.search;
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect unauthenticated users to login for protected routes.
+  // /practice is public — guests can play without saving a score.
+  const protectedPaths = ['/play', '/lessons', '/profile', '/daily', '/onboarding'];
   // Auth-required sub-routes under /challenge/[code] (landing page /challenge/[code] stays public)
   const protectedChallengePattern = /^\/challenge\/[^/]+\/lobby(?:\/|$)/;
   const isProtected =

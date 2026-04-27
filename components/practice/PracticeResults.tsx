@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import Sparkline from '@/components/ui/Sparkline';
 import type { Operation, PracticeSessionRecord } from '@/types';
@@ -17,6 +18,8 @@ interface PracticeResultsProps {
   sessionHistory: PracticeSessionRecord[];
   onPlayAgain: () => void;
   onSettings: () => void;
+  /** When true, replaces the action row with the "Sign in to keep your score" hero CTA. */
+  isGuest?: boolean;
 }
 
 const OPERATION_LABELS: Record<Operation, { symbol: string; name: string }> = {
@@ -38,6 +41,7 @@ export function PracticeResults({
   sessionHistory,
   onPlayAgain,
   onSettings,
+  isGuest = false,
 }: PracticeResultsProps) {
   const accuracy = correctCount + wrongCount > 0
     ? ((correctCount / (correctCount + wrongCount)) * 100).toFixed(1)
@@ -64,7 +68,9 @@ export function PracticeResults({
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
       >
-        <div className="text-[11px] tracking-[2px] text-ink-muted mb-1">SESSION COMPLETE</div>
+        <div className="text-[11px] tracking-[2px] text-ink-muted mb-1">
+          {isGuest ? 'FINAL SCORE' : 'SESSION COMPLETE'}
+        </div>
         <div className="font-mono text-6xl font-medium text-ink tabular-nums">
           <AnimatedNumber value={score} duration={1.0} />
         </div>
@@ -72,7 +78,7 @@ export function PracticeResults({
       </motion.div>
 
       {/* Personal best badge */}
-      {isNewPersonalBest && (
+      {!isGuest && isNewPersonalBest && (
         <motion.div
           className="flex items-center gap-2"
           initial={{ scale: 0, opacity: 0 }}
@@ -86,7 +92,7 @@ export function PracticeResults({
       )}
 
       {/* Previous best comparison */}
-      {previousBest !== null && (
+      {!isGuest && previousBest !== null && (
         <motion.div
           className="text-center"
           initial={{ opacity: 0 }}
@@ -109,7 +115,7 @@ export function PracticeResults({
       )}
 
       {/* Sparkline */}
-      {sparklineData.length > 1 && (
+      {!isGuest && sparklineData.length > 1 && (
         <motion.div
           className="w-full max-w-xs flex flex-col items-center gap-1"
           initial={{ opacity: 0, y: 10 }}
@@ -178,25 +184,61 @@ export function PracticeResults({
       )}
 
       {/* Actions */}
-      <motion.div
-        className="flex items-center gap-3 mt-4"
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5 }}
-      >
-        <button
-          onClick={onPlayAgain}
-          className="px-10 py-4 bg-btn text-btn-text font-semibold text-sm tracking-[2px] rounded-sm transition-colors hover:bg-btn-hover"
+      {isGuest ? (
+        <motion.div
+          className="w-full max-w-md mt-2"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
         >
-          PLAY AGAIN
-        </button>
-        <button
-          onClick={onSettings}
-          className="px-6 py-3 border border-edge text-ink-tertiary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+          <div className="relative rounded-md border-2 border-accent bg-accent-glow p-6 text-center shadow-[0_0_40px_rgba(124,58,237,0.15)] overflow-hidden">
+            <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-transparent" />
+            <div className="relative">
+              <div className="text-[10px] tracking-[3px] text-accent uppercase mb-2">
+                Your score is unsaved
+              </div>
+              <div className="font-serif text-2xl text-ink mb-2">
+                Sign in to keep {score}.
+              </div>
+              <p className="text-[12px] text-ink-muted leading-relaxed mb-5 max-w-xs mx-auto">
+                Track your PB, climb the global leaderboard, and unlock ranked duels — all free.
+              </p>
+              <Link
+                href="/login?redirect=/practice%3Fsprint%3D120"
+                className="inline-block px-7 py-3 bg-btn text-btn-text font-bold text-[12px] tracking-[2px] rounded-sm transition-colors hover:bg-btn-hover"
+              >
+                SIGN IN TO PLAY
+              </Link>
+              <button
+                onClick={onPlayAgain}
+                className="block mx-auto mt-4 text-[11px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors"
+              >
+                or play again as guest →
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          className="flex items-center gap-3 mt-4"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
         >
-          SETTINGS
-        </button>
-      </motion.div>
+          <button
+            onClick={onPlayAgain}
+            className="px-10 py-4 bg-btn text-btn-text font-semibold text-sm tracking-[2px] rounded-sm transition-colors hover:bg-btn-hover"
+          >
+            PLAY AGAIN
+          </button>
+          <button
+            onClick={onSettings}
+            className="px-6 py-3 border border-edge text-ink-tertiary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+          >
+            SETTINGS
+          </button>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

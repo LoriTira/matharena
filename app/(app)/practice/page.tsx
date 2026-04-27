@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
+import { useAuth } from '@/hooks/useAuth';
 import { PracticeSetup } from '@/components/practice/PracticeSetup';
 import { PracticeGame } from '@/components/practice/PracticeGame';
 import { PracticeResults } from '@/components/practice/PracticeResults';
@@ -11,6 +12,7 @@ import { Countdown } from '@/components/game/Countdown';
 import type { PracticeConfig } from '@/types';
 
 export default function PracticePage() {
+  const { user, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const initialConfig = useMemo((): Partial<PracticeConfig> | undefined => {
     const sprint = searchParams.get('sprint');
@@ -74,6 +76,7 @@ export default function PracticePage() {
           sessionHistory={session.sessionHistory}
           onPlayAgain={session.replaySession}
           onSettings={session.resetToSetup}
+          isGuest={!authLoading && !user}
         />
       )}
     </AnimatePresence>

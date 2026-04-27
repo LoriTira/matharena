@@ -84,7 +84,7 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* ── Logo ─────────────────────────────────── */}
-            <Link href={user ? '/dashboard' : '/'} className="flex items-center">
+            <Link href="/" className="flex items-center">
               <span className="font-serif text-base font-bold text-ink tracking-[1px]">
                 MATH<span className="font-normal text-ink-tertiary">ARENA</span>
               </span>
@@ -187,16 +187,10 @@ export function Navbar() {
                     </>
                   ) : (
                     <>
-                      <Link
-                        href="/leaderboard"
-                        className="text-[12px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors"
-                      >
-                        RANKINGS
-                      </Link>
                       <ThemeSettings />
                       <Link
                         href="/login"
-                        className="px-4 py-1.5 border border-edge-strong rounded-sm text-[12px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
+                        className="px-4 py-1.5 bg-accent text-on-accent rounded-sm text-[12px] tracking-[1.5px] font-bold hover:bg-accent/90 transition-colors"
                       >
                         SIGN IN
                       </Link>
@@ -246,7 +240,7 @@ export function Navbar() {
               {!loading && !user && (
                 <Link
                   href="/login"
-                  className="px-4 py-1.5 border border-edge-strong rounded-sm text-[12px] tracking-[1.5px] text-ink-secondary hover:text-ink hover:border-edge-strong transition-colors"
+                  className="px-4 py-1.5 bg-accent text-on-accent rounded-sm text-[12px] tracking-[1.5px] font-bold hover:bg-accent/90 transition-colors"
                 >
                   SIGN IN
                 </Link>
