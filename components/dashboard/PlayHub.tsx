@@ -204,10 +204,10 @@ export function PlayHub({
         </p>
       </div>
 
-      <div className="mt-7 flex flex-col lg:flex-row gap-4">
-        {/* SINGLE PLAYER — wider */}
-        <div className="lg:flex-[3]">
-          <PlayPanel variant="sp" eyebrow="Solo" title="Single Player" stats={spStats}>
+      <div className="mt-7 grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+        {/* SINGLE PLAYER */}
+        <div className="flex">
+          <PlayPanel variant="sp" eyebrow="Solo" title="Single Player" stats={spStats} className="flex-1">
             <PlayTile
               variant="sp"
               icon={ICON_SPRINT}
@@ -245,14 +245,15 @@ export function PlayHub({
           </PlayPanel>
         </div>
 
-        {/* MULTIPLAYER — narrower */}
-        <div className="lg:flex-[2]">
+        {/* MULTIPLAYER */}
+        <div className="flex">
           <PlayPanel
             variant="mp"
             eyebrow="Ranked"
             title="Multiplayer"
             stats={mpStats}
             lockedOverlay={mpLockedOverlay}
+            className="flex-1"
           >
             <PlayTile
               variant="mp"
