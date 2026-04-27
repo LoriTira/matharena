@@ -19,8 +19,10 @@ export function RecentMatchesCard({
   loaded,
 }: RecentMatchesCardProps) {
   return (
-    <Card variant="default" className="p-6">
-      <div className="text-[11px] tracking-[2px] text-ink-faint mb-4">RECENT MATCHES</div>
+    <Card variant="default" className="p-6 rounded-xl border-2 border-edge-strong">
+      <div className="text-[12px] tracking-[3px] font-black text-ink-tertiary mb-5">
+        ▸ RECENT MATCHES
+      </div>
       {!loaded ? (
         <div className="space-y-3">
           <Skeleton className="h-8" />
@@ -46,23 +48,25 @@ export function RecentMatchesCard({
                 href={`/play/${match.id}/analysis`}
                 className="flex items-center justify-between py-2.5 border-b border-edge-faint last:border-b-0 hover:bg-card transition-colors -mx-1 px-2 rounded-sm"
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <span
-                    className={`font-mono text-[11px] tracking-[1px] px-1.5 py-0.5 rounded-sm ${
-                      won ? 'text-ink-secondary bg-shade' : 'text-ink-muted bg-card'
+                    className={`font-mono text-[12px] font-black tracking-wider px-2 py-1 rounded-md ${
+                      won
+                        ? 'text-feedback-correct bg-feedback-correct/10 border border-feedback-correct/30'
+                        : 'text-feedback-wrong bg-feedback-wrong/10 border border-feedback-wrong/30'
                     }`}
                   >
                     {won ? 'W' : 'L'}
                   </span>
-                  <span className="text-[12px] text-ink-secondary">vs {opponentName}</span>
+                  <span className="text-[13px] font-semibold text-ink-secondary">vs {opponentName}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="font-mono text-[11px] text-ink-muted tabular-nums">
+                <div className="flex items-center gap-5">
+                  <span className="font-mono text-[12px] font-bold text-ink-tertiary tabular-nums">
                     {myScore}&ndash;{theirScore}
                   </span>
                   <span
-                    className={`font-mono text-[12px] tabular-nums w-10 text-right ${
-                      eloChange >= 0 ? 'text-ink-secondary' : 'text-ink-faint'
+                    className={`font-mono text-[13px] font-black tabular-nums w-12 text-right ${
+                      eloChange >= 0 ? 'text-feedback-correct' : 'text-feedback-wrong'
                     }`}
                   >
                     {eloChange >= 0 ? '+' : ''}

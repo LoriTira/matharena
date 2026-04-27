@@ -284,10 +284,12 @@ export function DashboardContent() {
     <div className="space-y-8">
       {/* Greeting */}
       <div>
-        <h1 className="font-serif text-3xl font-normal text-ink">
-          Welcome back, {profile.display_name || profile.username}
+        <h1 className="font-serif text-4xl sm:text-5xl font-black text-ink leading-none tracking-tight">
+          Welcome back, <em className="not-italic text-accent">{profile.display_name || profile.username}</em>
         </h1>
-        <p className="text-[13px] text-ink-muted mt-1">Your mind is your weapon. Keep it sharp.</p>
+        <p className="text-[14px] font-medium text-ink-tertiary mt-3">
+          Your mind is your weapon. Keep it sharp.
+        </p>
       </div>
 
       {/* Email verification banner */}

@@ -30,14 +30,16 @@ function HomeRouter() {
 
 function GuestHome() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <div className="text-[12px] tracking-[4px] text-ink-muted mb-3">MATHSARENA</div>
-        <h1 className="font-serif text-4xl sm:text-5xl text-ink leading-tight">
-          Where numbers become sport.
+        <div className="text-[12px] tracking-[5px] font-black text-accent mb-4">
+          ▸ MATHSARENA
+        </div>
+        <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-black text-ink leading-[0.95] tracking-tight">
+          Where numbers <em className="not-italic text-accent">become sport.</em>
         </h1>
-        <p className="text-[14px] text-ink-muted mt-3 max-w-lg">
-          Play a 120-second sprint right now — no signup. Sign in to save scores and unlock ranked duels.
+        <p className="text-[15px] sm:text-base font-medium text-ink-tertiary mt-5 max-w-xl leading-relaxed">
+          Play a 120-second sprint right now — no signup needed. Sign in to save scores and unlock ranked duels.
         </p>
       </div>
 

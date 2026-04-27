@@ -68,13 +68,13 @@ export function PracticeResults({
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
       >
-        <div className="text-[11px] tracking-[2px] text-ink-muted mb-1">
-          {isGuest ? 'FINAL SCORE' : 'SESSION COMPLETE'}
+        <div className="text-[12px] tracking-[4px] font-black text-accent mb-2">
+          {isGuest ? '▸ FINAL SCORE' : '▸ SESSION COMPLETE'}
         </div>
-        <div className="font-mono text-6xl font-medium text-ink tabular-nums">
+        <div className="font-serif text-8xl font-black text-ink tabular-nums leading-none tracking-tight">
           <AnimatedNumber value={score} duration={1.0} />
         </div>
-        <div className="text-[12px] tracking-[1px] text-accent mt-1">PROBLEMS SOLVED</div>
+        <div className="text-[12px] tracking-[3px] font-black text-ink-tertiary mt-3">PROBLEMS SOLVED</div>
       </motion.div>
 
       {/* Personal best badge */}
@@ -186,32 +186,32 @@ export function PracticeResults({
       {/* Actions */}
       {isGuest ? (
         <motion.div
-          className="w-full max-w-md mt-2"
+          className="w-full max-w-md mt-4"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.5 }}
         >
-          <div className="relative rounded-md border-2 border-accent bg-accent-glow p-6 text-center shadow-[0_0_40px_rgba(124,58,237,0.15)] overflow-hidden">
-            <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-transparent" />
+          <div className="relative rounded-xl border-[3px] border-accent bg-gradient-to-br from-accent-glow via-panel to-panel p-7 text-center shadow-[0_0_60px_var(--accent-glow)] overflow-hidden">
+            <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/15 via-transparent to-transparent" />
             <div className="relative">
-              <div className="text-[10px] tracking-[3px] text-accent uppercase mb-2">
-                Your score is unsaved
+              <div className="text-[11px] tracking-[4px] font-black text-accent uppercase mb-3">
+                ▸ YOUR SCORE IS UNSAVED
               </div>
-              <div className="font-serif text-2xl text-ink mb-2">
-                Sign in to keep {score}.
+              <div className="font-serif text-3xl font-black text-ink mb-3 tracking-tight leading-tight">
+                Sign in to keep <em className="not-italic text-accent">{score}.</em>
               </div>
-              <p className="text-[12px] text-ink-muted leading-relaxed mb-5 max-w-xs mx-auto">
+              <p className="text-[13px] font-medium text-ink-tertiary leading-relaxed mb-6 max-w-xs mx-auto">
                 Track your PB, climb the global leaderboard, and unlock ranked duels — all free.
               </p>
               <Link
                 href="/login?redirect=/practice%3Fsprint%3D120"
-                className="inline-block px-7 py-3 bg-btn text-btn-text font-bold text-[12px] tracking-[2px] rounded-sm transition-colors hover:bg-btn-hover"
+                className="inline-block px-8 py-3.5 bg-accent text-on-accent font-black text-[13px] tracking-[2.5px] rounded-md transition-all hover:scale-[1.02] shadow-[0_8px_30px_var(--accent-glow)]"
               >
                 SIGN IN TO PLAY
               </Link>
               <button
                 onClick={onPlayAgain}
-                className="block mx-auto mt-4 text-[11px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors"
+                className="block mx-auto mt-5 text-[12px] tracking-[1.5px] font-semibold text-ink-muted hover:text-ink-secondary transition-colors"
               >
                 or play again as guest →
               </button>
@@ -227,13 +227,13 @@ export function PracticeResults({
         >
           <button
             onClick={onPlayAgain}
-            className="px-10 py-4 bg-btn text-btn-text font-semibold text-sm tracking-[2px] rounded-sm transition-colors hover:bg-btn-hover"
+            className="px-10 py-4 bg-btn text-btn-text font-black text-sm tracking-[2.5px] rounded-md transition-all hover:scale-[1.02] hover:bg-btn-hover"
           >
             PLAY AGAIN
           </button>
           <button
             onClick={onSettings}
-            className="px-6 py-3 border border-edge text-ink-tertiary text-xs tracking-[1.5px] rounded-sm transition-colors hover:border-edge-strong hover:text-ink-secondary"
+            className="px-6 py-3 border-2 border-edge-strong text-ink-secondary text-xs font-bold tracking-[2px] rounded-md transition-colors hover:border-edge-bold hover:text-ink"
           >
             SETTINGS
           </button>

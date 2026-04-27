@@ -34,7 +34,7 @@ const NAV_GROUPS = [
 
 // ─── Shared styles ────────────────────────────────────────
 const triggerClass =
-  'text-[12px] tracking-[1.5px] text-ink-muted hover:text-ink-secondary transition-colors select-none';
+  'text-[12px] tracking-[2px] font-bold text-ink-tertiary hover:text-ink transition-colors select-none';
 
 const dropdownItemClass =
   'block px-4 py-2.5 text-[11px] text-ink-secondary hover:text-ink hover:bg-tint transition-colors';
@@ -85,8 +85,8 @@ export function Navbar() {
           <div className="flex items-center justify-between h-14">
             {/* ── Logo ─────────────────────────────────── */}
             <Link href="/" className="flex items-center">
-              <span className="font-serif text-base font-bold text-ink tracking-[1px]">
-                MATH<span className="font-normal text-ink-tertiary">ARENA</span>
+              <span className="font-serif text-lg font-black text-ink tracking-[1.5px] leading-none">
+                MATH<span className="font-medium text-ink-tertiary">ARENA</span>
               </span>
             </Link>
 
@@ -146,7 +146,7 @@ export function Navbar() {
                       {/* Challenge CTA */}
                       <button
                         onClick={() => setChallengeModalOpen(true)}
-                        className="px-3.5 py-1.5 bg-accent text-on-accent text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
+                        className="px-4 py-2 bg-accent text-on-accent text-[12px] tracking-[2px] font-black rounded-md hover:bg-accent-muted transition-colors shadow-[0_4px_16px_var(--accent-glow)]"
                       >
                         CHALLENGE
                       </button>
@@ -190,7 +190,7 @@ export function Navbar() {
                       <ThemeSettings />
                       <Link
                         href="/login"
-                        className="px-4 py-1.5 bg-accent text-on-accent rounded-sm text-[12px] tracking-[1.5px] font-bold hover:bg-accent/90 transition-colors"
+                        className="px-5 py-2 bg-accent text-on-accent rounded-md text-[12px] tracking-[2px] font-black hover:bg-accent/90 transition-colors shadow-[0_4px_20px_var(--accent-glow)]"
                       >
                         SIGN IN
                       </Link>
@@ -210,7 +210,7 @@ export function Navbar() {
                   {/* Challenge CTA — always visible on mobile */}
                   <button
                     onClick={() => setChallengeModalOpen(true)}
-                    className="px-3 py-1.5 bg-accent text-on-accent text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-accent-muted transition-colors"
+                    className="px-3.5 py-1.5 bg-accent text-on-accent text-[11px] tracking-[2px] font-black rounded-md hover:bg-accent-muted transition-colors"
                   >
                     CHALLENGE
                   </button>
@@ -240,7 +240,7 @@ export function Navbar() {
               {!loading && !user && (
                 <Link
                   href="/login"
-                  className="px-4 py-1.5 bg-accent text-on-accent rounded-sm text-[12px] tracking-[1.5px] font-bold hover:bg-accent/90 transition-colors"
+                  className="px-4 py-2 bg-accent text-on-accent rounded-md text-[12px] tracking-[2px] font-black hover:bg-accent/90 transition-colors shadow-[0_4px_16px_var(--accent-glow)]"
                 >
                   SIGN IN
                 </Link>

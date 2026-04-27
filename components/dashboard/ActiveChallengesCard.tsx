@@ -41,8 +41,10 @@ export function ActiveChallengesCard({
   };
 
   return (
-    <Card variant="default" className="p-6">
-      <div className="text-[11px] tracking-[2px] text-ink-faint mb-4">ACTIVE CHALLENGES</div>
+    <Card variant="default" className="p-6 rounded-xl border-2 border-accent/40 bg-accent-glow shadow-[0_0_30px_var(--accent-glow)]">
+      <div className="text-[12px] tracking-[3px] font-black text-accent mb-5">
+        ▸ ACTIVE CHALLENGES
+      </div>
       <div className="space-y-2.5">
         {receivedPending.map((challenge) => {
           const name = opponentName(challenge);

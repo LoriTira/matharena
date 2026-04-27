@@ -23,9 +23,9 @@ interface PlayHubProps {
 
 function SectionStat({ label, value }: { label: string; value: string }) {
   return (
-    <span className="inline-flex items-baseline gap-1.5">
-      <span className="text-[10px] tracking-[1.5px] text-ink-faint uppercase">{label}</span>
-      <span className="font-mono tabular-nums text-[14px] text-ink-secondary">{value}</span>
+    <span className="inline-flex items-baseline gap-2">
+      <span className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary uppercase">{label}</span>
+      <span className="font-mono tabular-nums text-[16px] font-black text-ink">{value}</span>
     </span>
   );
 }
@@ -116,49 +116,49 @@ export function PlayHub({
   const sprintStat = !isGuest
     ? sprintPB !== null
       ? (
-        <span>
-          <span className="text-[10px] tracking-[1.5px] text-ink-faint uppercase mr-1.5">Best</span>
-          <span className="font-mono tabular-nums text-accent text-[18px]">{sprintPB}</span>
+        <span className="inline-flex items-baseline gap-2">
+          <span className="text-[11px] tracking-[2px] font-black text-ink-tertiary uppercase">Best</span>
+          <span className="font-mono tabular-nums text-accent text-[22px] font-black">{sprintPB}</span>
         </span>
       ) : (
-        <span className="text-ink-muted">Set your first record</span>
+        <span className="text-ink-muted font-semibold">Set your first record</span>
       )
     : (
-      <span className="text-[11px] tracking-[1.5px] text-ink-faint uppercase">All operations · 120 seconds</span>
+      <span className="text-[11px] tracking-[2.5px] font-black text-ink-tertiary uppercase">All operations · 120s</span>
     );
 
   const dailyStat = !isGuest
     ? dailyStreak > 0
       ? (
-        <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden>🔥</span>
-          <span className="font-mono tabular-nums text-ink-secondary">{dailyStreak}</span>
-          <span className="text-[11px] tracking-[1.5px] text-ink-faint uppercase">day streak</span>
+        <span className="inline-flex items-center gap-2">
+          <span aria-hidden className="text-base">🔥</span>
+          <span className="font-mono tabular-nums text-accent text-[22px] font-black">{dailyStreak}</span>
+          <span className="text-[11px] tracking-[2px] font-black text-ink-tertiary uppercase">day streak</span>
         </span>
       ) : (
-        <span className="text-ink-muted">Start your streak</span>
+        <span className="text-ink-muted font-semibold">Start your streak</span>
       )
-    : <span className="text-ink-muted">5 problems · once per day</span>;
+    : <span className="text-[11px] tracking-[2.5px] font-black text-ink-tertiary uppercase">5 problems · once per day</span>;
 
   const findStat = !isGuest && onlineCount !== null ? (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 motion-safe:animate-pulse" aria-hidden />
-      <span className="font-mono tabular-nums text-ink-secondary">{onlineCount}</span>
-      <span className="text-[11px] tracking-[1.5px] text-ink-faint uppercase">online</span>
+    <span className="inline-flex items-center gap-2">
+      <span className="inline-block w-2 h-2 rounded-full bg-green-500 motion-safe:animate-pulse" aria-hidden />
+      <span className="font-mono tabular-nums text-ink text-[18px] font-black">{onlineCount}</span>
+      <span className="text-[11px] tracking-[2px] font-black text-ink-tertiary uppercase">online</span>
     </span>
   ) : null;
 
   const challengeStat = !isGuest
     ? pendingInvitesCount > 0
       ? (
-        <span className="inline-flex items-center gap-1.5">
-          <span className="font-mono tabular-nums text-accent text-[15px]">{pendingInvitesCount}</span>
-          <span className="text-[11px] tracking-[1.5px] text-accent/80 uppercase">
+        <span className="inline-flex items-center gap-2">
+          <span className="font-mono tabular-nums text-accent text-[18px] font-black">{pendingInvitesCount}</span>
+          <span className="text-[11px] tracking-[2px] font-black text-accent uppercase">
             {pendingInvitesCount === 1 ? 'invite waiting' : 'invites waiting'}
           </span>
         </span>
       ) : (
-        <span className="text-ink-muted">Generate a private link</span>
+        <span className="text-ink-muted font-semibold">Generate a private link</span>
       )
     : null;
 
@@ -179,13 +179,15 @@ export function PlayHub({
   const mpLockedOverlay = isGuest ? (
     <div className="flex items-center justify-between gap-4 flex-wrap">
       <div>
-        <div className="text-[10px] tracking-[2px] text-accent uppercase mb-1">Real opponents · Real rating</div>
-        <div className="text-[13px] text-ink-secondary">Free account, 30 seconds.</div>
+        <div className="text-[11px] tracking-[3px] font-black text-accent uppercase mb-1.5">
+          ▸ Real opponents · Real rating
+        </div>
+        <div className="text-[14px] font-semibold text-ink-secondary">Free account, 30 seconds.</div>
       </div>
       <button
         type="button"
         onClick={() => goLogin('/')}
-        className="shrink-0 px-5 py-2.5 bg-accent text-on-accent text-[11px] tracking-[2px] font-bold rounded-sm hover:bg-accent/90 transition-colors"
+        className="shrink-0 px-6 py-3 bg-accent text-on-accent text-[12px] tracking-[2.5px] font-black rounded-md hover:scale-[1.02] transition-all shadow-[0_8px_30px_var(--accent-glow)]"
       >
         SIGN IN TO PLAY
       </button>
@@ -195,11 +197,16 @@ export function PlayHub({
   return (
     <section aria-labelledby="play-hub-heading">
       <div>
-        <div className="text-[12px] tracking-[4px] text-ink-muted mb-3">PLAY</div>
-        <h2 id="play-hub-heading" className="font-serif text-3xl text-ink leading-tight mb-1">
-          Pick your fight
+        <div className="text-[12px] tracking-[5px] font-black text-accent mb-3">
+          ▸ PLAY
+        </div>
+        <h2
+          id="play-hub-heading"
+          className="font-serif text-4xl sm:text-5xl font-black text-ink leading-none tracking-tight mb-2"
+        >
+          Pick your fight.
         </h2>
-        <p className="text-[13px] text-ink-muted">
+        <p className="text-[14px] font-medium text-ink-tertiary">
           {isGuest ? 'Play free as guest. Sign in to save your score.' : 'Quick warmup, daily ritual, or live duel.'}
         </p>
       </div>
