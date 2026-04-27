@@ -150,15 +150,15 @@ export function UserSearchModal({ isOpen, onClose }: UserSearchModalProps) {
             exit={{ scale: 0.96, opacity: 0, y: -8 }}
             transition={{ type: 'spring', stiffness: 320, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-xl bg-panel border border-edge rounded-sm shadow-2xl overflow-hidden"
+            className="w-full max-w-xl bg-panel border-2 border-edge-strong rounded-xl shadow-2xl overflow-hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Search users"
           >
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-edge-faint">
-              <svg className="w-4 h-4 text-ink-muted shrink-0" viewBox="0 0 20 20" fill="none">
-                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M13 13L17 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <div className="flex items-center gap-3 px-5 py-4 border-b-2 border-edge-strong bg-shade">
+              <svg className="w-5 h-5 text-accent shrink-0" viewBox="0 0 20 20" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" />
+                <path d="M13 13L17 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
               <input
                 ref={inputRef}
@@ -167,12 +167,12 @@ export function UserSearchModal({ isOpen, onClose }: UserSearchModalProps) {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search players by username…"
-                className="flex-1 bg-transparent outline-none text-ink placeholder-ink-faint text-[14px]"
+                className="flex-1 bg-transparent outline-none text-ink font-bold placeholder-ink-faint text-[14px]"
                 autoComplete="off"
                 spellCheck={false}
               />
               {loading && (
-                <div className="w-4 h-4 border border-ink-muted border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
               )}
             </div>
 
@@ -194,22 +194,22 @@ export function UserSearchModal({ isOpen, onClose }: UserSearchModalProps) {
                       onMouseEnter={() => setActiveIdx(i)}
                       onClick={() => openProfile(row.id)}
                       className={`
-                        flex items-center gap-3 px-5 py-3 cursor-pointer
+                        flex items-center gap-3 px-5 py-3.5 cursor-pointer
                         border-b border-edge-faint last:border-b-0
-                        ${active ? 'bg-card' : ''}
+                        ${active ? 'bg-accent-glow border-l-[3px] border-l-accent' : 'border-l-[3px] border-l-transparent'}
                       `}
                     >
                       <Avatar user={row} size="sm" />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] text-ink truncate">
+                        <div className="text-[14px] font-bold text-ink truncate">
                           {row.display_name || row.username}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <div className="flex items-center gap-2 mt-1">
                           <RankBadge elo={row.elo_rating} size="sm" />
-                          <span className="text-[11px] text-ink-faint font-mono tabular-nums">
+                          <span className="text-[11px] font-black text-ink-tertiary font-mono tabular-nums">
                             {row.elo_rating}
                           </span>
-                          <span className="text-[11px] text-ink-faint">
+                          <span className="text-[11px] font-bold text-ink-tertiary">
                             @{row.username}
                           </span>
                         </div>

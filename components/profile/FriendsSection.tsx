@@ -60,12 +60,12 @@ export function FriendsSection({ onOpenSearch }: FriendsSectionProps) {
             transition={{ duration: 0.2 }}
           >
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[11px] tracking-[3px] text-ink-faint">REQUESTS</div>
-              <div className="text-[11px] font-mono text-accent tabular-nums">
+              <div className="text-[12px] tracking-[3px] font-black text-accent">▸ REQUESTS</div>
+              <div className="text-[12px] font-mono font-black text-accent tabular-nums">
                 {pending_incoming.length}
               </div>
             </div>
-            <div className="border border-edge-faint rounded-sm overflow-hidden">
+            <div className="border-2 border-edge-strong rounded-xl overflow-hidden bg-panel">
               <AnimatePresence initial={false}>
                 {pending_incoming.map((req) => (
                   <motion.div
@@ -83,7 +83,7 @@ export function FriendsSection({ onOpenSearch }: FriendsSectionProps) {
                     >
                       <Avatar user={req} size="sm" />
                       <div className="min-w-0">
-                        <div className="text-[13px] text-ink-secondary truncate">
+                        <div className="text-[13px] font-bold text-ink truncate">
                           {req.display_name || req.username}
                         </div>
                         <div className="font-mono text-[11px] text-ink-faint">
@@ -117,24 +117,24 @@ export function FriendsSection({ onOpenSearch }: FriendsSectionProps) {
       {/* ─── Accepted friends ─── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <div className="text-[11px] tracking-[3px] text-ink-faint">FRIENDS</div>
+          <div className="text-[12px] tracking-[3px] font-black text-accent">▸ FRIENDS</div>
           <button
             onClick={onOpenSearch}
-            className="text-[11px] tracking-[1.5px] text-ink-muted hover:text-accent transition-colors"
+            className="text-[11px] tracking-[2px] font-black text-ink-tertiary hover:text-accent transition-colors"
           >
             FIND FRIENDS +
           </button>
         </div>
         {loading ? (
-          <div className="text-ink-faint text-[12px]">Loading…</div>
+          <div className="text-ink-tertiary text-[13px] font-semibold">Loading…</div>
         ) : friends.length === 0 ? (
-          <div className="border border-dashed border-edge-faint rounded-sm p-6 text-center">
-            <div className="text-ink-faint text-[12px] mb-2">No friends yet</div>
+          <div className="border-2 border-dashed border-edge-strong rounded-xl p-6 text-center bg-panel">
+            <div className="text-ink-tertiary text-[13px] font-semibold mb-2">No friends yet</div>
             <button
               onClick={onOpenSearch}
-              className="text-[11px] tracking-[1.5px] text-accent hover:text-accent-muted transition-colors"
+              className="text-[12px] tracking-[2.5px] font-black text-accent hover:text-accent-muted transition-colors"
             >
-              FIND PLAYERS →
+              ▸ FIND PLAYERS
             </button>
           </div>
         ) : (
@@ -150,7 +150,7 @@ export function FriendsSection({ onOpenSearch }: FriendsSectionProps) {
                 >
                   <Avatar user={friend} size="sm" />
                   <div className="min-w-0">
-                    <div className="text-[13px] text-ink-secondary truncate">
+                    <div className="text-[13px] font-bold text-ink truncate">
                       {friend.display_name || friend.username}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">

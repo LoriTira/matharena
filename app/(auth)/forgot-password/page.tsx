@@ -30,34 +30,37 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-page">
-      <div className="w-full max-w-md p-8 border border-edge rounded-sm">
-        <h1 className="font-serif text-3xl font-normal text-ink text-center mb-1">Reset Password</h1>
-        <p className="text-ink-muted text-center text-sm mb-8">
-          Enter your email and we&apos;ll send you a reset link
+    <div className="min-h-screen flex items-center justify-center bg-page px-4 py-8">
+      <div className="w-full max-w-md p-6 sm:p-8 border-2 border-edge-strong bg-panel rounded-xl">
+        <div className="text-[11px] tracking-[4px] font-black text-accent text-center mb-2">▸ RESET PASSWORD</div>
+        <h1 className="font-serif text-3xl sm:text-4xl font-black text-ink text-center mb-2 tracking-tight leading-none">
+          Forgot it?
+        </h1>
+        <p className="text-ink-tertiary text-center text-[13px] font-medium mb-7">
+          Enter your email and we&apos;ll send you a reset link.
         </p>
 
         {sent ? (
           <div className="space-y-4">
-            <div className="p-4 rounded-sm bg-card border border-edge text-center">
-              <p className="text-ink-secondary text-sm">
-                Check your email for a password reset link.
+            <div className="p-5 rounded-md bg-accent-glow border-2 border-accent text-center">
+              <p className="text-ink font-bold text-[14px]">
+                ✓ Check your email for a password reset link.
               </p>
-              <p className="text-ink-muted text-[12px] mt-2">
+              <p className="text-ink-tertiary text-[12px] font-medium mt-2">
                 If you don&apos;t see it, check your spam folder.
               </p>
             </div>
             <Link
               href="/login"
-              className="block w-full py-3 text-center bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover"
+              className="block w-full py-4 text-center bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md transition-all hover:scale-[1.01] hover:bg-accent/90 shadow-[0_4px_20px_var(--accent-glow)]"
             >
-              BACK TO SIGN IN
+              ▸ BACK TO SIGN IN
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
+              <label htmlFor="email" className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">
                 Email
               </label>
               <input
@@ -65,29 +68,29 @@ export default function ForgotPasswordPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="w-full px-4 py-3.5 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                 placeholder="you@example.com"
                 required
               />
             </div>
 
             {error && (
-              <p className="text-red-400/70 text-sm">{error}</p>
+              <p className="text-feedback-wrong text-[13px] font-semibold">{error}</p>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md transition-all hover:scale-[1.01] hover:bg-accent/90 shadow-[0_4px_20px_var(--accent-glow)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {loading ? 'SENDING...' : 'SEND RESET LINK'}
+              {loading ? 'SENDING...' : '▸ SEND RESET LINK'}
             </button>
           </form>
         )}
 
-        <p className="mt-6 text-center text-ink-muted text-sm">
+        <p className="mt-7 text-center text-ink-tertiary text-[13px] font-medium">
           Remember your password?{' '}
-          <Link href="/login" className="text-ink-secondary underline underline-offset-2 decoration-edge hover:text-ink transition-colors">
+          <Link href="/login" className="text-accent font-black underline underline-offset-4 decoration-2 decoration-accent/40 hover:decoration-accent transition-colors">
             Sign in
           </Link>
         </p>

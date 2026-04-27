@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
     } else {
       setSuccess(true);
       setLoading(false);
-      setTimeout(() => router.push('/dashboard'), 2000);
+      setTimeout(() => router.push('/'), 2000);
     }
   };
 
@@ -52,20 +52,23 @@ export default function ResetPasswordPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-page">
-      <div className="w-full max-w-md p-8 border border-edge rounded-sm">
-        <h1 className="font-serif text-3xl font-normal text-ink text-center mb-1">New Password</h1>
-        <p className="text-ink-muted text-center text-sm mb-8">Choose a new password for your account</p>
+    <div className="min-h-screen flex items-center justify-center bg-page px-4 py-8">
+      <div className="w-full max-w-md p-6 sm:p-8 border-2 border-edge-strong bg-panel rounded-xl">
+        <div className="text-[11px] tracking-[4px] font-black text-accent text-center mb-2">▸ NEW PASSWORD</div>
+        <h1 className="font-serif text-3xl sm:text-4xl font-black text-ink text-center mb-2 tracking-tight leading-none">
+          Choose a new one.
+        </h1>
+        <p className="text-ink-tertiary text-center text-[13px] font-medium mb-7">At least 6 characters.</p>
 
         {success ? (
-          <div className="p-4 rounded-sm bg-card border border-edge text-center">
-            <p className="text-ink-secondary text-sm">Password updated successfully!</p>
-            <p className="text-ink-muted text-[12px] mt-2">Redirecting to dashboard...</p>
+          <div className="p-5 rounded-md bg-accent-glow border-2 border-accent text-center">
+            <p className="text-ink font-bold text-[14px]">✓ Password updated successfully!</p>
+            <p className="text-ink-tertiary text-[12px] font-medium mt-2">Redirecting…</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="password" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
+              <label htmlFor="password" className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">
                 New Password
               </label>
               <div className="relative">
@@ -74,7 +77,7 @@ export default function ResetPasswordPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                  className="w-full px-4 py-3.5 pr-12 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -82,7 +85,7 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink-tertiary transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-tertiary hover:text-ink transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? EyeOffIcon : EyeIcon}
@@ -91,7 +94,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
+              <label htmlFor="confirm-password" className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">
                 Confirm Password
               </label>
               <div className="relative">
@@ -100,7 +103,7 @@ export default function ResetPasswordPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                  className="w-full px-4 py-3.5 pr-12 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -109,22 +112,22 @@ export default function ResetPasswordPage() {
             </div>
 
             {error && (
-              <p className="text-red-400/70 text-sm">{error}</p>
+              <p className="text-feedback-wrong text-[13px] font-semibold">{error}</p>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md transition-all hover:scale-[1.01] hover:bg-accent/90 shadow-[0_4px_20px_var(--accent-glow)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {loading ? 'UPDATING...' : 'UPDATE PASSWORD'}
+              {loading ? 'UPDATING...' : '▸ UPDATE PASSWORD'}
             </button>
           </form>
         )}
 
-        <p className="mt-6 text-center text-ink-muted text-sm">
-          <Link href="/login" className="text-ink-secondary underline underline-offset-2 decoration-edge hover:text-ink transition-colors">
-            Back to sign in
+        <p className="mt-7 text-center text-ink-tertiary text-[13px] font-medium">
+          <Link href="/login" className="text-accent font-black underline underline-offset-4 decoration-2 decoration-accent/40 hover:decoration-accent transition-colors">
+            ← Back to sign in
           </Link>
         </p>
       </div>

@@ -15,14 +15,14 @@ const operationSymbols: Record<string, string> = {
 
 export function ProblemDisplay({ operand1, operand2, operation }: ProblemDisplayProps) {
   return (
-    <div className="flex items-center justify-center gap-4 py-8">
-      <span className="text-5xl md:text-7xl font-mono font-normal text-ink tabular-nums">
+    <div className="flex items-center justify-center gap-3 sm:gap-5 py-6 sm:py-8">
+      <span className="text-5xl sm:text-7xl md:text-8xl font-mono font-black text-ink tabular-nums tracking-tight">
         {operand1.toLocaleString()}
       </span>
-      <span className="text-4xl md:text-6xl font-mono text-ink-muted">
+      <span className="text-4xl sm:text-6xl md:text-7xl font-mono font-black text-accent">
         {operationSymbols[operation] || operation}
       </span>
-      <span className="text-5xl md:text-7xl font-mono font-normal text-ink tabular-nums">
+      <span className="text-5xl sm:text-7xl md:text-8xl font-mono font-black text-ink tabular-nums tracking-tight">
         {operand2.toLocaleString()}
       </span>
     </div>

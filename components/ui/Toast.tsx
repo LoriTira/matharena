@@ -10,8 +10,8 @@ interface ToastProps {
 }
 
 const borderColors = {
-  success: 'border-l-emerald-500',
-  error: 'border-l-red-500',
+  success: 'border-l-feedback-correct',
+  error: 'border-l-feedback-wrong',
   info: 'border-l-accent',
 };
 
@@ -32,18 +32,18 @@ export function Toast({ message, type = 'info', onClose }: ToastProps) {
       exit={{ x: 80, opacity: 0 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
       className={`
-        pointer-events-auto w-72
-        bg-shade backdrop-blur-lg
-        border border-edge border-l-2 ${borderColors[type]}
-        rounded-sm shadow-xl
-        px-4 py-3
+        pointer-events-auto w-[calc(100vw-2rem)] sm:w-80
+        bg-panel backdrop-blur-lg
+        border-2 border-edge-strong border-l-[5px] ${borderColors[type]}
+        rounded-md shadow-xl
+        px-4 py-3.5
       `}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[13px] leading-snug text-ink">{message}</p>
+        <p className="text-[13px] leading-snug font-bold text-ink">{message}</p>
         <button
           onClick={onClose}
-          className="shrink-0 text-ink-muted hover:text-ink-secondary transition-colors text-sm leading-none mt-0.5"
+          className="shrink-0 text-ink-tertiary hover:text-ink transition-colors text-base leading-none mt-0.5 font-black"
         >
           ×
         </button>

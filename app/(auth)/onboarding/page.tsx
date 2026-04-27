@@ -51,7 +51,7 @@ function OnboardingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
-  const destination = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard';
+  const destination = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
   const supabase = createClient();
 
   // Fetch current profile to pre-fill username
@@ -140,9 +140,9 @@ function OnboardingForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-page px-4">
+    <div className="min-h-screen flex items-center justify-center bg-page px-4 py-8">
       <motion.div
-        className="w-full max-w-md p-8 border border-edge rounded-sm relative"
+        className="w-full max-w-md p-6 sm:p-8 border-2 border-edge-strong bg-panel rounded-xl relative"
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -151,19 +151,19 @@ function OnboardingForm() {
         <AnimatePresence>
           {done && (
             <motion.div
-              className="absolute inset-0 z-10 flex items-center justify-center bg-page/80 rounded-sm"
+              className="absolute inset-0 z-10 flex items-center justify-center bg-page/80 rounded-xl"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
               <motion.svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="48"
-                height="48"
+                width="56"
+                height="56"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 className="text-accent"
@@ -179,31 +179,33 @@ function OnboardingForm() {
 
         {/* Header */}
         <motion.div
-          className="text-center mb-8"
+          className="text-center mb-7"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.4 }}
         >
-          <h1 className="font-serif text-3xl font-normal text-ink mb-1">Welcome to MathsArena</h1>
-          <p className="text-ink-muted text-sm">Just a couple of quick things before you start</p>
-          <div className="w-8 h-px bg-edge mx-auto mt-4" />
+          <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ WELCOME</div>
+          <h1 className="font-serif text-3xl sm:text-4xl font-black text-ink mb-2 tracking-tight leading-none">
+            Set up your profile.
+          </h1>
+          <p className="text-ink-tertiary text-[13px] font-medium">Two quick things before you play.</p>
         </motion.div>
 
         {/* Username */}
         <motion.div
-          className="mb-6"
+          className="mb-5"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
+          <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">
             Choose a username
           </label>
           <input
             type="text"
             value={username}
             onChange={e => { setUsername(e.target.value); setError(''); }}
-            className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+            className="w-full px-4 py-3.5 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
             placeholder="mathwizard42"
             minLength={3}
             maxLength={30}
@@ -212,12 +214,12 @@ function OnboardingForm() {
 
         {/* Country */}
         <motion.div
-          className="mb-6 relative"
+          className="mb-5 relative"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.4 }}
         >
-          <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
+          <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">
             Where are you from?
           </label>
           <CountrySelector value={country} onChange={handleCountryChange} />
@@ -237,8 +239,8 @@ function OnboardingForm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.4 }}
         >
-          <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">
-            School or Company <span className="text-ink-faint normal-case tracking-normal">(optional)</span>
+          <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">
+            School or Company <span className="text-ink-faint normal-case tracking-normal font-medium">(optional)</span>
           </label>
 
           {/* Segmented toggle */}
@@ -246,10 +248,10 @@ function OnboardingForm() {
             <button
               type="button"
               onClick={() => setAffiliationType(affiliationType === 'school' ? null : 'school')}
-              className={`flex-1 px-4 py-2.5 text-[12px] tracking-[1.5px] font-medium border rounded-sm transition-all ${
+              className={`flex-1 px-4 py-3 text-[12px] tracking-[2px] font-black border-2 rounded-md transition-all ${
                 affiliationType === 'school'
-                  ? 'bg-btn text-btn-text border-transparent'
-                  : 'bg-card text-ink-muted border-edge hover:border-edge-strong hover:text-ink-tertiary'
+                  ? 'bg-accent text-on-accent border-accent shadow-[0_4px_16px_var(--accent-glow)]'
+                  : 'bg-card text-ink-secondary border-edge-strong hover:border-edge-bold hover:bg-shade'
               }`}
             >
               SCHOOL
@@ -257,10 +259,10 @@ function OnboardingForm() {
             <button
               type="button"
               onClick={() => setAffiliationType(affiliationType === 'company' ? null : 'company')}
-              className={`flex-1 px-4 py-2.5 text-[12px] tracking-[1.5px] font-medium border rounded-sm transition-all ${
+              className={`flex-1 px-4 py-3 text-[12px] tracking-[2px] font-black border-2 rounded-md transition-all ${
                 affiliationType === 'company'
-                  ? 'bg-btn text-btn-text border-transparent'
-                  : 'bg-card text-ink-muted border-edge hover:border-edge-strong hover:text-ink-tertiary'
+                  ? 'bg-accent text-on-accent border-accent shadow-[0_4px_16px_var(--accent-glow)]'
+                  : 'bg-card text-ink-secondary border-edge-strong hover:border-edge-bold hover:bg-shade'
               }`}
             >
               COMPANY
@@ -281,7 +283,7 @@ function OnboardingForm() {
                   type="text"
                   value={affiliation}
                   onChange={e => setAffiliation(e.target.value)}
-                  className="w-full px-4 py-3 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                  className="w-full px-4 py-3.5 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                   placeholder={
                     affiliationType === 'school'
                       ? 'e.g., MIT, Stanford, Oxford...'
@@ -295,7 +297,7 @@ function OnboardingForm() {
 
         {/* Error */}
         {error && (
-          <p className="text-red-400/70 text-sm mb-4">{error}</p>
+          <p className="text-feedback-wrong text-[13px] font-semibold mb-4">{error}</p>
         )}
 
         {/* Actions */}
@@ -308,18 +310,18 @@ function OnboardingForm() {
             type="button"
             onClick={handleSubmit}
             disabled={!username || !country || saving}
-            className="w-full py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md transition-all hover:scale-[1.01] hover:bg-accent/90 shadow-[0_4px_24px_var(--accent-glow)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             animate={username && country && !saving ? { scale: [1, 1.015, 1] } : {}}
             transition={{ duration: 0.35, ease: 'easeInOut' }}
           >
-            {saving ? 'SETTING UP...' : "LET'S GO"}
+            {saving ? 'SETTING UP...' : "▸ LET'S GO"}
           </motion.button>
 
           <button
             type="button"
             onClick={handleSkip}
             disabled={saving}
-            className="w-full mt-3 py-2 text-ink-faint text-[12px] hover:text-ink-muted transition-colors disabled:opacity-50"
+            className="w-full mt-3 py-2 text-ink-tertiary font-bold text-[12px] hover:text-ink transition-colors disabled:opacity-50"
           >
             Skip for now
           </button>

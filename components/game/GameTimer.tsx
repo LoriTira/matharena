@@ -20,20 +20,20 @@ export function GameTimer({
       ? formatElapsedWithTenths(elapsedMs)
       : formatClockMMSS(elapsedMs);
 
-  const sizeClass = variant === 'prominent' ? 'text-2xl' : 'text-lg';
+  const sizeClass = variant === 'prominent' ? 'text-3xl sm:text-4xl' : 'text-xl';
 
   const colorStyle =
     state === 'critical' || state === 'urgent'
       ? { color: 'var(--feedback-wrong)' }
       : undefined;
 
-  const colorClass = colorStyle ? '' : 'text-ink-secondary';
+  const colorClass = colorStyle ? '' : 'text-ink';
 
   const animClass = state === 'critical' ? 'animate-score-bounce' : '';
 
   return (
     <span
-      className={`font-mono tabular-nums ${sizeClass} ${colorClass} ${animClass} ${className}`}
+      className={`font-mono font-black tabular-nums tracking-tight ${sizeClass} ${colorClass} ${animClass} ${className}`}
       style={colorStyle}
     >
       {text}

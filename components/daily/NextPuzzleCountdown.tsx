@@ -31,8 +31,8 @@ export function NextPuzzleCountdown({ className }: { className?: string }) {
 
   return (
     <div className={className ?? 'text-center'}>
-      <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">NEXT PUZZLE IN</div>
-      <div className="font-mono text-lg text-ink-muted tabular-nums">{timeLeft}</div>
+      <div className="text-[11px] tracking-[3px] font-black text-accent mb-1">▸ NEXT PUZZLE IN</div>
+      <div className="font-mono text-xl font-black text-ink tabular-nums tracking-tight">{timeLeft}</div>
     </div>
   );
 }

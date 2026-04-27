@@ -123,10 +123,10 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
           // readOnly (not disabled) keeps the mobile keyboard up during lockout.
           readOnly={locked || disabled}
           aria-disabled={locked || disabled}
-          className={`w-full px-6 py-4 text-2xl font-mono text-center rounded-sm border bg-card text-ink focus:outline-none transition-colors
-            ${feedback === 'correct' ? 'border-green-400/50 bg-green-400/5' : ''}
-            ${feedback === 'wrong' || locked ? 'border-red-400/50 bg-red-400/5' : ''}
-            ${!feedback && !locked ? 'border-edge focus:border-edge-strong focus:ring-1 focus:ring-edge' : ''}
+          className={`w-full px-6 py-4 text-2xl sm:text-3xl font-mono font-black text-center rounded-md border-2 bg-card text-ink focus:outline-none transition-colors
+            ${feedback === 'correct' ? 'border-feedback-correct bg-feedback-correct/10' : ''}
+            ${feedback === 'wrong' || locked ? 'border-feedback-wrong bg-feedback-wrong/10' : ''}
+            ${!feedback && !locked ? 'border-edge-strong focus:border-accent focus:ring-2 focus:ring-accent' : ''}
           `}
           placeholder={locked ? '' : 'Your answer'}
           autoComplete="off"
@@ -135,14 +135,14 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
           <div
             role="status"
             aria-live="polite"
-            className="absolute inset-0 flex items-center justify-center rounded-sm pointer-events-none overflow-hidden"
+            className="absolute inset-0 flex items-center justify-center rounded-md pointer-events-none overflow-hidden"
             style={{ backgroundColor: 'color-mix(in srgb, var(--feedback-wrong) 10%, transparent)' }}
           >
-            <span className="text-feedback-wrong font-medium text-sm tracking-wide tabular-nums">
+            <span className="text-feedback-wrong font-black text-sm tracking-wide tabular-nums">
               Wrong — try again in {remainingSeconds}s
             </span>
             <div
-              className="absolute left-0 right-0 bottom-0 h-0.5 rounded-b-sm"
+              className="absolute left-0 right-0 bottom-0 h-1 rounded-b-md"
               style={{ backgroundColor: 'color-mix(in srgb, var(--feedback-wrong) 10%, transparent)' }}
             >
               <div
@@ -156,11 +156,8 @@ export function AnswerInput({ onSubmit, disabled = false, feedbackRef }: AnswerI
       <button
         type="submit"
         disabled={locked || disabled || !value}
-        // Prevents the button from stealing focus from the input, which would
-        // collapse the mobile keyboard. Don't do this on touchstart — that
-        // cancels the synthetic click and the form won't submit.
         onMouseDown={(e) => e.preventDefault()}
-        className="px-8 py-4 bg-btn text-btn-text font-semibold text-xl rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-30 disabled:cursor-not-allowed"
+        className="px-6 sm:px-8 py-4 bg-accent text-on-accent font-black text-xl rounded-md transition-all hover:scale-[1.02] hover:bg-accent/90 shadow-[0_4px_20px_var(--accent-glow)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
       >
         &rarr;
       </button>

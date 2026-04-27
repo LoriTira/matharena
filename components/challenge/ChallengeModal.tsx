@@ -164,40 +164,41 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
   const showFriendsTab = friendsLoading || friends.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-scrim backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-panel border border-edge rounded-sm p-8 max-w-md w-full mx-4 max-h-[85vh] flex flex-col">
+      <div className="relative bg-panel border-2 border-edge-strong rounded-xl p-6 sm:p-8 w-[calc(100%-1rem)] sm:w-full max-w-md max-h-[85vh] flex flex-col shadow-[0_0_60px_rgba(0,0,0,0.4)]">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-ink-faint hover:text-ink-secondary transition-colors text-sm"
+          className="absolute top-4 right-4 text-ink-tertiary hover:text-ink transition-colors text-lg font-black w-8 h-8 flex items-center justify-center rounded-md hover:bg-shade"
         >
           ✕
         </button>
 
         <div className="text-center mb-5">
-          <h2 className="font-serif text-xl font-normal text-ink">Challenge a Friend</h2>
+          <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ CHALLENGE</div>
+          <h2 className="font-serif text-2xl sm:text-3xl font-black text-ink leading-none tracking-tight">Challenge a friend.</h2>
         </div>
 
         {/* Tabs */}
         {showFriendsTab && (
-          <div className="flex border-b border-edge mb-5">
+          <div className="flex border-b-2 border-edge-strong mb-5">
             <button
               onClick={() => setTab('friends')}
-              className={`flex-1 pb-2.5 text-[12px] tracking-[1.5px] font-semibold transition-colors border-b-2 ${
+              className={`flex-1 pb-3 text-[12px] tracking-[2.5px] font-black transition-colors border-b-[3px] -mb-[2px] ${
                 tab === 'friends'
                   ? 'border-accent text-accent'
-                  : 'border-transparent text-ink-muted hover:text-ink-tertiary'
+                  : 'border-transparent text-ink-tertiary hover:text-ink'
               }`}
             >
               FRIENDS
             </button>
             <button
               onClick={() => setTab('link')}
-              className={`flex-1 pb-2.5 text-[12px] tracking-[1.5px] font-semibold transition-colors border-b-2 ${
+              className={`flex-1 pb-3 text-[12px] tracking-[2.5px] font-black transition-colors border-b-[3px] -mb-[2px] ${
                 tab === 'link'
                   ? 'border-accent text-accent'
-                  : 'border-transparent text-ink-muted hover:text-ink-tertiary'
+                  : 'border-transparent text-ink-tertiary hover:text-ink'
               }`}
             >
               SEND LINK
@@ -225,24 +226,24 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
                       key={friend.id}
                       onClick={() => handleChallengeFriend(friend)}
                       disabled={sendingTo !== null}
-                      className="w-full flex items-center justify-between p-3 rounded-sm border border-edge-faint hover:border-edge-strong hover:bg-card transition-colors disabled:opacity-40 text-left"
+                      className="w-full flex items-center justify-between p-3.5 rounded-md border-2 border-edge-strong hover:border-accent hover:bg-accent-glow transition-all disabled:opacity-40 text-left"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="min-w-0">
-                          <div className="text-[13px] text-ink-secondary truncate">
+                          <div className="text-[14px] font-bold text-ink truncate">
                             {friend.display_name || friend.username}
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-ink-faint mt-0.5">
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-ink-tertiary mt-1">
                             <RankBadge elo={friend.elo_rating} size="sm" />
-                            <span className="font-mono tabular-nums">{friend.elo_rating}</span>
+                            <span className="font-mono tabular-nums font-black">{friend.elo_rating}</span>
                             <span>{winRate}% win</span>
                           </div>
                         </div>
                       </div>
-                      <span className={`text-[11px] tracking-[1px] font-semibold whitespace-nowrap ${
+                      <span className={`text-[11px] tracking-[2px] font-black whitespace-nowrap ${
                         isSending ? 'text-ink-faint' : 'text-accent'
                       }`}>
-                        {isSending ? 'SENDING...' : 'CHALLENGE'}
+                        {isSending ? 'SENDING...' : '▸ CHALLENGE'}
                       </span>
                     </button>
                   );
@@ -250,7 +251,7 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
               </div>
             ) : null}
 
-            <p className="text-[11px] text-ink-faint text-center mt-4">
+            <p className="text-[11px] font-semibold text-ink-tertiary text-center mt-4">
               Players you&apos;ve matched against appear here
             </p>
           </div>
@@ -259,46 +260,46 @@ export function ChallengeModal({ isOpen, onClose }: ChallengeModalProps) {
         {/* Link tab (or default if no friends) */}
         {(tab === 'link' || !showFriendsTab) && (
           <div>
-            <p className="text-ink-muted text-sm mb-4 text-center">Share this link to start a match</p>
+            <p className="text-ink-tertiary text-[13px] font-semibold mb-4 text-center">Share this link to start a match</p>
 
             {linkLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="w-5 h-5 border border-ink-muted border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
               </div>
             ) : error ? (
               <div className="text-center py-4">
-                <p className="text-red-400/70 text-sm mb-4">{error}</p>
+                <p className="text-feedback-wrong text-[13px] font-semibold mb-4">{error}</p>
                 <button
                   onClick={createLink}
-                  className="px-4 py-2 border border-edge text-ink-secondary rounded-sm text-xs tracking-[1px] hover:border-edge-strong transition-colors"
+                  className="px-5 py-2.5 border-2 border-edge-strong text-ink font-black rounded-md text-[12px] tracking-[2.5px] hover:border-edge-bold hover:bg-shade transition-colors"
                 >
                   TRY AGAIN
                 </button>
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2 bg-card border border-edge rounded-sm p-3 mb-4">
-                  <span className="font-mono text-[13px] text-ink-secondary truncate flex-1">
+                <div className="flex items-center gap-2 bg-card border-2 border-edge-strong rounded-md p-3 mb-4">
+                  <span className="font-mono text-[12px] font-bold text-ink-secondary truncate flex-1">
                     {challengeUrl}
                   </span>
                   <button
                     onClick={handleCopy}
-                    className="px-4 py-1.5 bg-btn text-btn-text text-[12px] tracking-[1.5px] font-semibold rounded-sm hover:bg-btn-hover transition-colors whitespace-nowrap"
+                    className="px-4 py-2 bg-accent text-on-accent text-[11px] tracking-[2px] font-black rounded-md hover:scale-[1.02] transition-all whitespace-nowrap shadow-[0_4px_16px_var(--accent-glow)]"
                   >
-                    {copied ? 'COPIED' : 'COPY'}
+                    {copied ? '✓ COPIED' : 'COPY'}
                   </button>
                 </div>
 
                 {typeof navigator !== 'undefined' && 'share' in navigator && (
                   <button
                     onClick={handleShare}
-                    className="w-full py-3 border border-edge text-ink-secondary text-xs tracking-[1px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+                    className="w-full py-3 border-2 border-edge-strong text-ink font-black text-[12px] tracking-[2.5px] rounded-md hover:border-edge-bold hover:bg-shade transition-colors"
                   >
-                    SHARE
+                    ▸ SHARE
                   </button>
                 )}
 
-                <p className="text-ink-faint text-[11px] text-center mt-4">Link expires in 7 days</p>
+                <p className="text-ink-tertiary text-[11px] font-semibold text-center mt-4">Link expires in 7 days</p>
               </>
             )}
           </div>

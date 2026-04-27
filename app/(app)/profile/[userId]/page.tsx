@@ -91,21 +91,22 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
     : 0;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <Link href="/leaderboard" className="text-ink-muted underline underline-offset-2 decoration-edge hover:text-ink-secondary text-sm transition-colors">
-        Back to leaderboard
+    <div className="max-w-3xl mx-auto space-y-7">
+      <Link href="/leaderboard" className="text-ink-tertiary font-bold hover:text-accent text-[13px] transition-colors">
+        ← Back to leaderboard
       </Link>
 
-      <div className="border border-edge rounded-sm p-8">
-        <div className="flex items-start justify-between gap-4">
+      <div className="border-2 border-edge-strong bg-panel rounded-xl p-6 sm:p-8">
+        <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
           <div className="flex items-center gap-4 min-w-0">
             <Avatar user={profile} size="lg" />
             <div className="min-w-0">
-              <h1 className="font-serif text-3xl font-normal text-ink truncate">
+              <div className="text-[10px] tracking-[3px] font-black text-accent mb-1">▸ PLAYER</div>
+              <h1 className="font-serif text-3xl sm:text-4xl font-black text-ink truncate tracking-tight leading-none">
                 {profile.display_name || profile.username}
               </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-ink-muted text-sm">@{profile.username}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-ink-tertiary text-[13px] font-semibold">@{profile.username}</p>
                 <RankBadge elo={profile.elo_rating} size="sm" />
               </div>
             </div>
@@ -122,16 +123,16 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
         </div>
 
         {(profile.country || profile.affiliation) && (
-          <div className="mt-4 space-y-1">
+          <div className="mt-5 space-y-2">
             {profile.country && (
-              <p className="text-ink-secondary text-sm">
-                <span className="text-ink-faint">Country: </span>
+              <p className="text-ink-secondary text-[14px] font-semibold">
+                <span className="text-ink-tertiary text-[11px] tracking-[2px] font-black uppercase mr-2">Country</span>
                 {profile.country}
               </p>
             )}
             {profile.affiliation && (
-              <p className="text-ink-secondary text-sm">
-                <span className="text-ink-faint capitalize">{profile.affiliation_type}: </span>
+              <p className="text-ink-secondary text-[14px] font-semibold">
+                <span className="text-ink-tertiary text-[11px] tracking-[2px] font-black uppercase capitalize mr-2">{profile.affiliation_type}</span>
                 {profile.affiliation}
               </p>
             )}
@@ -139,22 +140,22 @@ export default function PublicProfilePage({ params }: PublicProfileProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-shade rounded-sm overflow-hidden">
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">RATING</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.elo_rating}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">RATING</div>
+          <div className="font-mono text-3xl font-black text-accent tabular-nums">{profile.elo_rating}</div>
         </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_played}</div>
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">GAMES</div>
+          <div className="font-mono text-3xl font-black text-ink tabular-nums">{profile.games_played}</div>
         </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WINS</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_won}</div>
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">WINS</div>
+          <div className="font-mono text-3xl font-black text-ink tabular-nums">{profile.games_won}</div>
         </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">WIN RATE</div>
+          <div className="font-mono text-3xl font-black text-ink tabular-nums">{winRate}%</div>
         </div>
       </div>
 

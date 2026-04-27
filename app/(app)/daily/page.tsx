@@ -299,16 +299,16 @@ export default function DailyPuzzlePage() {
         </div>
 
         {/* Progress dots */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-2.5 mb-8">
           {problems.map((_, i) => (
             <div
               key={i}
-              className={`w-2.5 h-2.5 rounded-full transition-colors ${
+              className={`h-3 rounded-full transition-all border-2 ${
                 i < currentIndex
-                  ? 'bg-accent'
+                  ? 'w-3 bg-accent border-accent shadow-[0_0_8px_var(--accent-glow)]'
                   : i === currentIndex
-                    ? 'bg-ink-secondary'
-                    : 'bg-shade'
+                    ? 'w-8 bg-ink border-ink'
+                    : 'w-3 bg-transparent border-edge-strong'
               }`}
             />
           ))}

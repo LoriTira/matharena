@@ -78,13 +78,14 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
       transition={{ duration: 0.3 }}
     >
       <div className="text-center">
-        <h1 className="font-serif text-4xl font-normal text-ink">Practice Mode</h1>
-        <p className="text-ink-tertiary text-[15px] font-normal mt-2">
-          Timed speed drill. No rating impact.
+        <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ PRACTICE MODE</div>
+        <h1 className="font-serif text-4xl sm:text-5xl font-black text-ink leading-none tracking-tight">Speed drill.</h1>
+        <p className="text-ink-tertiary text-[14px] font-medium mt-3">
+          Timed sprint. No rating impact.
         </p>
         {personalBest !== null && (
-          <p className="text-accent text-[13px] font-mono mt-1">
-            Personal Best: {personalBest}
+          <p className="text-accent text-[14px] font-mono font-black mt-2">
+            <span className="text-[10px] tracking-[2px] mr-1.5 uppercase">PB</span>{personalBest}
           </p>
         )}
       </div>
@@ -92,7 +93,7 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
       <div className="space-y-6 w-full max-w-md">
         {/* Operations */}
         <div>
-          <label className="block text-[11px] tracking-[2px] text-ink-muted mb-3 uppercase">
+          <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-3 uppercase">
             Operations
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -100,10 +101,10 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
               <button
                 key={op.value}
                 onClick={() => toggleOperation(op.value)}
-                className={`py-3 rounded-sm font-mono text-lg transition-colors ${
+                className={`py-3.5 rounded-md font-mono font-black text-xl border-2 transition-all ${
                   config.operations.includes(op.value)
-                    ? 'bg-btn text-btn-text'
-                    : 'border border-edge text-ink-tertiary hover:text-ink-secondary hover:border-edge-strong'
+                    ? 'bg-accent text-on-accent border-accent shadow-[0_4px_16px_var(--accent-glow)]'
+                    : 'border-edge-strong text-ink-tertiary hover:text-ink hover:border-edge-bold bg-card'
                 }`}
               >
                 {op.symbol}
@@ -114,7 +115,7 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
 
         {/* Duration */}
         <div>
-          <label className="block text-[11px] tracking-[2px] text-ink-muted mb-3 uppercase">
+          <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-3 uppercase">
             Duration
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -122,10 +123,10 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
               <button
                 key={d}
                 onClick={() => onConfigChange({ duration: d })}
-                className={`py-3 rounded-sm font-mono text-sm transition-colors ${
+                className={`py-3.5 rounded-md font-mono font-black text-sm border-2 transition-all ${
                   config.duration === d
-                    ? 'bg-btn text-btn-text'
-                    : 'border border-edge text-ink-tertiary hover:text-ink-secondary hover:border-edge-strong'
+                    ? 'bg-accent text-on-accent border-accent shadow-[0_4px_16px_var(--accent-glow)]'
+                    : 'border-edge-strong text-ink-tertiary hover:text-ink hover:border-edge-bold bg-card'
                 }`}
               >
                 {d}s
@@ -136,7 +137,7 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
 
         {/* Difficulty */}
         <div>
-          <label className="block text-[11px] tracking-[2px] text-ink-muted mb-3 uppercase">
+          <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-3 uppercase">
             Difficulty
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -144,10 +145,10 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
               <button
                 key={d}
                 onClick={() => handleDifficultyChange(d)}
-                className={`py-2.5 rounded-sm text-[13px] transition-colors ${
+                className={`py-3 rounded-md font-black text-[12px] tracking-wide border-2 transition-all ${
                   config.difficulty === d
-                    ? 'bg-btn text-btn-text'
-                    : 'border border-edge text-ink-tertiary hover:text-ink-secondary hover:border-edge-strong'
+                    ? 'bg-accent text-on-accent border-accent shadow-[0_4px_16px_var(--accent-glow)]'
+                    : 'border-edge-strong text-ink-tertiary hover:text-ink hover:border-edge-bold bg-card'
                 }`}
               >
                 {PRACTICE_DIFFICULTY_LABELS[d]}
@@ -160,7 +161,7 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
         <div>
           <button
             onClick={handleToggleCustom}
-            className="text-[12px] text-ink-muted hover:text-ink-secondary transition-colors flex items-center gap-1"
+            className="text-[12px] font-black tracking-wider text-ink-tertiary hover:text-accent transition-colors flex items-center gap-1.5 uppercase"
           >
             <span className={`transition-transform ${showCustomRanges ? 'rotate-90' : ''}`}>▸</span>
             Customize ranges
@@ -199,9 +200,9 @@ export function PracticeSetup({ config, onConfigChange, onStart, personalBest }:
         {/* Start */}
         <button
           onClick={onStart}
-          className="w-full py-4 bg-btn text-btn-text text-sm font-semibold tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover"
+          className="w-full py-5 bg-accent text-on-accent text-[14px] font-black tracking-[2.5px] rounded-md transition-all hover:scale-[1.01] hover:bg-accent/90 shadow-[0_4px_24px_var(--accent-glow)]"
         >
-          START
+          ▸ START SPRINT
         </button>
       </div>
     </motion.div>
@@ -226,16 +227,16 @@ function RangeEditor({
   if (!enabled) return null;
 
   return (
-    <div className="bg-card rounded-sm border border-edge-faint p-3">
-      <div className="text-[11px] tracking-[1px] text-ink-muted mb-1 uppercase">{label}</div>
-      <div className="text-[10px] text-ink-faint mb-2">{sublabel}</div>
-      <div className="flex items-center gap-2 text-[13px] font-mono">
+    <div className="bg-card rounded-md border-2 border-edge-strong p-4">
+      <div className="text-[11px] tracking-[2px] font-black text-ink mb-1 uppercase">{label}</div>
+      <div className="text-[10px] text-ink-tertiary font-medium mb-2">{sublabel}</div>
+      <div className="flex items-center gap-2 text-[13px] font-mono font-bold">
         <span className="text-ink-faint">(</span>
         <RangeInput value={range.min1} onChange={(v) => onChange('min1', v)} />
         <span className="text-ink-faint">to</span>
         <RangeInput value={range.max1} onChange={(v) => onChange('max1', v)} />
         <span className="text-ink-faint">)</span>
-        <span className="text-accent">{symbol}</span>
+        <span className="text-accent font-black">{symbol}</span>
         <span className="text-ink-faint">(</span>
         <RangeInput value={range.min2} onChange={(v) => onChange('min2', v)} />
         <span className="text-ink-faint">to</span>

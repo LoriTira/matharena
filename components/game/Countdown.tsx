@@ -85,8 +85,8 @@ function CountdownFrame({ value }: { value: CountdownValue }) {
                 damping: 20,
                 duration: 0.4,
               }}
-              className={`font-serif font-bold tabular-nums select-none text-8xl md:text-[140px] ${
-                value === 'GO!' ? 'text-accent' : 'text-ink'
+              className={`font-serif font-black tabular-nums tracking-tight select-none text-9xl md:text-[180px] leading-none ${
+                value === 'GO!' ? 'text-accent drop-shadow-[0_0_40px_var(--accent-glow)]' : 'text-ink'
               }`}
             >
               {value}

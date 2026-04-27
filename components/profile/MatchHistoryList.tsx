@@ -80,16 +80,16 @@ export function MatchHistoryList({ userId, viewerId, ownerLabel }: MatchHistoryL
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[11px] tracking-[3px] text-ink-faint">MATCH HISTORY</div>
+        <div className="text-[12px] tracking-[3px] font-black text-accent">▸ MATCH HISTORY</div>
         {items.length > 0 && (
-          <div className="font-mono text-[11px] text-ink-faint tabular-nums">
+          <div className="font-mono text-[12px] font-black text-ink-tertiary tabular-nums">
             {items.length}{hasMore ? '+' : ''}
           </div>
         )}
       </div>
 
       {loading ? (
-        <div className="border border-edge-faint rounded-sm overflow-hidden">
+        <div className="border-2 border-edge-strong rounded-xl overflow-hidden bg-panel">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-edge-faint last:border-b-0">
               <Skeleton className="w-8 h-8 rounded-full" />
@@ -102,12 +102,12 @@ export function MatchHistoryList({ userId, viewerId, ownerLabel }: MatchHistoryL
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="border border-dashed border-edge-faint rounded-sm p-6 text-center">
-          <div className="text-ink-faint text-[12px]">No matches yet</div>
+        <div className="border-2 border-dashed border-edge-strong rounded-xl p-6 text-center bg-panel">
+          <div className="text-ink-tertiary text-[13px] font-semibold">No matches yet</div>
         </div>
       ) : (
         <>
-          <div className="border border-edge-faint rounded-sm overflow-hidden">
+          <div className="border-2 border-edge-strong rounded-xl overflow-hidden bg-panel">
             {items.map((item) => (
               <MatchRow
                 key={item.match_id}
@@ -121,7 +121,7 @@ export function MatchHistoryList({ userId, viewerId, ownerLabel }: MatchHistoryL
               <button
                 onClick={() => fetchPage(page + 1, true)}
                 disabled={loadingMore}
-                className="px-5 py-2 border border-edge text-ink-muted text-[11px] tracking-[1.5px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors disabled:opacity-50"
+                className="px-6 py-3 border-2 border-edge-strong text-ink font-black text-[12px] tracking-[2.5px] rounded-md hover:border-edge-bold hover:bg-shade transition-colors disabled:opacity-50"
               >
                 {loadingMore ? 'LOADING…' : 'LOAD MORE'}
               </button>
@@ -182,7 +182,7 @@ function MatchRow({
       onKeyDown={(e) => {
         if (e.key === 'Enter') onOpen();
       }}
-      className={`flex items-center gap-3 px-5 py-3.5 border-b border-edge-faint last:border-b-0 border-l-2 ${resultBadge.border} hover:bg-card transition-colors cursor-pointer`}
+      className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3.5 border-b border-edge-faint last:border-b-0 border-l-[3px] ${resultBadge.border} hover:bg-shade transition-colors cursor-pointer`}
     >
       {opponent ? (
         <Link
@@ -192,8 +192,8 @@ function MatchRow({
         >
           <Avatar user={opponent} size="sm" />
           <div className="min-w-0">
-            <div className="text-[13px] text-ink-secondary truncate">{opponentName}</div>
-            <div className="text-[11px] text-ink-faint font-mono tabular-nums">
+            <div className="text-[13px] font-bold text-ink truncate">{opponentName}</div>
+            <div className="text-[11px] font-bold text-ink-tertiary font-mono tabular-nums">
               Elo {opponent.elo_rating}
             </div>
           </div>
@@ -201,21 +201,21 @@ function MatchRow({
       ) : (
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Avatar user={{ username: 'unknown' }} size="sm" />
-          <div className="text-[13px] text-ink-faint italic">Unknown opponent</div>
+          <div className="text-[13px] text-ink-faint italic font-semibold">Unknown opponent</div>
         </div>
       )}
 
-      <div className="shrink-0 flex items-center gap-4">
-        <div className={`text-[12px] tracking-[1.5px] font-bold ${resultBadge.text}`}>
+      <div className="shrink-0 flex items-center gap-2 sm:gap-4">
+        <div className={`text-[12px] tracking-[1.5px] font-black ${resultBadge.text}`}>
           {resultBadge.label}
         </div>
-        <div className="font-mono text-[13px] text-ink tabular-nums">
+        <div className="font-mono text-[13px] font-bold text-ink-secondary tabular-nums">
           {item.viewer_score}–{item.opponent_score}
         </div>
-        <div className={`font-mono text-[11px] tabular-nums w-12 text-right ${deltaClass}`}>
+        <div className={`font-mono text-[12px] font-black tabular-nums w-12 text-right ${deltaClass}`}>
           {deltaSign}{item.elo_delta}
         </div>
-        <div className="text-[11px] text-ink-faint w-16 text-right hidden sm:block">
+        <div className="text-[11px] font-semibold text-ink-faint w-16 text-right hidden sm:block">
           {formatRelative(item.completed_at)}
         </div>
       </div>
