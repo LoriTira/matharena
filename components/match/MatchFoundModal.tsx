@@ -144,14 +144,14 @@ export function MatchFoundModal({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="w-full max-w-md bg-panel border border-accent/30 rounded-sm shadow-2xl overflow-hidden"
+          className="w-[calc(100%-1rem)] sm:w-full max-w-md bg-panel border-[3px] border-accent rounded-xl shadow-[0_0_60px_var(--accent-glow)] overflow-hidden"
         >
-          {/* Header — distinctly accented so it can't be mistaken for the warmup */}
-          <div className="flex items-center justify-center gap-2 py-4 border-b border-edge-faint bg-accent-subtle">
-            <span className="text-xl">🏆</span>
+          {/* Header */}
+          <div className="flex items-center justify-center gap-2.5 py-5 border-b-2 border-accent/40 bg-accent-glow">
+            <span className="text-2xl">🏆</span>
             <h2
               id="match-found-title"
-              className="font-serif text-xl text-ink tracking-wide"
+              className="font-serif text-2xl font-black text-accent tracking-tight"
             >
               MATCH FOUND
             </h2>
@@ -159,7 +159,7 @@ export function MatchFoundModal({
 
           {/* Opponent card */}
           <div className="flex flex-col items-center gap-3 px-6 py-8">
-            <div className="w-16 h-16 rounded-full bg-inset border border-edge flex items-center justify-center overflow-hidden">
+            <div className="w-20 h-20 rounded-full bg-inset border-2 border-edge-strong flex items-center justify-center overflow-hidden shadow-lg">
               {opponent?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -168,22 +168,22 @@ export function MatchFoundModal({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-2xl text-ink-muted font-serif">
+                <span className="text-3xl text-ink-secondary font-serif font-black">
                   {opponentName.charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="text-lg font-medium text-ink">{opponentName}</div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="font-serif text-2xl font-black text-ink tracking-tight">{opponentName}</div>
               {opponentElo !== undefined && (
-                <div className="text-[11px] tracking-[1.5px] text-ink-muted font-mono">
-                  ELO {opponentElo}
+                <div className="text-[12px] tracking-[2px] font-black text-ink-tertiary font-mono">
+                  ELO <span className="text-accent">{opponentElo}</span>
                 </div>
               )}
             </div>
 
             {alreadyAccepted && (
-              <div className="text-[11px] text-ink-tertiary mt-1 tracking-wide">
+              <div className="text-[12px] font-semibold text-accent mt-2 tracking-wide">
                 Waiting for opponent to accept…
               </div>
             )}
@@ -194,23 +194,23 @@ export function MatchFoundModal({
             <button
               onClick={handleAccept}
               disabled={alreadyAccepted}
-              className="relative w-full bg-btn text-btn-text font-semibold tracking-[1.5px] py-4 rounded-sm overflow-hidden transition-opacity disabled:opacity-60 hover:bg-btn-hover"
+              className="relative w-full bg-accent text-on-accent font-black tracking-[2.5px] text-[14px] py-4 rounded-md overflow-hidden transition-all disabled:opacity-60 hover:scale-[1.01] hover:bg-accent/90 shadow-[0_4px_24px_var(--accent-glow)]"
               aria-label="Accept match"
             >
               {/* Countdown progress bar across the bottom of the button */}
               <div
-                className="absolute bottom-0 left-0 h-0.5 bg-accent transition-[width] duration-100 ease-linear"
+                className="absolute bottom-0 left-0 h-1 bg-on-accent/60 transition-[width] duration-100 ease-linear"
                 style={{ width: `${progress * 100}%` }}
               />
               <span className="relative">
-                {alreadyAccepted ? 'ACCEPTED' : `ACCEPT · ${seconds}s`}
+                {alreadyAccepted ? '✓ ACCEPTED' : `▸ ACCEPT · ${seconds}s`}
               </span>
             </button>
 
             <button
               onClick={() => onDeclineOrTimeout('declined')}
               disabled={alreadyAccepted}
-              className="py-3 px-6 text-[11px] tracking-[1.5px] text-ink-muted hover:text-ink-tertiary transition-colors disabled:opacity-30"
+              className="py-3 px-6 text-[11px] tracking-[2px] font-bold text-ink-tertiary hover:text-ink transition-colors disabled:opacity-30"
             >
               Decline ({Math.round(GAME_CONFIG.MATCH_DECLINE_COOLDOWN_MS / 1000)}s cooldown)
             </button>

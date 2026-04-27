@@ -18,27 +18,32 @@ function PlayerCard({ profile, ready, isYou }: { profile: Profile | null; ready:
     : 0;
 
   return (
-    <div className={`border rounded-sm p-6 flex-1 min-w-[200px] transition-colors ${
-      isYou ? 'border-edge-strong bg-card' : 'border-edge bg-card'
+    <div className={`border-2 rounded-xl p-5 sm:p-6 flex-1 min-w-[200px] transition-all ${
+      isYou
+        ? 'border-accent bg-accent-glow shadow-[0_0_30px_var(--accent-glow)]'
+        : ready
+          ? 'border-edge-bold bg-panel'
+          : 'border-edge-strong bg-panel'
     }`}>
       <div className="flex items-center gap-2 mb-4">
-        <div className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400/80' : 'bg-edge'}`} />
-        <span className="text-[11px] tracking-[2px] text-ink-muted">
-          {ready ? 'READY' : 'WAITING'}
+        <div className={`w-2.5 h-2.5 rounded-full transition-colors ${ready ? 'bg-green-500 shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-ink-muted'}`} />
+        <span className={`text-[11px] tracking-[3px] font-black ${ready ? 'text-feedback-correct' : 'text-ink-tertiary'}`}>
+          {ready ? '▸ READY' : '▸ WAITING'}
         </span>
       </div>
-      <div className="font-serif text-lg text-ink mb-1 truncate">
+      <div className="font-serif text-2xl font-black text-ink mb-1 truncate tracking-tight">
         {profile.display_name || profile.username}
       </div>
-      <div className="font-mono text-sm text-ink-muted mb-3">
-        Elo {profile.elo_rating.toLocaleString()}
+      <div className="font-mono text-[14px] font-bold text-ink-secondary mb-4">
+        <span className="text-[10px] tracking-[2px] font-black text-ink-tertiary uppercase mr-1.5">Elo</span>
+        <span className={isYou ? 'text-accent font-black' : 'text-ink font-black'}>{profile.elo_rating.toLocaleString()}</span>
       </div>
-      <div className="flex gap-4 text-[11px] text-ink-faint">
-        <span>{profile.games_played} played</span>
-        <span>{winRate}% win</span>
+      <div className="flex gap-4 text-[12px] font-bold text-ink-tertiary">
+        <span><span className="text-ink font-black">{profile.games_played}</span> played</span>
+        <span><span className="text-ink font-black">{winRate}%</span> win</span>
       </div>
       {isYou && (
-        <div className="text-[11px] tracking-[1.5px] text-ink-faint mt-3">YOU</div>
+        <div className="text-[10px] tracking-[3px] font-black text-accent mt-3">▸ YOU</div>
       )}
     </div>
   );
@@ -330,13 +335,13 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="text-red-400/60 text-sm">{error}</div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
+        <div className="text-feedback-wrong text-[14px] font-semibold">{error}</div>
         <button
-          onClick={() => router.push('/dashboard')}
-          className="px-6 py-2.5 border border-edge text-ink-tertiary text-[12px] tracking-[1.5px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+          onClick={() => router.push('/')}
+          className="px-6 py-3 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_20px_var(--accent-glow)]"
         >
-          DASHBOARD
+          ▸ DASHBOARD
         </button>
       </div>
     );
@@ -348,22 +353,22 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
   const opponentProfile = isUserSender ? recipientProfile : senderProfile;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 px-4">
       <div className="text-center">
-        <div className="text-[11px] tracking-[3px] text-ink-faint mb-2">CHALLENGE LOBBY</div>
-        <h1 className="font-serif text-3xl font-normal text-ink">
-          {starting ? 'Starting match...' : 'Waiting for players'}
+        <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ CHALLENGE LOBBY</div>
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-ink leading-none tracking-tight">
+          {starting ? 'Starting match…' : 'Waiting for players.'}
         </h1>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full max-w-lg">
+      <div className="flex flex-col sm:flex-row items-stretch gap-3 sm:gap-4 w-full max-w-lg">
         <PlayerCard
           profile={isUserSender ? senderProfile : recipientProfile}
           ready={myReady}
           isYou={true}
         />
         <div className="flex items-center justify-center">
-          <span className="font-serif text-xl text-ink-faint italic">vs</span>
+          <span className="font-serif text-2xl sm:text-3xl font-black text-accent italic">vs</span>
         </div>
         <PlayerCard
           profile={opponentProfile}
@@ -374,31 +379,31 @@ export default function ChallengeLobbyPage({ params }: { params: Promise<{ code:
 
       {/* Connection error banner */}
       {connectionError && (
-        <div className="flex flex-col items-center gap-3 px-6 py-4 border border-red-400/30 rounded-sm bg-red-400/5">
-          <p className="text-red-400/70 text-[13px]">Connection lost. Check your internet and try again.</p>
+        <div className="flex flex-col items-center gap-3 px-6 py-5 border-2 border-feedback-wrong/40 rounded-xl bg-feedback-wrong/10">
+          <p className="text-feedback-wrong text-[14px] font-semibold">Connection lost. Check your internet and try again.</p>
           <button
             onClick={startPolling}
-            className="px-6 py-2 bg-btn text-btn-text font-semibold text-[12px] tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
+            className="px-6 py-3 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_20px_var(--accent-glow)]"
           >
-            RETRY
+            ▸ RETRY
           </button>
         </div>
       )}
 
       {/* Lobby timeout */}
       {timedOut && !connectionError && (
-        <div className="flex flex-col items-center gap-3 px-6 py-4 border border-edge rounded-sm">
-          <p className="text-ink-muted text-[13px]">Your opponent hasn&apos;t joined yet.</p>
-          <div className="flex gap-3">
+        <div className="flex flex-col items-center gap-3 px-6 py-5 border-2 border-edge-strong rounded-xl bg-panel">
+          <p className="text-ink-tertiary text-[14px] font-semibold">Your opponent hasn&apos;t joined yet.</p>
+          <div className="flex gap-3 flex-wrap justify-center">
             <button
               onClick={startPolling}
-              className="px-6 py-2 bg-btn text-btn-text font-semibold text-[12px] tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
+              className="px-6 py-3 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_20px_var(--accent-glow)]"
             >
               KEEP WAITING
             </button>
             <button
-              onClick={() => router.push('/dashboard')}
-              className="px-6 py-2 border border-edge text-ink-tertiary text-[12px] tracking-[1.5px] rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+              onClick={() => router.push('/')}
+              className="px-6 py-3 border-2 border-edge-strong text-ink font-black text-[12px] tracking-[2.5px] rounded-md hover:border-edge-bold hover:bg-shade transition-colors"
             >
               DASHBOARD
             </button>

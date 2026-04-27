@@ -8,10 +8,10 @@ interface CardProps {
 }
 
 const variantStyles: Record<string, string> = {
-  default: 'border border-edge bg-card',
+  default: 'border-2 border-edge-strong bg-panel',
   interactive:
-    'border border-edge bg-card hover:border-edge-strong hover:scale-[1.005] transition-all cursor-pointer',
-  highlight: 'border border-accent/20 bg-accent-glow',
+    'border-2 border-edge-strong bg-panel hover:border-edge-bold hover:scale-[1.005] transition-all cursor-pointer',
+  highlight: 'border-2 border-accent bg-accent-glow shadow-[0_0_30px_var(--accent-glow)]',
 };
 
 export function Card({
@@ -22,7 +22,7 @@ export function Card({
 }: CardProps) {
   return (
     <div
-      className={`rounded-sm p-4 ${variantStyles[variant]} ${className}`}
+      className={`rounded-lg p-4 ${variantStyles[variant]} ${className}`}
       onClick={onClick}
     >
       {children}

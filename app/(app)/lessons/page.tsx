@@ -30,34 +30,37 @@ export default function LessonsPage() {
     <div className="space-y-10">
       {/* Header */}
       <div>
-        <h1 className="font-serif text-3xl font-normal text-ink">Lessons</h1>
-        <p className="text-ink-muted mt-2 text-[15px]">Master mental math, one trick at a time.</p>
+        <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ LEARN</div>
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-ink leading-none tracking-tight">
+          Lessons.
+        </h1>
+        <p className="text-ink-tertiary mt-3 text-[14px] font-medium">Master mental math, one trick at a time.</p>
       </div>
 
       {/* Progress summary */}
       <motion.div
-        className="max-w-xl mx-auto border border-edge rounded-sm p-5 bg-card"
+        className="max-w-xl mx-auto border-2 border-edge-strong rounded-xl p-5 sm:p-6 bg-panel"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[11px] tracking-[2px] text-ink-faint uppercase">Progress</div>
-            <div className="font-mono text-2xl text-ink tabular-nums mt-1">
+            <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary uppercase">Progress</div>
+            <div className="font-mono text-3xl font-black text-ink tabular-nums mt-1">
               {completedCount}<span className="text-ink-faint">/{totalCount}</span>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[11px] tracking-[2px] text-ink-faint uppercase">Total XP</div>
-            <div className="font-mono text-2xl text-accent tabular-nums mt-1">
+            <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary uppercase">Total XP</div>
+            <div className="font-mono text-3xl font-black text-accent tabular-nums mt-1">
               {totalXp}
             </div>
           </div>
         </div>
         {/* Mini progress bar */}
-        <div className="h-1.5 w-full rounded-full bg-shade overflow-hidden mt-4">
+        <div className="h-2 w-full rounded-full bg-shade overflow-hidden mt-4">
           <motion.div
-            className="h-full rounded-full bg-accent"
+            className="h-full rounded-full bg-accent shadow-[0_0_12px_var(--accent-glow)]"
             initial={{ width: 0 }}
             animate={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}

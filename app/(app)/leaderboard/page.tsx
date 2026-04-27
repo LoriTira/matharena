@@ -59,14 +59,20 @@ export default function LeaderboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-3xl font-normal text-ink">Leaderboard</h1>
+      <div>
+        <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ RANKINGS</div>
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-ink leading-none tracking-tight">
+          Leaderboard.
+        </h1>
+        <p className="text-[14px] font-medium text-ink-tertiary mt-3">Top players by Elo rating.</p>
+      </div>
+      <div className="flex justify-end">
         <input
           type="text"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter by school/company..."
-          className="px-4 py-2 bg-card border border-edge rounded-sm text-ink-secondary placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong w-64 text-sm transition-colors"
+          className="px-4 py-3 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent w-full sm:w-72 text-[13px] transition-colors"
         />
       </div>
 
@@ -102,18 +108,18 @@ export default function LeaderboardPage() {
           </table>
         </div>
       ) : (
-        <div className="border border-edge-faint rounded-sm overflow-x-auto">
+        <div className="border-2 border-edge-strong rounded-xl overflow-x-auto bg-panel">
           <table className="w-full min-w-[700px]">
             <thead>
-              <tr className="border-b border-edge">
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint w-16">#</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">PLAYER</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">COUNTRY</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">AFFILIATION</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">SPRINT PB</th>
+              <tr className="border-b-2 border-edge-strong bg-shade">
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary w-16">#</th>
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">PLAYER</th>
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">COUNTRY</th>
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">AFFILIATION</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">RATING</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">W/L</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">WIN %</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">SPRINT PB</th>
               </tr>
             </thead>
             <tbody>
@@ -122,28 +128,29 @@ export default function LeaderboardPage() {
                   ? Math.round((player.games_won / player.games_played) * 100)
                   : 0;
                 const losses = player.games_played - player.games_won;
+                const isTop3 = index < 3;
 
                 return (
-                  <tr key={player.id} className="border-b border-edge-faint hover:bg-card transition-colors">
-                    <td className="px-4 py-3 font-mono text-ink-muted text-sm tabular-nums">{index + 1}</td>
+                  <tr key={player.id} className="border-b border-edge-faint last:border-b-0 hover:bg-shade transition-colors">
+                    <td className={`px-4 py-3 font-mono text-[14px] font-black tabular-nums ${isTop3 ? 'text-accent' : 'text-ink-tertiary'}`}>{index + 1}</td>
                     <td className="px-4 py-3">
                       <Link
                         href={`/profile/${player.id}`}
-                        className="text-ink-secondary hover:text-ink text-sm transition-colors"
+                        className="text-ink font-bold hover:text-accent text-[14px] transition-colors"
                       >
                         {player.display_name || player.username}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-ink-muted text-sm">{player.country ?? '—'}</td>
-                    <td className="px-4 py-3 text-ink-muted text-sm">{player.affiliation ?? '—'}</td>
-                    <td className="px-4 py-3 text-right font-mono font-medium text-ink tabular-nums text-sm">{player.elo_rating}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm tabular-nums">
-                      <span className="text-ink-secondary">{player.games_won}</span>
+                    <td className="px-4 py-3 text-ink-tertiary text-[13px] font-medium">{player.country ?? '—'}</td>
+                    <td className="px-4 py-3 text-ink-tertiary text-[13px] font-medium">{player.affiliation ?? '—'}</td>
+                    <td className="px-4 py-3 text-right font-mono font-black text-ink tabular-nums text-[14px]">{player.elo_rating}</td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-[13px] tabular-nums">
+                      <span className="text-feedback-correct">{player.games_won}</span>
                       <span className="text-ink-faint"> / </span>
-                      <span className="text-ink-muted">{losses}</span>
+                      <span className="text-feedback-wrong">{losses}</span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-ink-tertiary text-sm tabular-nums">{winRate}%</td>
-                    <td className="px-4 py-3 text-right font-mono text-ink-tertiary text-sm tabular-nums">{sprintPBs[player.id] ?? '—'}</td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-ink-secondary text-[13px] tabular-nums">{winRate}%</td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-ink-secondary text-[13px] tabular-nums">{sprintPBs[player.id] ?? '—'}</td>
                   </tr>
                 );
               })}
@@ -151,7 +158,7 @@ export default function LeaderboardPage() {
           </table>
 
           {players.length === 0 && (
-            <div className="text-center py-12 text-ink-faint">No players found</div>
+            <div className="text-center py-12 text-ink-tertiary font-semibold">No players found</div>
           )}
         </div>
       )}

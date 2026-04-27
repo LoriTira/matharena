@@ -81,9 +81,12 @@ function PlayContent() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6">
-      <header className="mb-5 flex items-center justify-between">
-        <h1 className="font-serif text-2xl md:text-3xl text-ink">Looking for Ranked Match…</h1>
-        <p className="hidden md:block text-[12px] text-ink-muted tracking-wide">
+      <header className="mb-7">
+        <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ RANKED MATCH</div>
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-ink leading-none tracking-tight">
+          Finding an opponent…
+        </h1>
+        <p className="text-[13px] sm:text-[14px] font-medium text-ink-tertiary mt-2">
           First to 5 wins · Elo on the line
         </p>
       </header>
@@ -107,7 +110,7 @@ function PlayContent() {
             error={error}
             onCancel={() => {
               cancel();
-              router.push('/dashboard');
+              router.push('/');
             }}
           />
         </div>
@@ -115,12 +118,12 @@ function PlayContent() {
 
       {/* Resume-search button when search has stopped but user still on page */}
       {!isSearching && cooldownRemainingMs === 0 && !showModal && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-7 flex justify-center">
           <button
             onClick={() => findMatch()}
-            className="px-8 py-3 bg-btn text-btn-text text-[12px] font-semibold tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
+            className="px-8 py-4 bg-accent text-on-accent text-[12px] font-black tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_24px_var(--accent-glow)]"
           >
-            RESUME SEARCH
+            ▸ RESUME SEARCH
           </button>
         </div>
       )}

@@ -153,23 +153,24 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
   if (user && challenge.sender_id === user.id) {
     const isAccepted = challenge.status === 'accepted';
     return (
-      <div className="min-h-screen bg-page flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="font-serif text-2xl font-normal text-ink mb-2">
-            {isAccepted ? 'Challenge Accepted!' : 'Your Challenge'}
+      <div className="min-h-screen bg-page flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="text-[11px] tracking-[4px] font-black text-accent mb-3">▸ CHALLENGE</div>
+          <h1 className="font-serif text-3xl sm:text-4xl font-black text-ink leading-none tracking-tight mb-3">
+            {isAccepted ? 'Accepted!' : 'Your challenge.'}
           </h1>
-          <p className="text-ink-muted text-sm mb-8">
+          <p className="text-ink-tertiary text-[14px] font-medium mb-8 leading-relaxed">
             {isAccepted
               ? 'Your opponent is ready. Head to the lobby to start the match.'
               : 'Share this link with a friend to challenge them.'}
           </p>
           {isAccepted ? (
-            <Link href={`/challenge/${code}/lobby`} className="px-8 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
-              GO TO LOBBY
+            <Link href={`/challenge/${code}/lobby`} className="inline-block px-8 py-4 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_24px_var(--accent-glow)]">
+              ▸ GO TO LOBBY
             </Link>
           ) : (
-            <Link href="/dashboard" className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors">
-              DASHBOARD
+            <Link href="/" className="inline-block px-8 py-4 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_24px_var(--accent-glow)]">
+              ▸ DASHBOARD
             </Link>
           )}
         </div>
@@ -183,40 +184,42 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     : 0;
 
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center px-4">
-      <div className="text-center">
-        <div className="text-[11px] tracking-[3px] text-ink-faint mb-6 uppercase">
-          You&apos;ve been challenged
+    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-8">
+      <div className="text-center max-w-md w-full">
+        <div className="text-[11px] tracking-[5px] font-black text-accent mb-5">
+          ▸ YOU&apos;VE BEEN CHALLENGED
         </div>
-        <h1 className="font-serif text-4xl font-normal text-ink mb-2">
+        <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-black text-ink leading-none tracking-tight mb-3">
           {sender.display_name || sender.username}
         </h1>
-        <p className="font-mono text-sm text-ink-muted mb-10">
-          Elo {sender.elo_rating.toLocaleString()} · {winRate}% win rate
-        </p>
+        <div className="font-mono text-[14px] text-ink-secondary mb-10 inline-flex items-center gap-3 px-4 py-2 border-2 border-edge-strong rounded-md bg-shade">
+          <span><span className="text-[10px] font-black tracking-[2px] text-ink-tertiary mr-1">ELO</span><span className="font-black text-ink">{sender.elo_rating.toLocaleString()}</span></span>
+          <span className="text-ink-faint">·</span>
+          <span><span className="font-black text-ink">{winRate}%</span> <span className="text-[10px] font-black tracking-[2px] text-ink-tertiary">WIN</span></span>
+        </div>
 
         {error && (
-          <p className="text-red-400/70 text-sm mb-4">{error}</p>
+          <p className="text-feedback-wrong text-[13px] font-semibold mb-4">{error}</p>
         )}
 
         {user ? (
           <button
             onClick={handleAccept}
             disabled={accepting}
-            className="px-12 py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-12 py-4 bg-accent text-on-accent font-black text-[13px] tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_24px_var(--accent-glow)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {accepting ? 'ACCEPTING...' : 'ACCEPT CHALLENGE'}
+            {accepting ? 'ACCEPTING...' : '▸ ACCEPT CHALLENGE'}
           </button>
         ) : (
           <Link
             href={`/login?redirect=/challenge/${code}/accept`}
-            className="inline-block px-12 py-3 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm hover:bg-btn-hover transition-colors"
+            className="inline-block w-full sm:w-auto px-12 py-4 bg-accent text-on-accent font-black text-[13px] tracking-[2.5px] rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_24px_var(--accent-glow)]"
           >
-            ACCEPT CHALLENGE
+            ▸ ACCEPT CHALLENGE
           </Link>
         )}
 
-        <p className="text-ink-faint text-[11px] mt-6">
+        <p className="text-ink-tertiary text-[12px] font-semibold mt-6">
           {user ? 'First to 5 · Mental math only' : 'Free · No download needed'}
         </p>
       </div>

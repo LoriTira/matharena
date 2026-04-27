@@ -35,7 +35,7 @@ export function PlayTile({
       onClick={onActivate}
       aria-label={ariaLabel ?? `${title}. ${blurb}`}
       data-locked={locked || undefined}
-      className={`group relative w-full text-left rounded-lg border-2 p-5 transition-all motion-safe:hover:scale-[1.015] motion-safe:hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 flex flex-col gap-4 min-h-[200px] ${
+      className={`group relative w-full text-left rounded-lg border-2 p-4 sm:p-5 transition-all motion-safe:hover:scale-[1.015] motion-safe:hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 flex flex-col gap-4 min-h-[180px] sm:min-h-[200px] ${
         locked
           ? 'border-edge bg-card/30 opacity-60 hover:opacity-90 hover:border-edge-strong'
           : isAccent
@@ -54,7 +54,7 @@ export function PlayTile({
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="font-serif text-2xl font-black text-ink leading-tight tracking-tight flex items-center gap-2">
+          <div className="font-serif text-xl sm:text-2xl font-black text-ink leading-tight tracking-tight flex items-center gap-2">
             {locked && (
               <svg
                 aria-hidden

@@ -52,26 +52,26 @@ function LeaderboardTable({
   return (
     <div className="space-y-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 border-b border-edge">
+      <div className="flex items-center justify-between px-2 py-2.5 border-b-2 border-edge-strong">
         <div className="flex items-center gap-3">
-          <span className="text-[11px] tracking-[1px] text-ink-faint w-6 text-center">#</span>
-          <span className="text-[11px] tracking-[1px] text-ink-faint">PLAYER</span>
+          <span className="text-[11px] tracking-[2px] font-black text-ink-tertiary w-6 text-center">#</span>
+          <span className="text-[11px] tracking-[2px] font-black text-ink-tertiary">PLAYER</span>
         </div>
-        <span className="text-[11px] tracking-[1px] text-ink-faint">TIME</span>
+        <span className="text-[11px] tracking-[2px] font-black text-ink-tertiary">TIME</span>
       </div>
       {/* Rows */}
       {top10.map((entry) => (
         <div
           key={`${entry.rank}-${entry.username}`}
-          className="flex items-center justify-between px-2 py-2.5 border-b border-edge-faint last:border-b-0"
+          className="flex items-center justify-between px-2 py-3 border-b border-edge-faint last:border-b-0"
         >
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] text-ink-muted w-6 text-center tabular-nums">
+            <span className="font-mono text-[12px] font-black text-ink-tertiary w-6 text-center tabular-nums">
               {entry.rank}
             </span>
-            <span className="text-[12px] text-ink-secondary">{entry.username}</span>
+            <span className="text-[13px] font-semibold text-ink-secondary">{entry.username}</span>
           </div>
-          <span className="font-mono text-[11px] text-ink-tertiary tabular-nums">
+          <span className="font-mono text-[12px] font-bold text-ink tabular-nums">
             {formatLeaderboardTime(entry.total_time_ms)}
           </span>
         </div>
@@ -98,7 +98,7 @@ function ResultsView({
   isCelebration: boolean;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* Heading */}
       {isCelebration ? (
         <motion.div
@@ -107,16 +107,18 @@ function ResultsView({
           transition={{ duration: 0.5, type: 'spring' }}
           className="text-center"
         >
-          <h1 className="font-serif text-3xl md:text-4xl font-normal text-accent">
-            PUZZLE COMPLETE!
+          <div className="text-[12px] tracking-[5px] font-black text-accent mb-3">▸ DAILY PUZZLE</div>
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-black text-accent leading-none tracking-tight">
+            Puzzle complete!
           </h1>
         </motion.div>
       ) : (
         <div className="text-center">
-          <h1 className="font-serif text-3xl font-normal text-ink-secondary">
-            Today&apos;s Puzzle
+          <div className="text-[12px] tracking-[5px] font-black text-accent mb-3">▸ DAILY PUZZLE</div>
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-ink leading-none tracking-tight">
+            Today&apos;s puzzle.
           </h1>
-          <p className="text-[11px] text-ink-muted mt-1">You already completed today&apos;s puzzle</p>
+          <p className="text-[13px] font-medium text-ink-tertiary mt-3">Already done today.</p>
         </div>
       )}
 
@@ -125,21 +127,21 @@ function ResultsView({
 
       {/* Total Time */}
       <div className="text-center">
-        <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">TOTAL TIME</div>
-        <div className="font-mono text-[48px] md:text-[56px] font-normal text-ink tabular-nums leading-none">
+        <div className="text-[11px] tracking-[3px] font-black text-ink-tertiary mb-2">TOTAL TIME</div>
+        <div className="font-mono text-[44px] sm:text-[56px] md:text-[64px] font-black text-ink tabular-nums leading-none tracking-tight">
           {formatElapsedWithTenths(totalTimeMs)}
         </div>
       </div>
 
       {/* Per-problem times */}
       {problemTimes.length > 0 && (
-        <Card variant="default" className="p-4">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-3">PROBLEM TIMES</div>
-          <div className="grid grid-cols-5 gap-2">
+        <Card variant="default" className="p-5 rounded-xl border-2 border-edge-strong">
+          <div className="text-[11px] tracking-[3px] font-black text-ink-tertiary mb-4">▸ PROBLEM TIMES</div>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {problemTimes.map((time, i) => (
-              <div key={i} className="text-center">
-                <div className="text-[12px] text-ink-muted mb-1">#{i + 1}</div>
-                <div className="font-mono text-[14px] text-ink-secondary tabular-nums">
+              <div key={i} className="text-center bg-shade rounded-md py-2.5 px-1">
+                <div className="text-[11px] font-black text-ink-tertiary mb-1">#{i + 1}</div>
+                <div className="font-mono text-[15px] font-black text-ink tabular-nums">
                   {formatProblemTime(time)}
                 </div>
               </div>
@@ -149,43 +151,43 @@ function ResultsView({
       )}
 
       {/* Rank + Streak row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {result && (
-          <Card variant="highlight" className="p-4 text-center">
-            <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">YOUR RANK</div>
-            <div className="font-mono text-[28px] text-accent tabular-nums leading-none">
+          <Card variant="highlight" className="p-5 text-center rounded-xl border-2 border-accent bg-accent-glow shadow-[0_0_30px_var(--accent-glow)]">
+            <div className="text-[11px] tracking-[3px] font-black text-accent mb-2">▸ YOUR RANK</div>
+            <div className="font-mono text-4xl font-black text-accent tabular-nums leading-none">
               #{result.rank}
             </div>
-            <div className="text-[12px] text-ink-muted mt-1.5">
+            <div className="text-[12px] font-semibold text-ink-tertiary mt-2">
               out of {result.totalPlayers} player{result.totalPlayers !== 1 ? 's' : ''}
             </div>
           </Card>
         )}
-        <Card variant="default" className="p-4 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">STREAK</div>
-          <div className="font-mono text-[28px] text-ink-secondary tabular-nums leading-none flex items-center justify-center gap-1.5">
-            <span className="text-xl">🔥</span>
+        <Card variant="default" className="p-5 text-center rounded-xl border-2 border-edge-strong">
+          <div className="text-[11px] tracking-[3px] font-black text-ink-tertiary mb-2">▸ STREAK</div>
+          <div className="font-mono text-4xl font-black text-ink tabular-nums leading-none flex items-center justify-center gap-2">
+            <span className="text-2xl">🔥</span>
             {streak}
           </div>
-          <div className="text-[12px] text-ink-muted mt-1.5">
+          <div className="text-[12px] font-semibold text-ink-tertiary mt-2">
             day{streak !== 1 ? 's' : ''} in a row
           </div>
         </Card>
       </div>
 
       {/* Leaderboard */}
-      <Card variant="default" className="p-4">
-        <div className="text-[11px] tracking-[2px] text-ink-faint mb-3">TODAY&apos;S LEADERBOARD</div>
+      <Card variant="default" className="p-5 rounded-xl border-2 border-edge-strong">
+        <div className="text-[11px] tracking-[3px] font-black text-ink-tertiary mb-4">▸ TODAY&apos;S LEADERBOARD</div>
         <LeaderboardTable leaderboard={leaderboard} />
       </Card>
 
       {/* Back button */}
       <div className="text-center pt-2">
         <Link
-          href="/dashboard"
-          className="inline-block px-8 py-3 border border-edge text-ink-tertiary text-[12px] tracking-[2px] font-semibold rounded-sm hover:border-edge-strong hover:text-ink-secondary transition-colors"
+          href="/"
+          className="inline-block px-8 py-4 bg-accent text-on-accent text-[12px] tracking-[2.5px] font-black rounded-md hover:scale-[1.02] transition-all shadow-[0_4px_24px_var(--accent-glow)]"
         >
-          BACK TO DASHBOARD
+          ▸ BACK TO DASHBOARD
         </Link>
       </div>
     </div>
@@ -270,7 +272,7 @@ export default function DailyPuzzlePage() {
         <Countdown onComplete={handleCountdownComplete} stepMs={1000} />
         {/* Underlying content so the page isn't blank after overlay fades */}
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 opacity-0">
-          <h1 className="font-serif text-3xl font-normal text-ink">DAILY PUZZLE</h1>
+          <h1 className="font-serif text-4xl font-black text-ink">DAILY PUZZLE</h1>
         </div>
       </div>
     );
@@ -285,11 +287,12 @@ export default function DailyPuzzlePage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-serif text-xl font-normal text-ink">DAILY PUZZLE</h1>
+            <div className="text-[10px] tracking-[3px] font-black text-accent mb-1">▸ DAILY</div>
+            <h1 className="font-serif text-xl sm:text-2xl font-black text-ink leading-none tracking-tight">Today&apos;s puzzle</h1>
           </div>
           <div className="text-right">
-            <div className="text-[11px] tracking-[2px] text-ink-faint mb-1">
-              PROBLEM {currentIndex + 1}/5
+            <div className="text-[10px] tracking-[3px] font-black text-ink-tertiary mb-1">
+              PROBLEM <span className="text-accent">{currentIndex + 1}</span>/5
             </div>
             <TimerDisplay startTime={puzzleStartTime} />
           </div>

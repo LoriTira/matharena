@@ -151,58 +151,61 @@ export default function ProfilePage() {
     : 0;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="border border-edge rounded-sm p-8">
-        <div className="flex items-center justify-between mb-6">
+    <div className="max-w-3xl mx-auto space-y-8">
+      <div className="border-2 border-edge-strong bg-panel rounded-xl p-6 sm:p-8">
+        <div className="flex items-start sm:items-center justify-between gap-4 mb-6 flex-col sm:flex-row">
           <div>
-            <h1 className="font-serif text-3xl font-normal text-ink">{profile.display_name || profile.username}</h1>
-            <p className="text-ink-muted text-sm mt-1">@{profile.username}</p>
+            <div className="text-[11px] tracking-[4px] font-black text-accent mb-2">▸ PROFILE</div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-ink leading-none tracking-tight">
+              {profile.display_name || profile.username}
+            </h1>
+            <p className="text-ink-tertiary text-[13px] font-semibold mt-2">@{profile.username}</p>
           </div>
           <button
             onClick={() => setEditing(!editing)}
-            className="px-4 py-2 text-[12px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors"
+            className="shrink-0 px-5 py-2.5 text-[11px] tracking-[2.5px] font-black text-ink border-2 border-edge-strong hover:border-edge-bold hover:bg-shade rounded-md transition-colors"
           >
-            {editing ? 'CANCEL' : 'EDIT PROFILE'}
+            {editing ? 'CANCEL' : 'EDIT'}
           </button>
         </div>
 
         {editing ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Display Name</label>
+              <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">Display Name</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="w-full px-4 py-3.5 bg-card border-2 border-edge-strong rounded-md text-ink font-medium focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Affiliation</label>
+              <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">Affiliation</label>
               <input
                 type="text"
                 value={affiliation}
                 onChange={(e) => setAffiliation(e.target.value)}
                 placeholder="MIT, Google, etc."
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="w-full px-4 py-3.5 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Country</label>
+              <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">Country</label>
               <input
                 type="text"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 placeholder="United States, France, etc."
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="w-full px-4 py-3.5 bg-card border-2 border-edge-strong rounded-md text-ink font-medium placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[11px] tracking-[2px] text-ink-muted mb-2 uppercase">Type</label>
+              <label className="block text-[11px] tracking-[2.5px] font-black text-ink-tertiary mb-2 uppercase">Type</label>
               <select
                 value={affiliationType}
                 onChange={(e) => setAffiliationType(e.target.value as 'school' | 'company' | '')}
-                className="w-full px-4 py-2.5 bg-card border border-edge rounded-sm text-ink focus:outline-none focus:ring-1 focus:ring-edge-strong focus:border-edge-strong transition-colors"
+                className="w-full px-4 py-3.5 bg-card border-2 border-edge-strong rounded-md text-ink font-medium focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
               >
                 <option value="">None</option>
                 <option value="school">School</option>
@@ -212,7 +215,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 bg-btn text-btn-text font-semibold text-xs tracking-[1.5px] rounded-sm transition-colors hover:bg-btn-hover disabled:opacity-50"
+              className="px-6 py-3.5 bg-accent text-on-accent font-black text-[12px] tracking-[2.5px] rounded-md transition-all hover:scale-[1.02] hover:bg-accent/90 shadow-[0_4px_20px_var(--accent-glow)] disabled:opacity-50"
             >
               {saving ? 'SAVING...' : 'SAVE CHANGES'}
             </button>
@@ -220,14 +223,14 @@ export default function ProfilePage() {
         ) : (
           <>
             {profile.country && (
-              <p className="text-ink-secondary text-sm">
-                <span className="text-ink-faint">Country: </span>
+              <p className="text-ink-secondary text-[14px] font-semibold">
+                <span className="text-ink-tertiary text-[11px] tracking-[2px] font-black uppercase mr-2">Country</span>
                 {profile.country}
               </p>
             )}
             {profile.affiliation && (
-              <p className="text-ink-secondary text-sm mt-1">
-                <span className="text-ink-faint capitalize">{profile.affiliation_type}: </span>
+              <p className="text-ink-secondary text-[14px] font-semibold mt-2">
+                <span className="text-ink-tertiary text-[11px] tracking-[2px] font-black uppercase capitalize mr-2">{profile.affiliation_type}</span>
                 {profile.affiliation}
               </p>
             )}
@@ -235,26 +238,26 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-shade rounded-sm overflow-hidden">
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">RATING</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.elo_rating}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">RATING</div>
+          <div className="font-mono text-3xl font-black text-accent tabular-nums">{profile.elo_rating}</div>
         </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">GAMES</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_played}</div>
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">GAMES</div>
+          <div className="font-mono text-3xl font-black text-ink tabular-nums">{profile.games_played}</div>
         </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WINS</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{profile.games_won}</div>
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">WINS</div>
+          <div className="font-mono text-3xl font-black text-ink tabular-nums">{profile.games_won}</div>
         </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">WIN RATE</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{winRate}%</div>
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">WIN RATE</div>
+          <div className="font-mono text-3xl font-black text-ink tabular-nums">{winRate}%</div>
         </div>
-        <div className="bg-page p-5 text-center">
-          <div className="text-[11px] tracking-[2px] text-ink-faint mb-2">SPRINT PB</div>
-          <div className="font-mono text-2xl text-ink tabular-nums">{sprintPB ?? '—'}</div>
+        <div className="bg-panel border-2 border-edge-strong rounded-xl p-5 text-center col-span-2 sm:col-span-1">
+          <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary mb-2">SPRINT PB</div>
+          <div className="font-mono text-3xl font-black text-ink tabular-nums">{sprintPB ?? '—'}</div>
         </div>
       </div>
 
@@ -266,7 +269,7 @@ export default function ProfilePage() {
 
       {/* Trophy Case */}
       <div>
-        <div className="text-[11px] tracking-[3px] text-ink-faint mb-4">TROPHY CASE</div>
+        <div className="text-[12px] tracking-[3px] font-black text-accent mb-4">▸ TROPHY CASE</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {[...ACHIEVEMENTS]
             .sort((a, b) => {

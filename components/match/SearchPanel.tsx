@@ -104,96 +104,90 @@ export function SearchPanel({
 
   return (
     <aside
-      className="flex flex-col border border-edge rounded-sm bg-panel shadow-sm"
+      className="flex flex-col border-2 border-accent/60 rounded-xl bg-panel shadow-[0_0_30px_var(--accent-glow)] overflow-hidden"
       aria-label="Matchmaking status"
     >
-      {/* Header — distinctly different from warmup header (solid border, not
-          dashed; green live-dot; explicit RANKED framing) so there's no
-          chance of confusing the two sections. */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-edge bg-accent-subtle">
-        <div className="flex items-center gap-2">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b-2 border-accent/40 bg-accent-glow">
+        <div className="flex items-center gap-2.5">
           {isSearching && !isCooldown ? (
-            <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
           ) : (
-            <span className="inline-block w-2 h-2 rounded-full bg-ink-muted" />
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-ink-muted" />
           )}
-          <span className="text-[11px] tracking-[2px] text-ink-secondary font-mono font-semibold">
+          <span className="text-[11px] tracking-[3px] text-accent font-black">
             {isCooldown
-              ? 'COOLDOWN'
+              ? '▸ COOLDOWN'
               : isSearching
-                ? 'RANKED MATCHMAKING'
-                : 'IDLE'}
+                ? '▸ RANKED MATCHMAKING'
+                : '▸ IDLE'}
           </span>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex flex-col gap-4 px-5 py-5">
+      <div className="flex flex-col gap-5 px-5 py-5">
         {isCooldown ? (
-          // Cooldown state: you declined or timed out on a match
           <div className="flex flex-col gap-2">
-            <div className="text-sm text-ink-secondary">Match cooldown</div>
-            <div className="font-mono text-2xl tabular-nums text-ink">
+            <div className="text-[11px] tracking-[2px] font-black text-ink-tertiary uppercase">Match cooldown</div>
+            <div className="font-mono text-3xl font-black tabular-nums text-ink">
               {cooldownSec}s
             </div>
-            <div className="text-[11px] text-ink-faint leading-relaxed">
+            <div className="text-[12px] font-medium text-ink-tertiary leading-relaxed">
               You declined or missed a match. Searching will resume automatically.
             </div>
           </div>
         ) : isSearching ? (
           <>
-            {/* Elapsed time */}
             <div className="flex flex-col gap-1">
-              <div className="text-[10px] tracking-[1.5px] text-ink-faint font-mono">
-                ELAPSED
+              <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary uppercase">
+                Elapsed
               </div>
-              <div className="font-mono text-2xl tabular-nums text-ink">
+              <div className="font-mono text-3xl font-black tabular-nums text-ink">
                 {formatElapsed(elapsedMs)}
               </div>
             </div>
 
-            {/* Elo range */}
             <div className="flex flex-col gap-1">
-              <div className="text-[10px] tracking-[1.5px] text-ink-faint font-mono">
-                RANGE
+              <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary uppercase">
+                Range
               </div>
-              <div className="font-mono text-sm text-ink-secondary tabular-nums">
+              <div className="font-mono text-base font-bold text-ink-secondary tabular-nums">
                 &plusmn;{eloRange} Elo{' '}
                 {isWidened && (
-                  <span className="text-ink-faint">(widening)</span>
+                  <span className="text-accent text-[12px] font-black uppercase tracking-wider">(widening)</span>
                 )}
               </div>
             </div>
 
-            {/* Online count */}
             {onlineCount !== null && (
               <div className="flex flex-col gap-1">
-                <div className="text-[10px] tracking-[1.5px] text-ink-faint font-mono">
-                  ACTIVITY
+                <div className="text-[10px] tracking-[2.5px] font-black text-ink-tertiary uppercase">
+                  Activity
                 </div>
-                <div className="text-sm text-ink-secondary">
-                  ~{onlineCount} in a match or searching
+                <div className="text-[13px] font-semibold text-ink-secondary">
+                  ~<span className="font-mono font-black text-ink">{onlineCount}</span> in a match or searching
                 </div>
               </div>
             )}
           </>
         ) : (
-          <div className="text-sm text-ink-tertiary">Not searching.</div>
+          <div className="text-[13px] font-medium text-ink-tertiary">Not searching.</div>
         )}
 
         {error && (
-          <div className="text-[12px] text-red-400/80 bg-red-400/5 border border-red-400/15 rounded-sm px-3 py-2 leading-relaxed">
+          <div className="text-[12px] font-semibold text-feedback-wrong bg-feedback-wrong/10 border-2 border-feedback-wrong/30 rounded-md px-3 py-2.5 leading-relaxed">
             {error}
           </div>
         )}
       </div>
 
       {/* Footer — cancel button */}
-      <div className="border-t border-edge-faint px-5 py-4">
+      <div className="border-t-2 border-edge-strong px-5 py-4">
         <button
           onClick={onCancel}
           disabled={!isSearching && !isCooldown}
-          className="w-full px-4 py-2 text-[11px] tracking-[1.5px] text-ink-muted border border-edge hover:border-edge-strong hover:text-ink-secondary rounded-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 text-[11px] tracking-[2.5px] font-black text-ink-tertiary border-2 border-edge-strong hover:border-edge-bold hover:text-ink rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           CANCEL
         </button>

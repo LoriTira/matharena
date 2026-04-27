@@ -17,13 +17,6 @@ import { useFriendships } from '@/hooks/useFriendships';
 // ─── Nav structure ────────────────────────────────────────
 const NAV_GROUPS = [
   {
-    label: 'PLAY',
-    items: [
-      { name: 'Quick Match', href: '/play' },
-      { name: 'Daily Puzzle', href: '/daily' },
-    ],
-  },
-  {
     label: 'LEARN',
     items: [
       { name: 'Practice', href: '/practice' },
