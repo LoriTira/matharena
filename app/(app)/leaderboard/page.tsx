@@ -1,20 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/Skeleton';
 import type { Profile } from '@/types';
+
+type SortKey = 'elo' | 'sprint';
 
 export default function LeaderboardPage() {
   const [players, setPlayers] = useState<Profile[]>([]);
   const [sprintPBs, setSprintPBs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('elo');
   const supabase = createClient();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      setLoading(true);
+
+      // Pull a generous slice ranked by Elo (the natural primary axis).
+      // Sprint PBs are a separate query — we re-rank client-side when the
+      // user chooses to sort by Sprint PB.
       let query = supabase
         .from('profiles')
         .select('*')
@@ -30,7 +38,6 @@ export default function LeaderboardPage() {
         const profiles = data as Profile[];
         setPlayers(profiles);
 
-        // Batch-fetch sprint PBs for all players
         const playerIds = profiles.map((p) => p.id);
         if (playerIds.length > 0) {
           const { data: sprintData } = await supabase
@@ -57,6 +64,23 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   }, [filter]);
 
+  const ranked = useMemo(() => {
+    if (sortKey === 'elo') return players;
+    // Sort by Sprint PB descending. Players without a PB sink to the bottom.
+    return [...players].sort((a, b) => {
+      const aPB = sprintPBs[a.id];
+      const bPB = sprintPBs[b.id];
+      if (aPB === undefined && bPB === undefined) return 0;
+      if (aPB === undefined) return 1;
+      if (bPB === undefined) return -1;
+      return bPB - aPB;
+    });
+  }, [players, sprintPBs, sortKey]);
+
+  const subtitle = sortKey === 'elo'
+    ? 'Top players by Elo rating.'
+    : 'Top 120s Sprint personal bests.';
+
   return (
     <div className="space-y-6">
       <div>
@@ -64,9 +88,39 @@ export default function LeaderboardPage() {
         <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-ink leading-none tracking-tight">
           Leaderboard.
         </h1>
-        <p className="text-[14px] font-medium text-ink-tertiary mt-3">Top players by Elo rating.</p>
+        <p className="text-[14px] font-medium text-ink-tertiary mt-3">{subtitle}</p>
       </div>
-      <div className="flex justify-end">
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Sort toggle */}
+        <div role="tablist" aria-label="Sort leaderboard" className="inline-flex border-2 border-edge-strong rounded-md p-1 bg-panel self-start">
+          <button
+            role="tab"
+            aria-selected={sortKey === 'elo'}
+            onClick={() => setSortKey('elo')}
+            className={`px-4 py-2 text-[11px] tracking-[2px] font-black rounded transition-all ${
+              sortKey === 'elo'
+                ? 'bg-accent text-on-accent shadow-[0_2px_12px_var(--accent-glow)]'
+                : 'text-ink-tertiary hover:text-ink'
+            }`}
+          >
+            ELO
+          </button>
+          <button
+            role="tab"
+            aria-selected={sortKey === 'sprint'}
+            onClick={() => setSortKey('sprint')}
+            className={`px-4 py-2 text-[11px] tracking-[2px] font-black rounded transition-all ${
+              sortKey === 'sprint'
+                ? 'bg-accent text-on-accent shadow-[0_2px_12px_var(--accent-glow)]'
+                : 'text-ink-tertiary hover:text-ink'
+            }`}
+          >
+            SPRINT PB
+          </button>
+        </div>
+
+        {/* Filter input */}
         <input
           type="text"
           value={filter}
@@ -77,18 +131,18 @@ export default function LeaderboardPage() {
       </div>
 
       {loading ? (
-        <div className="border border-edge-faint rounded-sm overflow-hidden">
+        <div className="border-2 border-edge-strong rounded-xl overflow-hidden bg-panel">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-edge">
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint w-16">#</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">PLAYER</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">COUNTRY</th>
-                <th className="px-4 py-3 text-left text-[11px] tracking-[2px] text-ink-faint">AFFILIATION</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">RATING</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">W/L</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">WIN %</th>
-                <th className="px-4 py-3 text-right text-[11px] tracking-[2px] text-ink-faint">SPRINT PB</th>
+              <tr className="border-b-2 border-edge-strong bg-shade">
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary w-16">#</th>
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">PLAYER</th>
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">COUNTRY</th>
+                <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">AFFILIATION</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">RATING</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">W/L</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">WIN %</th>
+                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">SPRINT PB</th>
               </tr>
             </thead>
             <tbody>
@@ -116,19 +170,24 @@ export default function LeaderboardPage() {
                 <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">PLAYER</th>
                 <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">COUNTRY</th>
                 <th className="px-4 py-4 text-left text-[11px] tracking-[2.5px] font-black text-ink-tertiary">AFFILIATION</th>
-                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">RATING</th>
+                <th className={`px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black ${sortKey === 'elo' ? 'text-accent' : 'text-ink-tertiary'}`}>
+                  RATING {sortKey === 'elo' && '▼'}
+                </th>
                 <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">W/L</th>
                 <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">WIN %</th>
-                <th className="px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black text-ink-tertiary">SPRINT PB</th>
+                <th className={`px-4 py-4 text-right text-[11px] tracking-[2.5px] font-black ${sortKey === 'sprint' ? 'text-accent' : 'text-ink-tertiary'}`}>
+                  SPRINT PB {sortKey === 'sprint' && '▼'}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {players.map((player, index) => {
+              {ranked.map((player, index) => {
                 const winRate = player.games_played > 0
                   ? Math.round((player.games_won / player.games_played) * 100)
                   : 0;
                 const losses = player.games_played - player.games_won;
                 const isTop3 = index < 3;
+                const sprintPB = sprintPBs[player.id];
 
                 return (
                   <tr key={player.id} className="border-b border-edge-faint last:border-b-0 hover:bg-shade transition-colors">
@@ -143,21 +202,25 @@ export default function LeaderboardPage() {
                     </td>
                     <td className="px-4 py-3 text-ink-tertiary text-[13px] font-medium">{player.country ?? '—'}</td>
                     <td className="px-4 py-3 text-ink-tertiary text-[13px] font-medium">{player.affiliation ?? '—'}</td>
-                    <td className="px-4 py-3 text-right font-mono font-black text-ink tabular-nums text-[14px]">{player.elo_rating}</td>
+                    <td className={`px-4 py-3 text-right font-mono tabular-nums text-[14px] ${sortKey === 'elo' ? 'font-black text-ink' : 'font-bold text-ink-secondary'}`}>
+                      {player.elo_rating}
+                    </td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-[13px] tabular-nums">
                       <span className="text-feedback-correct">{player.games_won}</span>
                       <span className="text-ink-faint"> / </span>
                       <span className="text-feedback-wrong">{losses}</span>
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-ink-secondary text-[13px] tabular-nums">{winRate}%</td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-ink-secondary text-[13px] tabular-nums">{sprintPBs[player.id] ?? '—'}</td>
+                    <td className={`px-4 py-3 text-right font-mono tabular-nums text-[13px] ${sortKey === 'sprint' && sprintPB !== undefined ? 'font-black text-ink' : 'font-bold text-ink-secondary'}`}>
+                      {sprintPB ?? '—'}
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
 
-          {players.length === 0 && (
+          {ranked.length === 0 && (
             <div className="text-center py-12 text-ink-tertiary font-semibold">No players found</div>
           )}
         </div>
